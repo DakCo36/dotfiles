@@ -14,32 +14,50 @@ COLOR_GREEN="\e[32m"
 COLOR_BLUE="\e[34m"
 
 LOG_LEVEL=${LOG_LEVEL:-$LOG_LEVEL_INFO}
+LOG_FILE=""
 
 get_timestamp() {
   date '+%Y-%m-%d %H:%M:%S'
 }
 
+logging_file() {
+  local message=$1
+  local no_color_message=$(echo "$message" | sed -e "s/\\\\e\[[0-9;]*m//g")
+  echo "$no_color_message"
+  if [[ -n "$LOG_FILE" ]]; then
+    echo "$no_color_message" >> $LOG_FILE
+  fi 
+}
+
 log_debug() {
+  local message="${COLOR_BLUE}$(get_timestamp) [DEBUG]${COLOR_RESET} $1"
   if [[ $LOG_LEVEL -le $LOG_LEVEL_DEBUG ]]; then
-    printf "${COLOR_BLUE}%s [DEBUG] ${COLOR_RESET}%s\n" "$(get_timestamp)" "$1"
+    echo -e $message
+    logging_file "$message"
   fi
 }
 
 log_info() {
+  local message="${COLOR_GREEN}$(get_timestamp) [INFO]${COLOR_RESET} $1"
   if [[ $LOG_LEVEL -le $LOG_LEVEL_INFO ]]; then
-    printf "${COLOR_GREEN}%s [INFO] ${COLOR_RESET}%s\n" "$(get_timestamp)" "$1"
+    echo -e $message
+    logging_file "$message"
   fi
 }
 
 log_warning() {
+  local message="${COLOR_YELLOW}$(get_timestamp) [WARNING]${COLOR_RESET} $1"
   if [[ $LOG_LEVEL -le $LOG_LEVEL_WARNING ]]; then 
-    printf "${COLOR_YELLOW}%s [WARNING] ${COLOR_RESET}%s\n" "$(get_timestamp)" "$1"
+    echo -e $message
+    logging_file "$message"
   fi
 }
 
 log_error() {
+  local message="${COLOR_RED}$(get_timestamp) [ERROR]${COLOR_RESET} $1"
   if [[ $LOG_LEVEL -le $LOG_LEVEL_ERROR ]]; then
-    printf "${COLOR_RED}%s [ERROR] ${COLOR_RESET}%s\n" "$(get_timestamp)" "$1"
+    echo -e $message
+    logging_file "$message"
   fi
 }
 
