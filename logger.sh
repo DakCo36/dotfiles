@@ -43,23 +43,14 @@ log_error() {
   fi
 }
 
-log_set_level() {
-  case "$1" in
-    "DEBUG")
-      LOG_LEVEL=0
-      ;;
-    "INFO")
-      LOG_LEVEL=1
-      ;;
-    "WARNING")
-      LOG_LEVEL=2
-      ;;
-    "ERROR")
-      LOG_LEVEL=3
-      ;;
-    *)
-      log_error "Invalid log level: $1"
-      exit 1
-      ;;
-  esac
+set_log_level() {
+  LOG_LEVEL="$1"
+  if ! [[ "$LOG_LEVEL" =~ ^[0-3]$ ]]; then
+    printf "${COLOR_RED}%s [ERROR] ${COLOR_RESET}Invalid log level: $1\n"
+    printf "${COLOR_RED}$s [ERROR] ${COLOR_RESET}Set log level INFO(${LOG_LEVEL_INFO})\n"
+    LOG_LEVEL=1
+    return 1
+  fi
+
+  return 0
 }
