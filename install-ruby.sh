@@ -14,6 +14,8 @@ ZSHRC="$HOME/.zshrc"
 ZSHRC_BACKUP="$BACKUP_DIR/.zshrc"
 ZPROFILE="$HOME/.zprofile"
 ZPROFILE_BACKUP="$BACKUP_DIR/.zprofile"
+BASHRC="$HOME/.bashrc"
+BASHPROFILE="$HOME/.bash_profile"
 
 PATH_BACKUP="$PATH"
 
@@ -25,15 +27,9 @@ RUBY_VERSION="3.4.3"
 
 function prepare() {
   mkdir -p "$BACKUP_DIR"
-  if [[ $? -ne 0 ]]; then
-    log_error "Failed to create backup directory at $BACKUP_DIR"
-    exit 1
-  fi
 }
 
 function install_rbenv() {
-  local output
-  local exit_code
   # Backup previous installation
   if [[ -d $RBENV_DIR ]]; then
     log_info "Backing up existing rbenv installation..."
@@ -42,43 +38,29 @@ function install_rbenv() {
   fi
 
   # Install rbenv
-  INSTALLING_STEPS+=("install_rbenv")
   log_info "Installing rbenv..."
-  output=$(git clone "$RBENV_GITHUB_URL" "$RBENV_DIR" 2>&1)
-  exit_code=$?
-  log_debug "$output"
-  
-  if [[ $exit_code -ne 0 ]]; then
-    log_error "Failed to install rbenv. Check the log at $INSTALL_LOG"
-    return 1
-  fi
-
+  git clone "$RBENV_GITHUB_URL" "$RBENV_DIR" 2>&1
   log_info "rbenv installed successfully."
 }
 
 function apply_rbenv() {
-  local output
-  local exit_code
-  # Backup existing .zshrc
-  if [[ -f $ZSHRC ]]; then
-    cp "$ZSHRC" "$ZSHRC_BACKUP"
-    log_info "Backup of .zshrc created at $ZSHRC_BACKUP"
-  fi
-  # Backup existing .zprofile
-  if [[ -f $ZPROFILE ]]; then
-    cp "$ZPROFILE" "$ZPROFILE_BACKUP"
-    log_info "Backup of .zprofile created at $ZPROFILE_BACKUP"
-  fi
+  for file in "$BASHRC" "$BASHPROFILE" "$ZSHRC" "$ZPROFILE"; do
+    if [[ -f $file ]]; then
+      log_info "Backing up existing $file..."
+      cp "$file" "$BACKUP_DIR/$(basename $file)"
+      log_info "Backup created at $BACKUP_DIR/$(basename $file)"
+    fi
+  done
 
-  log_info "Applying rbenv..."
-  output=$($RBENV_DIR/bin/rbenv init zsh --no-rehash 2>&1)
-  exit_code=$?
-  log_debug "$output"
+  log_info "Applying rbenv to bash and zsh..."
+  log_info "Applying on bash..."
+  $RBENV_DIR/bin/rbenv init bash --no-rehash 2>&1
 
-  if [[ $exit_code -ne 0 ]]; then
-    log_error "Failed to apply rbenv. Check the log at $INSTALL_LOG"
-    return 1
-  fi
+  log_info "Applying on zsh..."
+  $RBENV_DIR/bin/rbenv init zsh --no-rehash 2>&1
+
+  log_info "Applying on session..."
+  eval "$($RBENV_DIR/bin/rbenv init - 2>&1)"
 
   log_info "rbenv applied successfully."
 }
@@ -95,35 +77,22 @@ function install_ruby_build() {
   fi
 
   log_info "Cloning ruby-build..."
-  local git_log
-  git_log=$(git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build 2>&1)
-  log_debug "$git_log"
+  git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build 2>&1
 }
 
 function install_ruby() {
   local log
   log_info "Installing ruby (${RUBY_VERSION})"
   rbenv install "$RUBY_VERSION"
-  exit_code=$?
-
-  if [[ $exit_code -ne 0 ]]; then
-    log_error "Fail to install ruby"
-    return 1
-  fi
 }
 
 function set_ruby() {
   log_info "Set global ruby version ${RUBY_VERSION}"
   rbenv global "$RUBY_VERSION"
-  exit_code=$?
-
-  if [[ $exit_code -ne 0 ]]; then
-    log_error "Fail to set version ${RUBY_VERSION}"
-    return 1
-  fi
 }
 
 function rollback_install_rbenv() {
+  local exit_code
   rm -rf "$RBENV_DIR"
   exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
@@ -134,17 +103,14 @@ function rollback_install_rbenv() {
 }
 
 function rollback_apply_rbenv() {
-  if [[ -f $ZSHRC_BACKUP ]]; then
-    mv "$ZSHRC_BACKUP" "$ZSHRC"
-    exit_code=$?
-    if [[ $exit_code -ne 0 ]]; then
-      log_warning "Failed to restore .zshrc from $ZSHRC_BACKUP"
-    else
-      log_info "Rollback, .zshrc restored successfully."
+  # Restore .bashrc, .bash_profile, .zshrc, and .zprofile
+  for file in "$BASHRC" "$BASHPROFILE" "$ZSHRC" "$ZPROFILE"; do
+    backup_file="$BACKUP_DIR/$(basename $file)"
+    if [[ -f $backup_file ]]; then
+      log_info "Restoring $file from backup..."
+      mv "$backup_file" "$file"
     fi
-  else
-    log_warning "No backup found for .zshrc. Cannot rollback."
-  fi
+  done
 
   PATH="$PATH_BACKUP"
   log_info "Rollback, PATH restored successfully."
@@ -159,46 +125,65 @@ function rollback_install_ruby_build() {
 # End of Rollbacks
 
 function rollback() {
+  trap - ERR
+  set +e
+
   log_error "An error occured. Rolling back changes..."
 
   for step in "${INSTALLING_STEPS[@]}"; do
     case "$step" in
       "install_rbenv")
-        rollback_rbenv
+        log_info "Rollback, removing rbenv directory"
+        rollback_install_rbenv
         ;;
       "apply_rbenv")
+        log_info "Rollback, restoring .zshrc and PATH"
         rollback_apply_rbenv
         ;;
       "install_ruby_build")
+        log_info "Rollback, removing ruby-build"
         rollback_install_ruby_build
         ;;
       *)
-        log_warning "Unknown step: $step"
+        log_info "No rollbacks for $step"
         ;;
     esac
   done
+  exit 1
 }
 
 function run_functions() {
   local runnable=$1
 
   $runnable
-  exit_code=$?
   INSTALLING_STEPS+=("$runnable")
-  if [[ $exit_code -ne 0 ]]; then
-    log_error "Failed to run $runnable. Check the log at $INSTALL_LOG"
+}
+
+function cleanup_on_exit() {
+  local exit_code=$1
+  if [[ $exit_code -eq 0 ]]; then
+    log_info "Installation completed successfully."
+  else
+    log_error "Installation failed with exit code $exit_code."
     rollback
-    exit 1
   fi
+  set +euo pipefail
+  trap - EXIT
+  trap - ERR
 }
 
 function main() {
+  trap 'cleanup_on_exit $?' EXIT
+  trap 'rollback' ERR
+
   prepare
   # Add rollback function to trap
   run_functions install_rbenv
   run_functions apply_rbenv
   run_functions install_ruby_build
   run_functions install_ruby
+  run_functions set_ruby
 }
 
+set -euo pipefail
 main
