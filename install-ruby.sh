@@ -21,7 +21,9 @@ LOG_FILE="/tmp/ruby_install.$TIMESTAMP.log"
 INSTALL_LOG="$LOG_FILE"
 INSTALLING_STEPS=()
 
-prepare() {
+RUBY_VERSION="3.4.3"
+
+function prepare() {
   mkdir -p "$BACKUP_DIR"
   if [[ $? -ne 0 ]]; then
     log_error "Failed to create backup directory at $BACKUP_DIR"
@@ -29,7 +31,7 @@ prepare() {
   fi
 }
 
-install_rbenv() {
+function install_rbenv() {
   local output
   local exit_code
   # Backup previous installation
@@ -54,7 +56,7 @@ install_rbenv() {
   log_info "rbenv installed successfully."
 }
 
-apply_rbenv() {
+function apply_rbenv() {
   local output
   local exit_code
   # Backup existing .zshrc
@@ -68,7 +70,6 @@ apply_rbenv() {
     log_info "Backup of .zprofile created at $ZPROFILE_BACKUP"
   fi
 
-  INSTALLING_STEPS+=("apply_rbenv")
   log_info "Applying rbenv..."
   output=$($RBENV_DIR/bin/rbenv init zsh --no-rehash 2>&1)
   exit_code=$?
@@ -82,17 +83,47 @@ apply_rbenv() {
   log_info "rbenv applied successfully."
 }
 
-# install_ruby_build() {
-#   local output
-#   local exit_code
-#   # Install ruby-build
-#   log_info "Installing ruby-build..."
-#   output=$(git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build 2>&1)
-#   exit_code=$?
-# }
-# End of Runnable functions
+function install_ruby_build() {
+  if [[ ! -d "$(rbenv root)/plugins" ]]; then
+    log_info "create plugins directory"
+    mkdir -p "$(rbenv root)/plugins"
+  fi
 
-rollback_install_rbenv() {
+  if [[ -d "$(rbenv root)/plugins/ruby-build" ]]; then
+    log_info "Remove previous ruby-build"
+    rm -rf "$(rbenv root)/plugins/ruby-build"
+  fi
+
+  log_info "Cloning ruby-build..."
+  local git_log
+  git_log=$(git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build 2>&1)
+  log_debug "$git_log"
+}
+
+function install_ruby() {
+  local log
+  log_info "Installing ruby (${RUBY_VERSION})"
+  rbenv install "$RUBY_VERSION"
+  exit_code=$?
+
+  if [[ $exit_code -ne 0 ]]; then
+    log_error "Fail to install ruby"
+    return 1
+  fi
+}
+
+function set_ruby() {
+  log_info "Set global ruby version ${RUBY_VERSION}"
+  rbenv global "$RUBY_VERSION"
+  exit_code=$?
+
+  if [[ $exit_code -ne 0 ]]; then
+    log_error "Fail to set version ${RUBY_VERSION}"
+    return 1
+  fi
+}
+
+function rollback_install_rbenv() {
   rm -rf "$RBENV_DIR"
   exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
@@ -102,7 +133,7 @@ rollback_install_rbenv() {
   fi
 }
 
-rollback_apply_rbenv() {
+function rollback_apply_rbenv() {
   if [[ -f $ZSHRC_BACKUP ]]; then
     mv "$ZSHRC_BACKUP" "$ZSHRC"
     exit_code=$?
@@ -119,22 +150,15 @@ rollback_apply_rbenv() {
   log_info "Rollback, PATH restored successfully."
 }
 
-
-
-# End of Rollbacks
-
-run_functions() {
-  local runnable=$1
-
-  $runnable
-  exit_code=$?
-  if [[ $exit_code -ne 0 ]]; then
-    log_error "Failed to run $runnable. Check the log at $INSTALL_LOG"
-    return 1
+function rollback_install_ruby_build() {
+  if [[ -d "$(rbenv root)/plugins/ruby-build" ]]; then
+    log_info "Remove installed ruby-build"
+    rm -rf "$(rbenv root)/plugins/ruby-build"
   fi
 }
+# End of Rollbacks
 
-rollback() {
+function rollback() {
   log_error "An error occured. Rolling back changes..."
 
   for step in "${INSTALLING_STEPS[@]}"; do
@@ -145,6 +169,9 @@ rollback() {
       "apply_rbenv")
         rollback_apply_rbenv
         ;;
+      "install_ruby_build")
+        rollback_install_ruby_build
+        ;;
       *)
         log_warning "Unknown step: $step"
         ;;
@@ -152,12 +179,26 @@ rollback() {
   done
 }
 
+function run_functions() {
+  local runnable=$1
 
-main() {
+  $runnable
+  exit_code=$?
+  INSTALLING_STEPS+=("$runnable")
+  if [[ $exit_code -ne 0 ]]; then
+    log_error "Failed to run $runnable. Check the log at $INSTALL_LOG"
+    rollback
+    exit 1
+  fi
+}
+
+function main() {
   prepare
   # Add rollback function to trap
   run_functions install_rbenv
   run_functions apply_rbenv
+  run_functions install_ruby_build
+  run_functions install_ruby
 }
 
 main
