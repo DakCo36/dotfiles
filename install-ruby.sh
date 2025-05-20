@@ -29,6 +29,61 @@ function prepare() {
   mkdir -p "$BACKUP_DIR"
 }
 
+function check_sudo_previleges() {
+  if sudo -v &>/dev/null; then
+    log_info "Sudo privileges are available."
+    return 0
+  else
+    log_error "Sudo privileges are required to run this script."
+    return 1
+  fi
+}
+
+function install_ubuntu_prerequisite() {
+  packages=(
+    "build-essential"
+    "libssl-dev"
+    "libreadline-dev"
+    "libyaml-dev"
+    "libgmp-dev"
+    "zlib1g-dev"
+    "libncurses5-dev"
+    "libffi-dev"
+    "libgdbm-dev"
+    "autoconf"
+    "bison"
+  )
+
+  if ! check_sudo_previleges; then
+    log_error "Sudo privileges are required to install packages."
+    exit 1
+  fi
+
+  log_info "Installing required libraries for Ubuntu..."
+  for package in "${packages[@]}"; do
+    if ! dpkg -l | grep -q "$package"; then
+      log_info "Installing $package..."
+      sudo apt-get install -y "$package" 2>&1
+    else
+      log_info "$package is already installed."
+    fi
+  done
+}
+
+function install_prerequisite() {
+  log_info "Installing required libraries..."
+  if [[ -f "/etc/os-release" ]]; then
+    . /etc/os-release
+  fi
+
+  if [[ "$ID" == "ubuntu" ]]; then
+    install_ubuntu_prerequisite
+  else
+    log_error "Unsupported OS: $ID"
+    exit 1
+  fi
+}
+
 function install_rbenv() {
   # Backup previous installation
   if [[ -d $RBENV_DIR ]]; then
@@ -80,7 +135,7 @@ function install_ruby_build() {
   git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build 2>&1
 }
 
-function install_ruby() {
+function install_target_ruby() {
   local log
   log_info "Installing ruby (${RUBY_VERSION})"
   rbenv install "$RUBY_VERSION"
@@ -167,23 +222,47 @@ function cleanup_on_exit() {
     log_error "Installation failed with exit code $exit_code."
     rollback
   fi
-  set +euo pipefail
+
+  if [[ -n ${ORIGINAL_SHELL_OPTIONS} ]]; then
+    eval "$ORIGINAL_SHELL_OPTIONS"
+  fi
   trap - EXIT
   trap - ERR
 }
 
-function main() {
+function install() {
+  # Save original shell options
+  ORIGINAL_SHELL_OPTIONS=$(set +o)
+
+  set -euo pipefail
   trap 'cleanup_on_exit $?' EXIT
   trap 'rollback' ERR
 
   prepare
   # Add rollback function to trap
+  run_functions install_prerequisite
   run_functions install_rbenv
   run_functions apply_rbenv
   run_functions install_ruby_build
-  run_functions install_ruby
+  run_functions install_target_ruby
   run_functions set_ruby
 }
 
-set -euo pipefail
-main
+INSTALL_RUBY_SCRIPT_SOURCED=0
+if [ -n "$ZSH_VERSION" ]; then
+  if [[ "$ZSH_EVAL_CONTEXT" =~ :file$ ]]; then
+    INSTALL_RUBY_SCRIPT_SOURCED=1
+  else
+    INSTALL_RUBY_SCRIPT_SOURCED=0
+  fi
+elif [ -n "$BASH_VERSION" ]; then
+  if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    INSTALL_RUBY_SCRIPT_SOURCED=1
+  else
+    INSTALL_RUBY_SCRIPT_SOURCED=0
+  fi
+fi
+
+if [ "$INSTALL_RUBY_SCRIPT_SOURCED" -eq 0 ]; then
+  install
+fi
