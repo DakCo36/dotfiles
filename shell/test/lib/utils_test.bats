@@ -70,3 +70,32 @@ EOF
   # Then
   assert_failure
 }
+
+@test "restore_trap restore the trap successfully" {
+  # Given
+  local trap_type="ERR"
+  local original_trap="trap 'echo \"Test\"' ERR"
+
+  # When
+  trap 'echo "Not this trap"' ERR
+  restore_trap "$trap_type" "$original_trap"
+
+  # Then
+  run trap -p ERR
+  assert_success
+  assert_output "trap -- 'echo \"Test\"' ERR"
+}
+
+@test "restore_trap restore empty trap when original_trap is empty" {
+  # Given
+  local trap_type="ERR"
+
+  # When
+  trap 'echo "Not this trap"' ERR
+  restore_trap "$trap_type"
+
+  # Then
+  run trap -p ERR
+  assert_success
+  assert_output ""
+}
