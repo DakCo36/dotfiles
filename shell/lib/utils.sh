@@ -17,11 +17,14 @@ function restore_trap() {
   local trap_type="$1"
   local original_trap="$2"
 
-  if [[ -n "$original_trap" ]]; then
-    eval "$original_trap"
+  if [[ -z "$original_trap" ]]; then
+    # Unknown why 'trap - $trap_type' doesn't work
+    eval "trap -- ":" $trap_type"
   else
-    eval "trap - $trap_type"
+    eval "$original_trap"
   fi
+
+  return 0
 }
 
 function handle_error() {
