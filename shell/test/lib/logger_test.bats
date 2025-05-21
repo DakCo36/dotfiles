@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
+BATS_DIR="$(dirname ${BATS_TEST_FILENAME})"
 
-source ../../lib/logger.sh
-
+source ${BATS_DIR}/../../lib/logger.sh
 load '../test_helper/bats-support/load'
 load '../test_helper/bats-assert/load'
 
