@@ -64,7 +64,7 @@ function install_prerequisite() {
     return 1
   fi
 
-  cleanup()
+  cleanup 0 "${ORIGINAL_SHELL_OPTIONS}" "${ORIGINAL_TRAP_EXIT}" "${ORIGINAL_TRAP_ERR}"
   return 0
 }
 
