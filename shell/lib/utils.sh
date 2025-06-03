@@ -1,6 +1,10 @@
 #!/bin/bash
 
-UTILS_SCRIPT_DIR="$(dirname ${BASH_SOURCE[0]})"
+if [[ -n "${BASH_SOURCE[0]}" ]]; then
+  UTILS_SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+else
+  UTILS_SCRIPT_DIR="$(pwd)"
+fi
 source "$UTILS_SCRIPT_DIR/logger.sh"
 
 function has_sudo_privileges() {
