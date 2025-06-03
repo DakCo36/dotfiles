@@ -45,7 +45,7 @@ function install_prerequisite() {
   set -euo pipefail
 
   trap 'handle_error $? "$LINENO"' ERR
-  trap 'cleanup_on_exit $? "${ORIGINAL_SHELL_OPTIONS}" "${ORIGINAL_TRAP_EXIT}" "${ORIGINAL_TRAP_ERR}"' EXIT
+  trap 'cleanup $? "${ORIGINAL_SHELL_OPTIONS}" "${ORIGINAL_TRAP_EXIT}" "${ORIGINAL_TRAP_ERR}"' EXIT
 
   log_info "Detail logs are in: $INSTALL_LOG"
   if ! has_sudo_privileges; then
@@ -64,10 +64,11 @@ function install_prerequisite() {
     return 1
   fi
 
+  cleanup()
   return 0
 }
 
-function cleanup_on_exit() {
+function cleanup() {
   local exit_code=$1
   local original_shell_options=$2
   local original_trap_exit=$3
