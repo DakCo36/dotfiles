@@ -5,8 +5,8 @@ if [[ -n "${BASH_SOURCE[0]}" ]]; then
 else
   INSTALL_PREREQUISITE_SCRIPT_DIR="$(pwd)"
 fi
-source "$INSTALL_PREREQUISITE_SCRIPT_DIR/../lib/utils.sh"
-source "$INSTALL_PREREQUISITE_SCRIPT_DIR/../lib/logger.sh"
+source "$INSTALL_PREREQUISITE_SCRIPT_DIR/../lib/utils.sh" || return 1
+source "$INSTALL_PREREQUISITE_SCRIPT_DIR/../lib/logger.sh" || return 1
 INSTALL_LOG=$(mktemp /tmp/install_prerequisite.XXXXXX.log)
 
 UBUNTU_PACKAGES=(
@@ -29,7 +29,7 @@ function install_ubuntu_prerequisite() {
 
   log_info "Installing Ubuntu prerequisites..."
   for package in "${UBUNTU_PACKAGES[@]}"; do
-    if ! dpkg -l | grep -q "$package"; then
+    if ! dpkg -s "${package}" &>/dev/null; then
       log_info "Installing $package..."
       sudo apt-get install -y "$package" &>> "$INSTALL_LOG"
     else
@@ -48,7 +48,6 @@ function install_prerequisite() {
   trap 'cleanup_on_exit $? "${ORIGINAL_SHELL_OPTIONS}" "${ORIGINAL_TRAP_EXIT}" "${ORIGINAL_TRAP_ERR}"' EXIT
 
   log_info "Detail logs are in: $INSTALL_LOG"
-
   if ! has_sudo_privileges; then
     log_error "Need sudo privileges to install prerequisites."
     false

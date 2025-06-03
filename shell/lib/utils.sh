@@ -5,7 +5,10 @@ if [[ -n "${BASH_SOURCE[0]}" ]]; then
 else
   UTILS_SCRIPT_DIR="$(pwd)"
 fi
-source "$UTILS_SCRIPT_DIR/logger.sh"
+LOGGER_FILE="$UTILS_SCRIPT_DIR/logger.sh"
+
+source "${LOGGER_FILE}" || return 1
+log_info "Loading ${LOGGER_FILE} successfully"
 
 function has_sudo_privileges() {
   if sudo -v &>/dev/null; then
