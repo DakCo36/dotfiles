@@ -24,7 +24,7 @@ UBUNTU_PACKAGES=(
 )
 
 function install_ubuntu_prerequisite() {
-  log_info "Updateing package list..."
+  log_info "Updating package list..."
   sudo apt-get update &>> "$INSTALL_LOG"
 
   log_info "Installing Ubuntu prerequisites..."
