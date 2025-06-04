@@ -64,7 +64,7 @@ set_log_level() {
   LOG_LEVEL="$1"
   if ! [[ "$LOG_LEVEL" =~ ^[0-3]$ ]]; then
     printf "${COLOR_RED}%s [ERROR] ${COLOR_RESET}Invalid log level: $1\n"
-    printf "${COLOR_RED}$s [ERROR] ${COLOR_RESET}Set log level INFO(${LOG_LEVEL_INFO})\n"
+    printf "${COLOR_RED}%s [ERROR] ${COLOR_RESET}Set log level INFO(${LOG_LEVEL_INFO})\n"
     LOG_LEVEL=1
     return 1
   fi
