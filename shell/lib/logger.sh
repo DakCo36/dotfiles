@@ -24,7 +24,7 @@ logging_file() {
   local message=$1
   local no_color_message=$(echo "$message" | sed -e "s/\\\\e\[[0-9;]*m//g")
   if [[ -n "$LOG_FILE" ]]; then
-    echo "$no_color_message" >> $LOG_FILE
+    echo "$no_color_message" >> "$LOG_FILE"
   fi 
 }
 
