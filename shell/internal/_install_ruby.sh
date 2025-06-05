@@ -187,4 +187,11 @@ function cleanup() {
   else
     log_info "Complete the script, install_ruby.sh successfully"
   fi
+
+  # Restore the original traps
+  restore_trap EXIT "$original_trap_exit"
+  restore_trap ERR "$original_trap_err"
+
+  # Restore the original shell options
+  eval "$original_shell_options"
 }
