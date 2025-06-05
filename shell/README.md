@@ -1,8 +1,21 @@
+# Shell 스크립트
 
+이 디렉터리는 Ruby 설치를 위한 스크립트와 관련 테스트를 포함합니다.
 
-# Test
----
+## 설치 방법
+
+다음 명령어를 실행하면 필요한 패키지와 Ruby가 설치됩니다.
+
+```bash
+./install.sh
 ```
-# Test all bats tests in the current directory.
-$ bats ./test/*
+
+Ubuntu 환경에서 실행하면 rbenv와 ruby-build가 자동으로 설치되고 지정된 버전의 Ruby가 세팅됩니다.
+
+## 테스트 실행
+
+테스트는 Bats 프레임워크로 작성되어 있습니다. 아래 명령어로 모든 테스트를 실행할 수 있습니다.
+
+```bash
+bats ./test/*
 ```
