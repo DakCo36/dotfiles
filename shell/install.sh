@@ -33,3 +33,4 @@ source "$SCRIPT_DIR/internal/_install_ruby.sh" || {
 install_prerequisite
 install_ruby
 
+exit 0
