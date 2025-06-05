@@ -21,11 +21,11 @@ fi
 
 # Source internal scripts
 source "$SCRIPT_DIR/internal/_install_prerequisite.sh" || {
-  echo "Failed to load prerequisite installer" >&2
+  echo "Failed to load Prerequisite Installer ($SCRIPT_DIR/internal/_install_prerequisite.sh)" >&2
   exit 1
 }
 source "$SCRIPT_DIR/internal/_install_ruby.sh" || {
-  echo "Failed to load ruby installer" >&2
+  echo "Failed to load Ruby Installer ($SCRIPT_DIR/internal/_install_ruby.sh)" >&2
   exit 1
 }
 
