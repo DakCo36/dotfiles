@@ -8,7 +8,7 @@ class Powerlevel10kInstaller < Installer
 
   def install
     dest = File.expand_path('~/.oh-my-zsh/custom/themes/powerlevel10k')
-    system("git clone https://github.com/romkatv/powerlevel10k.git #{dest}") unless installed?
+    system("git clone --depth 1 https://github.com/romkatv/powerlevel10k.git #{dest}") unless installed?
 
     zshrc = File.expand_path('~/.zshrc')
     if File.exist?(zshrc)
