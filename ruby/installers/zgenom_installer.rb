@@ -8,7 +8,7 @@ class ZgenomInstaller < Installer
 
   def install
     dest = File.expand_path('~/.zgenom')
-    system("git clone https://github.com/jandamm/zgenom.git #{dest}") unless installed?
+    system("git clone --depth 1 https://github.com/jandamm/zgenom.git #{dest}") unless installed?
     zshrc = File.expand_path('~/.zshrc')
     lines = File.exist?(zshrc) ? File.readlines(zshrc) : []
     unless lines.any? { |l| l =~ /^# load zgenom/ }
