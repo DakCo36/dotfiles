@@ -18,3 +18,4 @@ module Component
     end
   end
 end
+
