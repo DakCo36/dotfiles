@@ -3,7 +3,7 @@ require_relative 'base'
 module Component
   class CurlComponent < BaseComponent
     def exists?
-      system('curl --version > /dev/null 2>&1')
+      system('curl', '--version', out: File::NULL, err: File::NULL)
     end
 
     def version
