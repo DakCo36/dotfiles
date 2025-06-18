@@ -29,15 +29,20 @@ RSpec.describe Loggable do
   end
 
   it 'returns a Logger instance' do
+    # When
+
+    # Then
     expect(instance.logger).to be_a(Logger)
   end
 
   it 'logs message with caller location info' do
+    # When
     instance.test_info_log('hello world')
 
+    # Then
     log_output.rewind
     logged = log_output.read
-
+    puts "logged: #{logged}"
     expect(logged).to include('INFO')
     expect(logged).to include('hello world')
     expect(logged).to match(/test_info_log - hello world/)
