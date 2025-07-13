@@ -15,6 +15,7 @@ module Component
       out, err, status = Open3.capture3(command, *args)
       unless status.success?
         logger.error("Command failed: #{command} #{args.join(' ')}")
+        logger.error("Exit status: #{status.exitstatus}")
         logger.warn("Stdout: #{out}") unless out.empty?
         logger.error("Stderr: #{err}") unless err.empty?
         raise "Command `#{command}` failed"
@@ -23,6 +24,13 @@ module Component
       if (showStdout)
         logger.info("Stdout: #{out}") unless out.empty?
       end
+
+      [out, err, status]
+    end
+
+    def runCmdWithOutput(command, *args, showStdout: false)
+      out, err, status = runCmd(command, *args, showStdout: false)
+      out
     end
 
     def withDir(dir)

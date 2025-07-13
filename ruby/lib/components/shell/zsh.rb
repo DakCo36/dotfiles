@@ -20,24 +20,24 @@ module Component
     def initialize
       @curl = Component::CurlComponent.new
     end
-    
+
+    def exists?
+      runCmd('command', '-v', 'zsh')
+    end
+
     def installed?
-      system('command', '-v', 'zsh', out: File::NULL, err: File::NULL)
-      $?.success?
+      runCmd('command', '-v', 'zsh')
     end
 
     def version
-      system('zsh', '--version', out: File::NULL, err: File::NULL)
-      if not $?.success?
-        return nil
-      end
-      output = `zsh --version 2>&1`
-      output.split(' ')[1] # example zsh 5.8 (x86_64-pc-linux-musl)
+      out = runCmdWithOutput('zsh', '--version')
+      out.split(' ')[1] # example zsh 5.8 (x86_64-pc-linux-musl)
     end
 
     def install
       if installed?
         logger.info("Zsh is already installed.")
+        return
       end
 
       logger.info("Installing zsh version #{VERSION}")
@@ -48,7 +48,7 @@ module Component
     end
 
     def rollback
-      FileUtils.rm_f(File.expand_path('~/.local/bin/zsh'))
+      raise "Not implemented"
     end
 
     private
