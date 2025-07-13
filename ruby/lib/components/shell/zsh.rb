@@ -12,8 +12,11 @@ module Component
 
     CONFIG = Components::Configuration.instance
     VERSION="5.9"
-    DOWNLOAD_URL = "https://sourceforge.net/projects/zsh/files/zsh/#{VERSION}/zsh-#{VERSION}.tar.xz/download"
-
+    DIRNAME = "zsh-#{VERSION}"
+    FILENAME = "zsh-#{VERSION}.tar.xz"
+    FILEPATH = CONFIG.tmp + File::SEPARATOR + FILENAME
+    DIRPATH = CONFIG.tmp + File::SEPARATOR + DIRNAME
+    DOWNLOAD_URL = "https://sourceforge.net/projects/zsh/files/zsh/#{VERSION}/#{FILENAME}/download"
     def initialize
       @curl = Component::CurlComponent.new
     end
@@ -38,8 +41,10 @@ module Component
       end
 
       logger.info("Installing zsh version #{VERSION}")
-
-      download
+      @curl.download(DOWNLOAD_URL, FILEPATH)
+      logger.info("Unzip #{FILEPATH} to #{DIRPATH}")
+      runCmd('tar', '-xf', FILEPATH, '-C', File.dirname(FILEPATH))
+      configureAndInstall()
     end
 
     def rollback
@@ -47,10 +52,13 @@ module Component
     end
 
     private
-    def download
-      destination = CONFIG.tmp + '/' + "zsh-#{VERSION}.tar.xz"
-      logger.info("Downloading zsh zip file to #{destination}")
-      @curl.download(DOWNLOAD_URL, destination)
+    def configureAndInstall
+      logger.info("Configuring zsh")
+      withDir(DIRPATH) do
+        runCmd('./configure', '--prefix', CONFIG.local, showStdout: true)
+        runCmd('make', '-j', '4')
+        runCmd('make', 'install')
+      end
     end
   end
 end

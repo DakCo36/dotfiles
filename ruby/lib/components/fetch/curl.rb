@@ -21,15 +21,7 @@ module Component
         raise "curl is not installed"
       end
 
-      out, err, status = Open3.capture3('curl', '-L', '-o', destination, url)
-      if status.success?
-        logger.info("Successfully, download from #{url} to #{destination}")
-      else
-        logger.error("Failed to download #{url} to #{destination}")
-        logger.error("Stdout: ${out}")
-        logger.error("Stderr: ${err}")
-        raise "Download failed"
-      end
+      runCmd('curl', '-L', '-o', destination, url)
     end
   end
 end
