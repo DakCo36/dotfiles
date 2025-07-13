@@ -51,7 +51,6 @@ RSpec.describe Component::ZshComponent do
 
     it 'returns false when zsh is not installed' do
       # Given
-      fake_status = instance_double(Process::Status, success?: false)
       allow(zsh).to receive(:runCmd)
         .with('command', '-v', 'zsh')
         .and_return(false)
