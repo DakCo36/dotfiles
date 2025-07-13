@@ -14,10 +14,10 @@ module Component
       logger.info('Command: ' + command + ' ' + args.join(' '))
       out, err, status = Open3.capture3(command, *args)
       unless status.success?
-        logger.error("Command failed: #{command} #{args.join(' ')}")
-        logger.error("Exit status: #{status.exitstatus}")
+        logger.warn("Command failed: #{command} #{args.join(' ')}")
+        logger.warn("Exit status: #{status.exitstatus}")
         logger.warn("Stdout: #{out}") unless out.empty?
-        logger.error("Stderr: #{err}") unless err.empty?
+        logger.warn("Stderr: #{err}") unless err.empty?
         raise "Command `#{command}` failed"
       end
 

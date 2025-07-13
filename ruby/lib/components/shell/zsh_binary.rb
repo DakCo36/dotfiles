@@ -6,7 +6,7 @@ require_relative '../../mixins/loggable'
 require_relative '../fetch/curl'
 
 module Component
-  class ZshComponent < BaseComponent
+  class ZshBinaryComponent < BaseComponent
     include Installable
     include Loggable
 
@@ -22,11 +22,19 @@ module Component
     end
 
     def exists?
-      runCmd('command', '-v', 'zsh')
+      runCmd('which', 'zsh')
+      true
+    rescue RuntimeError
+      logger.info("Zsh is not installed.")
+      false
     end
 
     def installed?
-      runCmd('command', '-v', 'zsh')
+      runCmd('which', 'zsh')
+      true
+    rescue RuntimeError
+      logger.info("Zsh is not installed.")
+      false
     end
 
     def version
@@ -45,6 +53,9 @@ module Component
       logger.info("Unzip #{FILEPATH} to #{DIRPATH}")
       runCmd('tar', '-xf', FILEPATH, '-C', File.dirname(FILEPATH))
       configureAndInstall()
+    rescue
+      logger.error("Failed to install zsh: #{$!}")
+      raise "Failed to install zsh: #{$!}"
     end
 
     def rollback

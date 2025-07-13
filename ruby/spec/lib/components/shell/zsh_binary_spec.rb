@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'components/shell/zsh'
+require 'components/shell/zsh_binary'
 
-RSpec.describe Component::ZshComponent do
+RSpec.describe Component::ZshBinaryComponent do
   let(:curl) { instance_double(Component::CurlComponent) }
   before do
     allow(Component::CurlComponent).to receive(:new).and_return(curl)
@@ -17,7 +17,7 @@ RSpec.describe Component::ZshComponent do
     it 'returns true when zsh command is available' do
       # Given
       allow(zsh).to receive(:runCmd)
-        .with('command', '-v', 'zsh')
+        .with('which', 'zsh')
         .and_return(true)
       # When
       exists = zsh.exists?
@@ -28,8 +28,8 @@ RSpec.describe Component::ZshComponent do
     it 'returns false when zsh command is missing' do
       # Given
       allow(zsh).to receive(:runCmd)
-        .with('command', '-v', 'zsh')
-        .and_return(false)
+        .with('which', 'zsh')
+        .and_raise(RuntimeError)
       # When
       exists = zsh.exists?
       # Then
@@ -41,7 +41,7 @@ RSpec.describe Component::ZshComponent do
     it 'returns true when zsh is installed' do
       # Given
       allow(zsh).to receive(:runCmd)
-        .with('command', '-v', 'zsh')
+        .with('which', 'zsh')
         .and_return(true)
       # When
       installed = zsh.installed?
@@ -52,8 +52,8 @@ RSpec.describe Component::ZshComponent do
     it 'returns false when zsh is not installed' do
       # Given
       allow(zsh).to receive(:runCmd)
-        .with('command', '-v', 'zsh')
-        .and_return(false)
+        .with('which','zsh')
+        .and_raise(RuntimeError)
       # When
       installed = zsh.installed?
       # Then
