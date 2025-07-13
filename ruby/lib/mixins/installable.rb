@@ -5,10 +5,6 @@ module Installable
   	raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
   end
 
-  def possible?
-  	raise NotIMplementedError, "#{self.class} has not implemented method '#{__method__}'"
-  end
-
   def install
   	raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
   end

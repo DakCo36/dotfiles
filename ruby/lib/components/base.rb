@@ -1,4 +1,4 @@
-module Components
+module Component
   # This module defined the interface for an component.
   class BaseComponent
     def exists?

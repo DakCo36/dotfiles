@@ -1,5 +1,5 @@
 require 'fileutils'
-require_relative 'base'
+require_relative '../base'
 
 class Powerlevel10kInstaller < Installer
   def installed?
