@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require_relative 'bin_helper'
+require_relative '../bin_helper'
 require 'mixins/loggable'
 
 class TestLogger
