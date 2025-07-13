@@ -42,7 +42,6 @@ RSpec.describe Loggable do
     # Then
     log_output.rewind
     logged = log_output.read
-    puts "logged: #{logged}"
     expect(logged).to include('INFO')
     expect(logged).to include('hello world')
     expect(logged).to match(/test_info_log - hello world/)
