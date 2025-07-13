@@ -5,3 +5,6 @@
 # backup files
 *.swp
 *.swo
+
+ruby/vendor
+ruby/.bundle
