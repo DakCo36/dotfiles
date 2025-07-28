@@ -16,12 +16,20 @@ RSpec.describe Component::OhMyZshComponent do
 
   describe '#installed?' do
     it 'returns true when target directory exists' do
-      allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR).and_return(true)
+      allow(Dir)
+        .to receive(:exist?)
+        .with(described_class::DIRPATH)
+        .and_return(true)
+
       expect(ohmyzsh.installed?).to be true
     end
 
     it 'returns false when target directory is missing' do
-      allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR).and_return(false)
+      allow(Dir)
+        .to receive(:exist?)
+        .with(described_class::DIRPATH)
+        .and_return(false)
+
       expect(ohmyzsh.installed?).to be false
     end
   end

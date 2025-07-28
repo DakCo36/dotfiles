@@ -13,7 +13,7 @@ module Component
 
     CONFIG = Components::Configuration.instance
     DOWNLOAD_URL = 'https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh'
-    TARGET_DIR = File.join(CONFIG.home, '.oh-my-zsh')
+    DIRPATH = File.join(CONFIG.home, '.oh-my-zsh')
     SCRIPT_PATH = File.join(CONFIG.tmp, 'install-oh-my-zsh.sh')
 
     def initialize
@@ -25,7 +25,7 @@ module Component
     end
 
     def installed?
-      Dir.exist?(TARGET_DIR)
+      Dir.exist?(DIRPATH)
     end
 
     def install
@@ -33,7 +33,11 @@ module Component
         logger.info('oh-my-zsh already installed.')
         return
       end
+      install!
+    end
 
+    def install!
+      FileUtils.rm_rf(DIRPATH) if Dir.exist?(DIRPATH)
       logger.info('Installing oh-my-zsh')
       @curl.download(DOWNLOAD_URL, SCRIPT_PATH)
       runCmd('sh', SCRIPT_PATH, showStdout: true)
@@ -45,7 +49,7 @@ module Component
     end
 
     def rollback
-      FileUtils.rm_rf(TARGET_DIR)
+      FileUtils.rm_rf(DIRPATH)
     end
   end
 end
