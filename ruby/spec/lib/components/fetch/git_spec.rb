@@ -2,16 +2,16 @@ require 'spec_helper'
 require 'components/fetch/git'
 
 RSpec.describe Component::GitComponent do
-  subject(:git) { described_class.new }
+  subject(:git) { described_class.instance }
 
-  describe '#exists?' do
+  describe '#exist?' do
     it 'returns true when git command is available' do
       allow(git)
         .to receive(:system)
         .with('git', '--version', out: File::NULL, err: File::NULL)
         .and_return(true)
 
-      expect(git.exists?).to be true
+      expect(git.exist?).to be true
     end
 
     it 'returns false when git command is missing' do
@@ -20,7 +20,7 @@ RSpec.describe Component::GitComponent do
         .with('git', '--version', out: File::NULL, err: File::NULL)
         .and_return(false)
       
-      expect(git.exists?).to be false
+      expect(git.exist?).to be false
     end
   end
 
