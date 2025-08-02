@@ -1,10 +1,13 @@
 require 'singleton'
+require_relative '../mixins/loggable'
 
 module Component
   class DependencyError < StandardError; end
 
   # This module defined the interface for an component.
   class BaseComponent
+    include Loggable
+    
     def self.inherited(subclass)
       super
       subclass.include Singleton # Make new method available
