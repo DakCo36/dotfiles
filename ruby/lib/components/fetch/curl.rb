@@ -1,11 +1,9 @@
 require 'open3'
 require_relative '../base'
-require_relative '../../mixins/loggable'
 
 module Component
   class CurlComponent < BaseComponent
-    include Loggable
-    def exists?
+    def exist?
       system('curl', '--version', out: File::NULL, err: File::NULL)
     end
 

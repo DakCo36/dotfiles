@@ -1,12 +1,10 @@
 require 'open3'
 require_relative '../base'
-require_relative '../../mixins/loggable'
 
 module Component
   class GitComponent < BaseComponent
-    include Loggable
 
-    def exists?
+    def exist?
       system('git', '--version', out: File::NULL, err: File::NULL)
     end
 
