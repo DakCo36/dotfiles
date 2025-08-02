@@ -29,7 +29,7 @@ module Component
     end
     
     def self.depends_on(component_class, name: nil)
-      # 이름이 제공되지 않으면 클래스 이름에서 자동 생성
+      # Create name from class name if not provided
       if name.nil?
         class_name = component_class.name.split('::').last  # Component::GitComponent → GitComponent
         name = class_name
@@ -44,8 +44,8 @@ module Component
       
       define_method(name) do
         instance_variable_name = "@#{name}"
-        instance_variable_get(instance_variable_name)
-        instance_variable_set(instance_variable_name, dependency)
+        instance_variable_get(instance_variable_name) ||
+          instance_variable_set(instance_variable_name, component_class.instance)
       end
     end
     
