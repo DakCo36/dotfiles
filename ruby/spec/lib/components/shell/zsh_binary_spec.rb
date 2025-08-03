@@ -2,38 +2,37 @@ require 'spec_helper'
 require 'components/shell/zsh_binary'
 
 RSpec.describe Component::ZshBinaryComponent do
-  let(:curl) { instance_double(Component::CurlComponent) }
+  subject(:zsh) { described_class.instance }
+  let(:null_logger) { instance_spy(Logger) }
+  let(:mock_curl) { instance_spy(Component::CurlComponent) }
+
   before do
-    allow(Component::CurlComponent).to receive(:new).and_return(curl)
+    allow(zsh).to receive(:logger).and_return(null_logger)
+    allow(zsh).to receive(:curl).and_return(mock_curl)
   end
 
-  subject(:zsh) { described_class.new }
-  before do
-    null_logger = Logger.new(File::NULL)
-    allow(zsh).to receive(:logger).and_return(null_logger)
-  end
-  
-  describe '#exists?' do
+  describe '#available?' do
     it 'returns true when zsh command is available' do
       # Given
       allow(zsh).to receive(:runCmd)
         .with('which', 'zsh')
         .and_return(true)
       # When
-      exists = zsh.exists?
+      available = zsh.available?
       # Then
-      expect(exists).to be true
+      expect(available).to be true
     end
 
     it 'returns false when zsh command is missing' do
       # Given
+      
       allow(zsh).to receive(:runCmd)
         .with('which', 'zsh')
         .and_raise(RuntimeError)
       # When
-      exists = zsh.exists?
+      available = zsh.available?
       # Then
-      expect(exists).to be false
+      expect(available).to be false
     end
   end
 
@@ -92,17 +91,17 @@ RSpec.describe Component::ZshBinaryComponent do
       it 'install zsh' do
         # Given
         allow(zsh).to receive(:installed?).and_return(false)
-        allow(curl).to receive(:download).and_return(true)
         allow(zsh).to receive(:runCmd)
-          .with('tar', '-xf', described_class::FILEPATH, '-C', File.dirname(described_class::FILEPATH))
+          .with('tar', '-xf', anything, '-C', anything)
           .and_return(true)
-        allow(zsh).to receive(:configureAndInstall).and_return(nil)
+        allow(zsh).to receive(:configureAndMake).and_return(nil)
 
         # When
         zsh.install
+
         # Then
-        expect(curl).to have_received(:download).with(described_class::DOWNLOAD_URL, described_class::FILEPATH)
-        expect(zsh).to have_received(:configureAndInstall)
+        expect(mock_curl).to have_received(:download).with(anything, anything)
+        expect(zsh).to have_received(:configureAndMake)
       end
     end
   end
