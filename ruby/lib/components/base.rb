@@ -13,12 +13,8 @@ module Component
       subclass.include Singleton # Make new method available
     end
     
-    def exist?
-      raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
-    end
-    
     def available?
-      exist?
+      raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
     end
 
     def version
@@ -45,6 +41,8 @@ module Component
       
       dependencies[name] = component_class
       
+      # Define a method to access the component instance
+      # If name is curl, then create 'curl' method (getter)
       define_method(name) do
         instance_variable_name = "@#{name}"
         instance_variable_get(instance_variable_name) ||
