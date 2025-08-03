@@ -4,7 +4,7 @@ require_relative '../base'
 module Component
   class GitComponent < BaseComponent
 
-    def exist?
+    def available?
       system('git', '--version', out: File::NULL, err: File::NULL)
     end
 
@@ -16,7 +16,7 @@ module Component
     end
 
     def clone(url, destination)
-      if !exists?
+      if !available?
         raise "git is not installed"
       end
 

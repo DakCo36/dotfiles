@@ -4,14 +4,14 @@ require 'components/fetch/git'
 RSpec.describe Component::GitComponent do
   subject(:git) { described_class.instance }
 
-  describe '#exist?' do
+  describe '#available?' do
     it 'returns true when git command is available' do
       allow(git)
         .to receive(:system)
         .with('git', '--version', out: File::NULL, err: File::NULL)
         .and_return(true)
 
-      expect(git.exist?).to be true
+      expect(git.available?).to be true
     end
 
     it 'returns false when git command is missing' do
@@ -19,8 +19,8 @@ RSpec.describe Component::GitComponent do
         .to receive(:system)
         .with('git', '--version', out: File::NULL, err: File::NULL)
         .and_return(false)
-      
-      expect(git.exist?).to be false
+
+      expect(git.available?).to be false
     end
   end
 
@@ -66,7 +66,7 @@ RSpec.describe Component::GitComponent do
 
     context 'when git is not installed' do
       before do
-        allow(git).to receive(:exists?).and_return(false)
+        allow(git).to receive(:available?).and_return(false)
       end
 
       it 'raises an error' do

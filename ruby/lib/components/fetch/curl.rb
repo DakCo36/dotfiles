@@ -3,7 +3,7 @@ require_relative '../base'
 
 module Component
   class CurlComponent < BaseComponent
-    def exist?
+    def available?
       system('curl', '--version', out: File::NULL, err: File::NULL)
     end
 
@@ -15,7 +15,7 @@ module Component
     end
 
     def download(url, destination)
-      if !exists?
+      if !available?
         raise "curl is not installed"
       end
 
