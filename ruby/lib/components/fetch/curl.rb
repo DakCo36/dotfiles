@@ -1,11 +1,9 @@
 require 'open3'
-require_relative '../base'
-require_relative '../../mixins/loggable'
+require 'components/base'
 
 module Component
   class CurlComponent < BaseComponent
-    include Loggable
-    def exists?
+    def available?
       system('curl', '--version', out: File::NULL, err: File::NULL)
     end
 
@@ -17,7 +15,7 @@ module Component
     end
 
     def download(url, destination)
-      if !exists?
+      if !available?
         raise "curl is not installed"
       end
 

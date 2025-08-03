@@ -1,12 +1,57 @@
+require 'singleton'
+require 'mixins/loggable'
+
 module Component
+  class DependencyError < StandardError; end
+
   # This module defined the interface for an component.
   class BaseComponent
-    def exists?
+    include Loggable
+    
+    def self.inherited(subclass)
+      super
+      subclass.include Singleton # Make new method available
+    end
+    
+    def available?
       raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
     end
 
     def version
       raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
+    end
+    
+    def self.dependencies(&block)
+      @dependencies ||= {}
+      instance_eval(&block) if block_given?
+      @dependencies
+    end
+    
+    def self.depends_on(component_class, name: nil)
+      # Create name from class name if not provided
+      if name.nil?
+        class_name = component_class.name.split('::').last  # Component::GitComponent → GitComponent
+        name = class_name
+          .gsub(/Component$/, '')  # GitComponent → Git
+          .gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2')  # ABCDef → ABC_Def
+          .gsub(/([a-z\d])([A-Z])/, '\1_\2')  # abcDef → abc_Def
+          .downcase  # Git → git, OhMyZsh → oh_my_zsh
+          .to_sym
+      end
+      
+      dependencies[name] = component_class
+      
+      # Define a method to access the component instance
+      # If name is curl, then create 'curl' method (getter)
+      define_method(name) do
+        instance_variable_name = "@#{name}"
+        instance_variable_get(instance_variable_name) ||
+          instance_variable_set(instance_variable_name, component_class.instance)
+      end
+    end
+    
+    def dependencies
+      self.class.dependencies
     end
 
     private

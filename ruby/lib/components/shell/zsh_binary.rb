@@ -1,40 +1,37 @@
 require 'fileutils'
-require_relative '../base'
-require_relative '../configuration'
-require_relative '../../mixins/installable'
-require_relative '../../mixins/loggable'
-require_relative '../fetch/curl'
+require 'components/base'
+require 'components/configuration'
+require 'mixins/installable'
+require 'components/fetch/curl'
 
 module Component
   class ZshBinaryComponent < BaseComponent
     include Installable
-    include Loggable
 
     CONFIG = Components::Configuration.instance
-    VERSION="5.9"
-    DIRNAME = "zsh-#{VERSION}"
-    FILENAME = "zsh-#{VERSION}.tar.xz"
-    FILEPATH = CONFIG.tmp + File::SEPARATOR + FILENAME
-    DIRPATH = CONFIG.tmp + File::SEPARATOR + DIRNAME
-    DOWNLOAD_URL = "https://sourceforge.net/projects/zsh/files/zsh/#{VERSION}/#{FILENAME}/download"
-    def initialize
-      @curl = Component::CurlComponent.new
-    end
+    TARGET_VERSION="5.9"
+    TARGET_FILE_NAME = "zsh-#{TARGET_VERSION}.tar.xz"
+    TARGET_DIR_NAME = "zsh-#{TARGET_VERSION}"
+    
+    TMP_FILE_PATH = File.join(CONFIG.tmp, TARGET_FILE_NAME)
+    TMP_DIR_PATH = File.join(CONFIG.tmp, TARGET_DIR_NAME)
 
-    def exists?
+    DOWNLOAD_URL = "https://sourceforge.net/projects/zsh/files/zsh/#{TARGET_VERSION}/#{TARGET_FILE_NAME}/download"
+
+    private_constant :TARGET_VERSION, :TARGET_FILE_NAME, :TARGET_DIR_NAME, :TMP_FILE_PATH, :TMP_DIR_PATH, :DOWNLOAD_URL
+
+    depends_on Component::CurlComponent
+
+    def available?
       runCmd('which', 'zsh')
       true
     rescue RuntimeError
-      logger.info("Zsh is not installed.")
       false
     end
 
     def installed?
-      runCmd('which', 'zsh')
-      true
-    rescue RuntimeError
-      logger.info("Zsh is not installed.")
-      false
+      available?
+      # TODO: Check zsh is installed with correct version
     end
 
     def version
@@ -48,11 +45,11 @@ module Component
         return
       end
 
-      logger.info("Installing zsh version #{VERSION}")
-      @curl.download(DOWNLOAD_URL, FILEPATH)
-      logger.info("Unzip #{FILEPATH} to #{DIRPATH}")
-      runCmd('tar', '-xf', FILEPATH, '-C', File.dirname(FILEPATH))
-      configureAndInstall()
+      logger.info("Installing zsh version #{TARGET_VERSION}")
+      curl.download(DOWNLOAD_URL, TMP_FILE_PATH)
+      logger.info("Unzip #{TMP_FILE_PATH} to #{TMP_DIR_PATH}")
+      runCmd('tar', '-xf', TMP_FILE_PATH, '-C', File.dirname(TMP_FILE_PATH))
+      configureAndMake()
     rescue
       logger.error("Failed to install zsh: #{$!}")
       raise "Failed to install zsh: #{$!}"
@@ -63,13 +60,14 @@ module Component
     end
 
     private
-    def configureAndInstall
+    def configureAndMake
       logger.info("Configuring zsh")
-      withDir(DIRPATH) do
+      withDir(TMP_DIR_PATH) do
         runCmd('./configure', '--prefix', CONFIG.local, showStdout: true)
         runCmd('make', '-j', '4')
         runCmd('make', 'install')
       end
+      logger.info("Zsh installed successfully.")
     end
   end
 end

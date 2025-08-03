@@ -1,16 +1,53 @@
 require 'fileutils'
-require_relative '../base'
+require 'components/base'
+require 'components/configuration'
+require 'mixins/installable'
+require 'components/fetch/curl'
+require 'components/shell/zsh_binary'
 
-class OhMyZshInstaller < Installer
-  def installed?
-    Dir.exist?(File.expand_path('~/.oh-my-zsh'))
-  end
+module Component
+  # Component for installing oh-my-zsh using curl
+  class OhMyZshComponent < BaseComponent
+    include Installable
 
-  def install
-    system(%(sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"))
-  end
+    CONFIG = Components::Configuration.instance
+    DOWNLOAD_URL = 'https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh'
+    
+    TARGET_DIR_PATH = File.join(CONFIG.home, '.oh-my-zsh')
+    TMP_SCRIPT_PATH = File.join(CONFIG.tmp, 'install-oh-my-zsh.sh')
 
-  def rollback
-    FileUtils.rm_rf(File.expand_path('~/.oh-my-zsh'))
+    depends_on Component::CurlComponent
+    depends_on Component::ZshBinaryComponent
+
+    private_constant :DOWNLOAD_URL, :TARGET_DIR_PATH, :TMP_SCRIPT_PATH
+
+    def available?
+      Dir.exist?(TARGET_DIR_PATH)
+    end
+
+    def installed?
+      available?
+      # TODO: Check if oh-my-zsh is installed with correct version or configuration
+    end
+
+    def install
+      if installed?
+        logger.info('oh-my-zsh already installed.')
+        return
+      end
+      install!
+    end
+
+    def install!
+      FileUtils.rm_rf(TARGET_DIR_PATH) if Dir.exist?(TARGET_DIR_PATH)
+      logger.info('Installing oh-my-zsh')
+      curl.download(DOWNLOAD_URL, TARGET_DIR_PATH)
+      runCmd('sh', TMP_SCRIPT_PATH, showStdout: true)
+    rescue => e
+      logger.error("Failed to install oh-my-zsh: #{e}")
+      raise e
+    ensure
+      FileUtils.rm_f(TMP_SCRIPT_PATH) if File.exist?(TMP_SCRIPT_PATH)
+    end
   end
 end

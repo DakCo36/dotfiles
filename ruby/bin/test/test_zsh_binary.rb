@@ -4,7 +4,7 @@ require 'mixins/loggable'
 require 'components/shell/zsh_binary'
 
 if __FILE__ == $0
-  zsh = Component::ZshBinaryComponent.new
+  zsh = Component::ZshBinaryComponent.instance
 
   installed = zsh.installed?
   puts installed

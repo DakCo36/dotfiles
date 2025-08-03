@@ -2,15 +2,15 @@ require 'spec_helper'
 require 'components/fetch/curl'
 
 RSpec.describe Component::CurlComponent do
-  subject(:curl) { described_class.new }
+  subject(:curl) { described_class.instance }
 
-  describe '#exists?' do
+  describe '#available?' do
     it 'returns true when curl command is available' do
       allow(curl).to receive(:system)
         .with('curl', '--version', out: File::NULL, err: File::NULL)
         .and_return(true)
 
-      expect(curl.exists?).to be true
+      expect(curl.available?).to be true
     end
 
     it 'returns false when curl command is missing' do
@@ -18,7 +18,7 @@ RSpec.describe Component::CurlComponent do
         .with('curl', '--version', out: File::NULL, err: File::NULL)
         .and_return(false)
 
-      expect(curl.exists?).to be false
+      expect(curl.available?).to be false
     end
   end
 
