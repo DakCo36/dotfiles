@@ -6,7 +6,7 @@ require 'components/fetch/curl'
 
 module Component
   class ZshBinaryComponent < BaseComponent
-    include Installable
+    prepend Installable
 
     CONFIG = Components::Configuration.instance
     TARGET_VERSION="5.9"

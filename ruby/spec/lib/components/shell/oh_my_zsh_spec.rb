@@ -5,9 +5,11 @@ RSpec.describe Component::OhMyZshComponent do
   subject(:oh_my_zsh) { described_class.instance }
   let(:mock_curl) { instance_spy(Component::CurlComponent) }
   let(:mock_zsh_binary) { instance_spy(Component::ZshBinaryComponent) }
-  let(:mock_logger) { instance_spy(Logger) }
+  let(:mock_logger) { Logger.new(File::NULL) }
 
   before do
+    allow(Component::ZshBinaryComponent).to receive(:instance).and_return(mock_zsh_binary)
+    allow(Component::CurlComponent).to receive(:instance).and_return(mock_curl)
     allow(oh_my_zsh).to receive(:curl).and_return(mock_curl)
     allow(oh_my_zsh).to receive(:zsh_binary).and_return(mock_zsh_binary)
     allow(oh_my_zsh).to receive(:logger).and_return(mock_logger)

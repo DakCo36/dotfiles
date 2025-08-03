@@ -7,7 +7,7 @@ require 'components/shell/oh_my_zsh'
 
 module Component
   class Powerlevel10kComponent < BaseComponent
-    include Installable
+    prepend Installable
 
     CONFIG = Components::Configuration.instance
     REPO_URL = 'https://github.com/romkatv/powerlevel10k.git'
@@ -36,11 +36,7 @@ module Component
     end
 
     def install!
-      logger.debug("Check oh-my-zsh installation, #{File.join(CONFIG.home, '.oh-my-zsh')}")
-      if not oh_my_zsh.installed?
-        logger.error('Oh My Zsh is not installed. Please install Oh My Zsh first.')
-        raise 'Oh My Zsh is not installed. Please install Oh My Zsh first.'
-      end
+      FileUtils.rm_rf(TARGET_DIR_PATH) if Dir.exist?(TARGET_DIR_PATH)
       FileUtils.mkdir_p(TARGET_DIR_PATH) unless Dir.exist?(TARGET_DIR_PATH)
       logger.info('Installing Powerlevel10k theme')
       git.clone(REPO_URL, TARGET_DIR_PATH)

@@ -8,7 +8,7 @@ require 'components/shell/zsh_binary'
 module Component
   # Component for installing oh-my-zsh using curl
   class OhMyZshComponent < BaseComponent
-    include Installable
+    prepend Installable
 
     CONFIG = Components::Configuration.instance
     DOWNLOAD_URL = 'https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh'
