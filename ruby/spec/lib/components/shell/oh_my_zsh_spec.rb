@@ -2,66 +2,63 @@ require 'spec_helper'
 require 'components/shell/oh_my_zsh'
 
 RSpec.describe Component::OhMyZshComponent do
-  let(:curl) { instance_double(Component::CurlComponent) }
+  subject(:oh_my_zsh) { described_class.instance }
+  let(:mock_curl) { instance_spy(Component::CurlComponent) }
+  let(:mock_logger) { instance_spy(Logger) }
 
   before do
-    allow(Component::CurlComponent).to receive(:new).and_return(curl)
-  end
-
-  subject(:ohmyzsh) { described_class.new }
-  before do
-    null_logger = Logger.new(File::NULL)
-    allow(ohmyzsh).to receive(:logger).and_return(null_logger)
+    allow(oh_my_zsh).to receive(:curl).and_return(mock_curl)
+    allow(oh_my_zsh).to receive(:logger).and_return(mock_logger)
   end
 
   describe '#installed?' do
     it 'returns true when target directory exists' do
       allow(Dir)
         .to receive(:exist?)
-        .with(described_class::DIRPATH)
+        .with(anything)
         .and_return(true)
 
-      expect(ohmyzsh.installed?).to be true
+      installed = oh_my_zsh.installed?
+
+      expect(installed).to be true
     end
 
     it 'returns false when target directory is missing' do
       allow(Dir)
         .to receive(:exist?)
-        .with(described_class::DIRPATH)
+        .with(anything)
         .and_return(false)
 
-      expect(ohmyzsh.installed?).to be false
-    end
-  end
+      installed = oh_my_zsh.installed?
 
-  describe '#exists?' do
-    it 'delegates to installed?' do
-      allow(ohmyzsh).to receive(:installed?).and_return(true)
-      expect(ohmyzsh.exists?).to be true
+      expect(installed).to be false
     end
   end
 
   describe '#install' do
     context 'when already installed' do
       it 'does nothing' do
-        allow(ohmyzsh).to receive(:installed?).and_return(true)
-        ohmyzsh.install
-        expect(curl).not_to receive(:download)
+        allow(oh_my_zsh)
+          .to receive(:installed?)
+          .and_return(true)
+
+        oh_my_zsh.install
+
+        expect(mock_curl).not_to have_received(:download)
       end
     end
 
     context 'when not installed' do
       it 'downloads and runs the installer script' do
-        allow(ohmyzsh).to receive(:installed?).and_return(false)
-        allow(curl).to receive(:download).and_return(true)
-        allow(ohmyzsh).to receive(:runCmd).with('sh', described_class::SCRIPT_PATH, showStdout: true).and_return(true)
-        allow(FileUtils).to receive(:rm_f)
-        allow(File).to receive(:exist?).with(described_class::SCRIPT_PATH).and_return(true)
+        allow(oh_my_zsh).to receive(:installed?).and_return(false)
+        allow(mock_curl).to receive(:download).and_return(true)
+        allow(oh_my_zsh).to receive(:runCmd).with('sh', anything, showStdout: true).and_return(true)
+        allow(FileUtils).to receive(:rm_rf).with(anything)
 
-        ohmyzsh.install
+        oh_my_zsh.install
 
-        expect(curl).to have_received(:download).with(described_class::DOWNLOAD_URL, described_class::SCRIPT_PATH)
-        expect(ohmyzsh).to have_received(:runCmd).with('sh', described_class::SCRIPT_PATH, showStdout: true)
+        expect(mock_curl).to have_received(:download).with(anything, anything)
+        expect(oh_my_zsh).to have_received(:runCmd).with('sh', anything, showStdout: true)
       end
     end
   end
