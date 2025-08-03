@@ -4,7 +4,7 @@ require 'mixins/loggable'
 require 'components/shell/oh_my_zsh'
 
 if __FILE__ == $0
-  ohmyzsh = Component::OhMyZshComponent.new
+  ohmyzsh = Component::OhMyZshComponent.instance
 
   ohmyzsh.install!
 end

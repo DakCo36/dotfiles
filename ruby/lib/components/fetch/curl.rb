@@ -1,5 +1,5 @@
 require 'open3'
-require_relative '../base'
+require 'components/base'
 
 module Component
   class CurlComponent < BaseComponent

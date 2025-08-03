@@ -1,8 +1,9 @@
 require 'fileutils'
-require_relative '../base'
-require_relative '../configuration'
-require_relative '../../mixins/installable'
-require_relative '../fetch/curl'
+require 'components/base'
+require 'components/configuration'
+require 'mixins/installable'
+require 'components/fetch/curl'
+require 'components/shell/zsh_binary'
 
 module Component
   # Component for installing oh-my-zsh using curl
@@ -16,6 +17,7 @@ module Component
     TMP_SCRIPT_PATH = File.join(CONFIG.tmp, 'install-oh-my-zsh.sh')
 
     depends_on Component::CurlComponent
+    depends_on Component::ZshBinaryComponent
 
     private_constant :DOWNLOAD_URL, :TARGET_DIR_PATH, :TMP_SCRIPT_PATH
 

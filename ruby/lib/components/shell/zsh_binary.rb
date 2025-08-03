@@ -1,8 +1,8 @@
 require 'fileutils'
-require_relative '../base'
-require_relative '../configuration'
-require_relative '../../mixins/installable'
-require_relative '../fetch/curl'
+require 'components/base'
+require 'components/configuration'
+require 'mixins/installable'
+require 'components/fetch/curl'
 
 module Component
   class ZshBinaryComponent < BaseComponent

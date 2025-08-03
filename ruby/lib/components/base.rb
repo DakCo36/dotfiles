@@ -1,5 +1,5 @@
 require 'singleton'
-require_relative '../mixins/loggable'
+require 'mixins/loggable'
 
 module Component
   class DependencyError < StandardError; end
