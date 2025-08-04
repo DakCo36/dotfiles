@@ -37,6 +37,7 @@ module Component
     end
 
     def install!
+      logger.debug("Remove existing oh-my-zsh directory(#{TARGET_DIR_PATH}) if it exists")
       FileUtils.rm_rf(TARGET_DIR_PATH) if Dir.exist?(TARGET_DIR_PATH)
       logger.info('Installing oh-my-zsh')
       curl.download(DOWNLOAD_URL, TMP_SCRIPT_PATH)
@@ -46,8 +47,8 @@ module Component
       logger.error("Failed to install oh-my-zsh: #{e}")
       raise e
     ensure
-      # logger.debug('Cleaning up temporary files')
-      # FileUtils.rm_f(TMP_SCRIPT_PATH) if File.exist?(TMP_SCRIPT_PATH)
+      logger.debug('Cleaning up temporary files')
+      FileUtils.rm_f(TMP_SCRIPT_PATH) if File.exist?(TMP_SCRIPT_PATH)
     end
   end
 end
