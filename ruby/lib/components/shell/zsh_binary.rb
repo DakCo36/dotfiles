@@ -14,7 +14,6 @@ module Component
     TARGET_DIR_NAME = "zsh-#{TARGET_VERSION}"
     TARGET_PATH = File.join(CONFIG.local, 'bin')
 
-    BASHRC_PATH = File.join(CONFIG.home, '.bashrc')
     TMP_FILE_PATH = File.join(CONFIG.tmp, TARGET_FILE_NAME)
     TMP_DIR_PATH = File.join(CONFIG.tmp, TARGET_DIR_NAME)
 
@@ -86,22 +85,51 @@ module Component
       ENV['PATH'] = paths.join(':')
       logger.debug("Current PATH: #{ENV['PATH']}")
 
+      # Sourcing bashrc in bash_profile
+      addSourceBashrcInBashProfile
+
       # Set PATH on bashrc
+      addLocalBinPathInBashrc
+    end
+
+    def addLocalBinPathInBashrc
       time = Time.now.strftime('%Y%m%d%H%M%S')
       logger.debug("Backup existing .bashrc file to .bashrc.bak_#{time}")
-      FileUtils.cp(BASHRC_PATH, "#{BASHRC_PATH}.bak_#{time}") if File.exist?(BASHRC_PATH)
+      FileUtils.cp(CONFIG.bashrc, "#{CONFIG.bashrc}.bak_#{time}") if File.exist?(CONFIG.bashrc)
 
       zsh_path_line = "export PATH=\"#{TARGET_PATH}:$PATH\""
-      FileUtils.touch(BASHRC_PATH) unless File.exist?(BASHRC_PATH)
-      bashrc_content = File.read(BASHRC_PATH)
+      FileUtils.touch(CONFIG.bashrc) unless File.exist?(CONFIG.bashrc)
+      bashrc_content = File.read(CONFIG.bashrc)
 
-      if bashrc_content =~ /export\s+PATH=.*(\$HOME|\~)\/\.local\/bin/
+      escaped_target_path = Regexp.escape(TARGET_PATH)
+      if bashrc_content =~ /export\s+PATH=.*?(#{escaped_target_path}|(\$HOME|\~)\/\.local\/bin)/
         logger.info("PATH already set in .bashrc, skipping")
       else
         logger.info("Adding PATH to .bashrc")
-        File.open(BASHRC_PATH, 'a') do |file|
+        File.open(CONFIG.bashrc, 'a') do |file|
           file.puts(zsh_path_line)
         end
+      end
+    end
+
+    def addSourceBashrcInBashProfile
+      # Set bash_profile sourcing bashrc
+      logger.debug("Setting up .bash_profile to source .bashrc on last")
+      time = Time.now.strftime('%Y%m%d%H%M%S')
+      FileUtils.touch(CONFIG.bash_profile) unless File.exist?(CONFIG.bash_profile)
+      FileUtils.cp(CONFIG.bash_profile, "#{CONFIG.bash_profile}.bak_#{time}") if File.exist?(CONFIG.bash_profile)
+      bash_profile_content = File.read(CONFIG.bash_profile)
+
+      bash_profile_content.gsub!(/if\s+\[\s*-f\s+~?\/\.bashrc\s*\];\s*then\s*\n?\s*(\.|source)\s+~?\/\.bashrc\s*\n?fi\n?/, '')
+      bash_profile_content.gsub!(/^\s*(\.|source)\s+~?\/?\.bashrc\s*\n?/, '')
+
+      File.open(CONFIG.bash_profile, 'w') do |file|
+        file.puts(bash_profile_content)
+      end
+      File.open(CONFIG.bash_profile, 'a') do |file|
+        file.puts("if [ -f ~/.bashrc ]; then")
+        file.puts("  . ~/.bashrc")
+        file.puts("fi")
       end
     end
   end
