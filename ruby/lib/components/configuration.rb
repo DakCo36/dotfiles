@@ -26,6 +26,14 @@ module Components
       FileUtils.mkdir_p(@tmp) unless Dir.exist?(@tmp)
     end
 
+    def contract_path(path)
+      if path.is_a?(String) && path.start_with?(@home)
+        path.sub(@home, '$HOME')
+      else
+        path
+      end
+    end
+
     private
     def generateTimestamp
       Time.now.strftime('%Y%m%d_%H%M%S')

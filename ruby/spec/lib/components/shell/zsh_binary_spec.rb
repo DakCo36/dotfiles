@@ -5,6 +5,7 @@ RSpec.describe Component::ZshBinaryComponent do
   subject(:zsh) { described_class.instance }
   let(:null_logger) { instance_spy(Logger) }
   let(:mock_curl) { instance_spy(Component::CurlComponent) }
+  let(:home_path) { '/home/user' }
   let(:bash_profile_path) { '/home/user/.bash_profile' }
   let(:bashrc_path) { '/home/user/.bashrc' }
   let(:local_path) { '/home/user/.local' }
@@ -13,10 +14,16 @@ RSpec.describe Component::ZshBinaryComponent do
   before do
     allow(zsh).to receive(:logger).and_return(null_logger)
     allow(zsh).to receive(:curl).and_return(mock_curl)
-    allow(Components::Configuration.instance).to receive(:bash_profile).and_return(bash_profile_path)
-    allow(Components::Configuration.instance).to receive(:bashrc).and_return(bashrc_path)
-    allow(Components::Configuration.instance).to receive(:local).and_return(local_path)
+
+    # Mock CONFIG constant to return our test values
+    mock_config = instance_double(Components::Configuration)
+    allow(mock_config).to receive(:bash_profile).and_return(bash_profile_path)
+    allow(mock_config).to receive(:bashrc).and_return(bashrc_path)
+    allow(mock_config).to receive(:local).and_return(local_path)
+    allow(mock_config).to receive(:tmp).and_return('/tmp/test')
+    stub_const("#{described_class}::CONFIG", mock_config)
     stub_const("#{described_class}::TARGET_PATH", target_path)
+
     allow(FileUtils).to receive(:touch)
     allow(FileUtils).to receive(:cp)
     allow(File).to receive(:exist?).and_return(true)
