@@ -9,7 +9,7 @@ RSpec.describe Component::ZshBinaryComponent do
   let(:bash_profile_path) { '/home/user/.bash_profile' }
   let(:bashrc_path) { '/home/user/.bashrc' }
   let(:local_path) { '/home/user/.local' }
-  let(:target_path) { '/home/user/.local/bin' }
+  let(:bin_path) { '/home/user/.local/bin' }
 
   before do
     allow(zsh).to receive(:logger).and_return(null_logger)
@@ -20,9 +20,12 @@ RSpec.describe Component::ZshBinaryComponent do
     allow(mock_config).to receive(:bash_profile).and_return(bash_profile_path)
     allow(mock_config).to receive(:bashrc).and_return(bashrc_path)
     allow(mock_config).to receive(:local).and_return(local_path)
+    allow(mock_config).to receive(:bin).and_return(bin_path)
     allow(mock_config).to receive(:tmp).and_return('/tmp/test')
+    allow(mock_config).to receive(:contract_path) do |path|
+      path.sub('/home/user', '$HOME')
+    end
     stub_const("#{described_class}::CONFIG", mock_config)
-    stub_const("#{described_class}::TARGET_PATH", target_path)
 
     allow(FileUtils).to receive(:touch)
     allow(FileUtils).to receive(:cp)
@@ -258,7 +261,7 @@ RSpec.describe Component::ZshBinaryComponent do
       zsh.send(:addLocalBinPathInBashrc)
 
       # Then
-      expect(file_handle).to have_received(:puts).with(match(/export PATH.*\/\.local\/bin/))
+      expect(file_handle).to have_received(:puts).with("export PATH=\"$HOME/.local/bin:$PATH\"")
     end
 
     it 'already local bin path to .bashrc with absolute path' do
