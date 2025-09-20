@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build --progress plain --no-cache -t shell-test -f test/Dockerfile .
+docker build --progress plain -t shell-test -f test/Dockerfile .

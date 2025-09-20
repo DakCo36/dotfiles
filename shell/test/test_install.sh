@@ -12,11 +12,23 @@ cd /home/testuser/shell && ./install.sh
 
 echo ""
 echo "========================================="
+echo "Debugging .bashrc contents"
+echo "========================================="
+echo "Full contents of ~/.bashrc:"
+cat ~/.bashrc
+echo "========================================="
+echo ""
+
+echo "========================================="
 echo "Verifying installation"
 echo "========================================="
 
 # Source the shell configuration to get PATH updates
 source ~/.bashrc 2>/dev/null || source ~/.bash_profile 2>/dev/null || true
+
+echo "Current PATH after sourcing .bashrc:"
+echo "$PATH"
+echo ""
 
 # Test rbenv installation
 echo -n "Checking rbenv... "

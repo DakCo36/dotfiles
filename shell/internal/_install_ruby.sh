@@ -59,7 +59,21 @@ function install_rbenv() {
   eval "$($RBENV_DIR/bin/rbenv init - 2>&1)"
 
   log_info "Applying on bash..."
-  $RBENV_DIR/bin/rbenv init bash --no-rehash 2>&1
+
+  # Check if rbenv is already in ~/.bashrc
+  if ! grep -q "$RBENV_DIR/bin" ~/.bashrc; then
+    log_info "Adding rbenv to PATH in ~/.bashrc..."
+    sed -i "1i # Added by rbenv installation\nexport PATH=\"$RBENV_DIR/bin:\$PATH\"\n" ~/.bashrc
+    log_info "rbenv PATH added at the beginning of ~/.bashrc"
+  else
+    log_info "rbenv PATH already exists in ~/.bashrc"
+  fi
+
+  # Add rbenv init to bashrc
+  if ! grep -q 'rbenv init' ~/.bashrc; then
+    sed -i '3i # eval rbenv\neval "$(rbenv init - --no-rehash bash)"' ~/.bashrc
+    log_info "rbenv init added to ~/.bashrc"
+  fi
 
   log_info "Successfully, rbenv installed"
 }
