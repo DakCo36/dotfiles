@@ -42,8 +42,8 @@ RUN chmod +x ./shell/install.sh ./shell/test/test_install.sh ./shell/test/test_u
 # Run unit tests BEFORE installation
 RUN ./shell/test/test_units.sh
 
-# Run installation and integration tests (needs sudo)
-RUN sudo ./shell/test/test_install.sh
+# # Run installation and integration tests (needs sudo)
+RUN ./shell/test/test_install.sh
 
 # Default command
 CMD ["/bin/bash", "-l"]

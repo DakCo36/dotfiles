@@ -8,7 +8,14 @@ echo "========================================="
 
 # Run install.sh
 echo "Running install.sh..."
-cd /home/testuser/shell && ./install.sh
+cd /home/testuser/shell
+
+# Should test prerequisite installer and ruby installer separately
+echo "Running prerequisite installer..."
+sudo bash -c "source /home/testuser/shell/internal/_install_prerequisite.sh && install_prerequisite"
+
+echo "Running ruby installer..."
+bash -c "source /home/testuser/shell/internal/_install_ruby.sh && install_ruby"
 
 echo ""
 echo "========================================="
