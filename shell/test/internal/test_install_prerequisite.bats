@@ -43,7 +43,7 @@ teardown() {
   }
 
   # When
-  install_ubuntu_prerequisite
+  run install_ubuntu_prerequisite
 
   # Then
   assert_success

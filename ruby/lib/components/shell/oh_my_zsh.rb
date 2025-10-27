@@ -8,7 +8,7 @@ require 'components/shell/zsh_binary'
 module Component
   # Component for installing oh-my-zsh using curl
   class OhMyZshComponent < BaseComponent
-    include Installable
+    prepend Installable
 
     CONFIG = Components::Configuration.instance
     DOWNLOAD_URL = 'https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh'
@@ -18,8 +18,6 @@ module Component
 
     depends_on Component::CurlComponent
     depends_on Component::ZshBinaryComponent
-
-    private_constant :DOWNLOAD_URL, :TARGET_DIR_PATH, :TMP_SCRIPT_PATH
 
     def available?
       Dir.exist?(TARGET_DIR_PATH)
@@ -39,14 +37,17 @@ module Component
     end
 
     def install!
+      logger.debug("Remove existing oh-my-zsh directory(#{TARGET_DIR_PATH}) if it exists")
       FileUtils.rm_rf(TARGET_DIR_PATH) if Dir.exist?(TARGET_DIR_PATH)
       logger.info('Installing oh-my-zsh')
-      curl.download(DOWNLOAD_URL, TARGET_DIR_PATH)
-      runCmd('sh', TMP_SCRIPT_PATH, showStdout: true)
+      curl.download(DOWNLOAD_URL, TMP_SCRIPT_PATH)
+      File.chmod(0755, TMP_SCRIPT_PATH) if File.exist?(TMP_SCRIPT_PATH)
+      runCmd('sh', '-c', TMP_SCRIPT_PATH, showStdout: true)
     rescue => e
       logger.error("Failed to install oh-my-zsh: #{e}")
       raise e
     ensure
+      logger.debug('Cleaning up temporary files')
       FileUtils.rm_f(TMP_SCRIPT_PATH) if File.exist?(TMP_SCRIPT_PATH)
     end
   end
