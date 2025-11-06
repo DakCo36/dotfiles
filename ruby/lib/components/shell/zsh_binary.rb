@@ -74,7 +74,7 @@ module Component
     def configureAndMake
       logger.info("Configuring zsh")
       withDir(TMP_DIR_PATH) do
-        runCmd('./configure', '--prefix', CONFIG.local, showStdout: true)
+        runCmd('./configure', '--prefix', CONFIG.local, '--with-tcsetpgrp', showStdout: true)
         runCmd('make', '-j', '4')
         runCmd('make', 'install')
       end
