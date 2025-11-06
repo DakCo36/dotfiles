@@ -58,11 +58,11 @@ RSpec.describe Component::ZshBinaryComponent do
   end
 
   describe '#installed?' do
-    it 'returns true when zsh is installed' do
+    it 'returns true when zsh is installed locally' do
       # Given
-      allow(zsh).to receive(:runCmd)
-        .with('which', 'zsh')
-        .and_return(true)
+      local_zsh_path = File.join(bin_path, 'zsh')
+      allow(File).to receive(:exist?).with(local_zsh_path).and_return(true)
+      allow(File).to receive(:executable?).with(local_zsh_path).and_return(true)
       # When
       installed = zsh.installed?
       # Then
@@ -71,8 +71,10 @@ RSpec.describe Component::ZshBinaryComponent do
 
     it 'returns false when zsh is not installed' do
       # Given
+      local_zsh_path = File.join(bin_path, 'zsh')
+      allow(File).to receive(:exist?).with(local_zsh_path).and_return(false)
       allow(zsh).to receive(:runCmd)
-        .with('which','zsh')
+        .with('which', 'zsh')
         .and_raise(RuntimeError)
       # When
       installed = zsh.installed?

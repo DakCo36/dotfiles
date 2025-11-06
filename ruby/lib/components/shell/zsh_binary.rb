@@ -32,8 +32,15 @@ module Component
     end
 
     def installed?
-      available?
-      # TODO: Check zsh is installed with correct version
+      # Check if zsh is installed locally first
+      local_zsh_path = File.join(CONFIG.bin, 'zsh')
+      if File.exist?(local_zsh_path) && File.executable?(local_zsh_path)
+        logger.info("Zsh is installed locally at #{local_zsh_path}")
+        return true
+      end
+
+      logger.info("Zsh is not installed")
+      false
     end
 
     def version
