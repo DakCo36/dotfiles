@@ -10,6 +10,7 @@ RSpec.describe Component::ZshBinaryComponent do
   let(:bashrc_path) { '/home/user/.bashrc' }
   let(:local_path) { '/home/user/.local' }
   let(:bin_path) { '/home/user/.local/bin' }
+  let(:path_fixture) { "#{bin_path}:/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin" }
 
   before do
     allow(zsh).to receive(:logger).and_return(null_logger)
@@ -29,7 +30,6 @@ RSpec.describe Component::ZshBinaryComponent do
 
     allow(FileUtils).to receive(:touch)
     allow(FileUtils).to receive(:cp)
-    allow(File).to receive(:exist?).and_return(true)
   end
 
   describe '#available?' do
@@ -58,9 +58,10 @@ RSpec.describe Component::ZshBinaryComponent do
   end
 
   describe '#installed?' do
-    it 'returns true when zsh is installed locally' do
+    it 'returns true when zsh is installed locally and executable and in PATH' do
       # Given
       local_zsh_path = File.join(bin_path, 'zsh')
+      allow(ENV).to receive(:[]).with('PATH').and_return(path_fixture)
       allow(File).to receive(:exist?).with(local_zsh_path).and_return(true)
       allow(File).to receive(:executable?).with(local_zsh_path).and_return(true)
       # When
@@ -69,13 +70,36 @@ RSpec.describe Component::ZshBinaryComponent do
       expect(installed).to be true
     end
 
-    it 'returns false when zsh is not installed' do
+    it 'returns false when zsh is installed locally but not executable' do
+      # Given
+      local_zsh_path = File.join(bin_path, 'zsh') 
+      allow(ENV).to receive(:[]).with('PATH').and_return(path_fixture)
+      allow(File).to receive(:exist?).with(local_zsh_path).and_return(true)
+      allow(File).to receive(:executable?).with(local_zsh_path).and_return(false)
+      # When
+      installed = zsh.installed?
+      # Then
+      expect(installed).to be false
+    end
+
+    it 'returns false when zsh is not installed locally' do
       # Given
       local_zsh_path = File.join(bin_path, 'zsh')
+      allow(ENV).to receive(:[]).with('PATH').and_return(path_fixture)
       allow(File).to receive(:exist?).with(local_zsh_path).and_return(false)
-      allow(zsh).to receive(:runCmd)
-        .with('which', 'zsh')
-        .and_raise(RuntimeError)
+      allow(File).to receive(:executable?).with(local_zsh_path).and_return(false)
+      # When
+      installed = zsh.installed?
+      # Then
+      expect(installed).to be false
+    end
+
+    it 'returns false when zsh is installed locally and executable but not in PATH' do
+      # Given
+      local_zsh_path = File.join(bin_path, 'zsh')
+      allow(ENV).to receive(:[]).with('PATH').and_return("/usr/local/bin:/bin:/usr/bin")
+      allow(File).to receive(:exist?).with(local_zsh_path).and_return(true)
+      allow(File).to receive(:executable?).with(local_zsh_path).and_return(true)
       # When
       installed = zsh.installed?
       # Then

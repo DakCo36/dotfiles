@@ -34,7 +34,12 @@ module Component
     def installed?
       # Check if zsh is installed locally first
       local_zsh_path = File.join(CONFIG.bin, 'zsh')
-      if File.exist?(local_zsh_path) && File.executable?(local_zsh_path)
+      is_in_path = ENV['PATH']
+        &.to_s
+        &.split(':')
+        &.any? { |path| path == CONFIG.bin }
+
+      if is_in_path && File.exist?(local_zsh_path) && File.executable?(local_zsh_path)
         logger.info("Zsh is installed locally at #{local_zsh_path}")
         return true
       end
