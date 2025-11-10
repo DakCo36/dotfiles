@@ -86,6 +86,7 @@ module Component
       logger.info("Zsh installed successfully.")
     end
 
+    private
     def setPath
       logger.info("Setting PATH to include #{CONFIG.bin}")
       # Set current environment's PATH
@@ -103,6 +104,7 @@ module Component
       addLocalBinPathInBashrc
     end
 
+    private
     def addLocalBinPathInBashrc
       time = Time.now.strftime('%Y%m%d%H%M%S')
       logger.debug("Backup existing .bashrc file to .bashrc.bak_#{time}")
@@ -124,6 +126,7 @@ module Component
       end
     end
 
+    private
     def addSourceBashrcInBashProfile
       # Set bash_profile sourcing bashrc
       logger.debug("Setting up .bash_profile to source .bashrc on last")

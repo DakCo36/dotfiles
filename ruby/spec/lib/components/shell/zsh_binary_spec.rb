@@ -158,6 +158,90 @@ RSpec.describe Component::ZshBinaryComponent do
     end
   end
 
+  describe '#addLocalBinPathInBashrc' do
+    it 'adds local bin path to .bashrc' do
+      # Given
+      original_content = <<~CONTENT
+        export EDITOR=vim
+        export PATH="/usr/local/sometext:$PATH"
+      CONTENT
+
+      allow(File).to receive(:read)
+        .with(bashrc_path)
+        .and_return(original_content)
+
+      file_handle = instance_double(File)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'w')
+        .and_yield(file_handle)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'a')
+        .and_yield(file_handle)
+      allow(file_handle).to receive(:puts)
+
+      # When
+      zsh.send(:addLocalBinPathInBashrc)
+
+      # Then
+      expect(file_handle).to have_received(:puts).with("export PATH=\"$HOME/.local/bin:$PATH\"")
+    end
+
+    it 'already local bin path to .bashrc with absolute path' do
+      # Given
+      original_content = <<~CONTENT
+        export PATH="/usr/local/sometext:$PATH"
+        export PATH="/home/user/.local/bin:$PATH"
+        export EDITOR=vim
+      CONTENT
+
+      allow(File).to receive(:read)
+        .with(bashrc_path)
+        .and_return(original_content)
+
+      file_handle = instance_double(File)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'w')
+        .and_yield(file_handle)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'a')
+        .and_yield(file_handle)
+      allow(file_handle).to receive(:puts)
+
+      # When
+      zsh.send(:addLocalBinPathInBashrc)
+
+      # Then
+      expect(file_handle).not_to have_received(:puts).with(match(/export PATH.*\/\.local\/bin/))
+    end
+
+    it 'already local bin path to .bashrc with relative path' do
+      # Given
+      original_content = <<~CONTENT
+        export PATH="~/.local/bin:$PATH"
+        export EDITOR=vim
+      CONTENT
+
+      allow(File).to receive(:read)
+        .with(bashrc_path)
+        .and_return(original_content)
+
+      file_handle = instance_double(File)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'w')
+        .and_yield(file_handle)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'a')
+        .and_yield(file_handle)
+      allow(file_handle).to receive(:puts)
+
+      # When
+      zsh.send(:addLocalBinPathInBashrc)
+
+      # Then
+      expect(file_handle).not_to have_received(:puts).with(match(/export PATH.*\/\.local\/bin/))
+    end
+  end
+
   describe '#addSourceBashrcInBashProfile' do
     it 'removes existing source .bashrc patterns and adds new one at the end' do
       original_content = <<~CONTENT
@@ -266,70 +350,6 @@ RSpec.describe Component::ZshBinaryComponent do
       # Then - verify empty lines are cleaned up
       expect(file_handle).to have_received(:puts).with(match(/export PATH.*\nexport EDITOR=vim/m))
       expect(file_handle).not_to have_received(:puts).with(match(/\n\n\n/))
-    end
-  end
-
-  describe '#addLocalBinPathInBashrc' do
-    it 'adds local bin path to .bashrc' do
-      # Given
-      original_content = <<~CONTENT
-        export EDITOR=vim
-      CONTENT
-
-      allow(File).to receive(:read).with(bashrc_path).and_return(original_content)
-
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bashrc_path, 'w').and_yield(file_handle)
-      allow(File).to receive(:open).with(bashrc_path, 'a').and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addLocalBinPathInBashrc)
-
-      # Then
-      expect(file_handle).to have_received(:puts).with("export PATH=\"$HOME/.local/bin:$PATH\"")
-    end
-
-    it 'already local bin path to .bashrc with absolute path' do
-      # Given
-      original_content = <<~CONTENT
-        export PATH="/home/user/.local/bin:$PATH"
-        export EDITOR=vim
-      CONTENT
-
-      allow(File).to receive(:read).with(bashrc_path).and_return(original_content)
-
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bashrc_path, 'w').and_yield(file_handle)
-      allow(File).to receive(:open).with(bashrc_path, 'a').and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addLocalBinPathInBashrc)
-
-      # Then
-      expect(file_handle).not_to have_received(:puts).with(match(/export PATH.*\/\.local\/bin/))
-    end
-
-    it 'already local bin path to .bashrc with relative path' do
-      # Given
-      original_content = <<~CONTENT
-        export PATH="~/.local/bin:$PATH"
-        export EDITOR=vim
-      CONTENT
-
-      allow(File).to receive(:read).with(bashrc_path).and_return(original_content)
-
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bashrc_path, 'w').and_yield(file_handle)
-      allow(File).to receive(:open).with(bashrc_path, 'a').and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addLocalBinPathInBashrc)
-
-      # Then
-      expect(file_handle).not_to have_received(:puts).with(match(/export PATH.*\/\.local\/bin/))
     end
   end
 end
