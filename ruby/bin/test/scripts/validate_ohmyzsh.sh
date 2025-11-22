@@ -1,4 +1,7 @@
-# 핵심 파일들이 있는지 확인
+set -e 
+
+echo "Validating oh-my-zsh installation..."
+
 test -f ~/.oh-my-zsh/oh-my-zsh.sh     && echo "✓ Main script exists" || echo "✗ Main script does not exist"
 test -f ~/.oh-my-zsh/tools/upgrade.sh && echo "✓ Tools exist"        || echo "✗ Tools do not exist"
 test -d ~/.oh-my-zsh/lib              && echo "✓ Library exists"     || echo "✗ Library does not exist"
