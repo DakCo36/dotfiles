@@ -88,6 +88,7 @@ module Component
 
     private
     def setPath
+      # Called explicitly in install method
       logger.info("Setting PATH to include #{CONFIG.bin}")
       # Set current environment's PATH
       paths = ENV['PATH'].to_s.split(':').reject do |path|
