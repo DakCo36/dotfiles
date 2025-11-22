@@ -29,7 +29,7 @@ RSpec.describe Component::OhMyZshComponent do
 
     it 'returns false when target directory does not exist' do
       allow(Dir)
-        .to receive(:exists?)
+        .to receive(:exist?)
         .with(described_class::TARGET_DIR_PATH)
         .and_return(false)
 
