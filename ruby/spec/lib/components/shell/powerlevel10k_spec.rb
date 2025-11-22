@@ -160,7 +160,40 @@ RSpec.describe Component::Powerlevel10kComponent do
 
       expect(file_double)
         .to have_received(:write)
-        .with(match(/ZSH_THEME="powerlevel10k\/powerlevel10k"\n$/))
+        .with(match(/ZSH_THEME="powerlevel10k\/powerlevel10k"/))
+    end
+
+    it 'add source .p10k.zsh to .zshrc file if not exist' do
+      file_double = instance_double(File)
+      allow(file_double).to receive(:write)
+
+      zshrc_content = <<~EOF
+        # Somthing blahblah
+        ANOTHER=VARIABLE
+        # Another thing blahblah
+        ANOTHER_VARIABLE=VALUE
+      EOF
+
+      allow(File)
+        .to receive(:exist?)
+        .with(described_class::ZSHRC)
+        .and_return(true)
+
+      allow(File)
+        .to receive(:read)
+        .with(described_class::ZSHRC)
+        .and_return(zshrc_content)
+
+      allow(File)
+        .to receive(:open)
+        .with(described_class::ZSHRC, 'w')
+        .and_yield(file_double)
+        
+      p10k.send(:setTheme)
+
+      expect(file_double)
+        .to have_received(:write)
+        .with(match(/\[\[ ! -f ~\/.p10k.zsh \]\] \|\| source ~\/.p10k.zsh\n$/))
     end
   end
 

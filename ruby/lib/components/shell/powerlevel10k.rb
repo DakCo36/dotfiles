@@ -68,6 +68,13 @@ module Component
         logger.warn("ZSH_THEME not found in .zshrc, adding at the end")
         zshrc_content << "\nZSH_THEME=\"powerlevel10k/powerlevel10k\"\n"
       end
+
+      if zshrc_content.match?(/source.*\.p10k\.zsh/)
+        logger.info("source .p10k.zsh already exists in .zshrc, skipping")
+      else
+        logger.info("Adding source .p10k.zsh to .zshrc")
+        zshrc_content << "\n[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh\n"
+      end
       
       File.open(ZSHRC, 'w') do |file|
         file.write(zshrc_content)
