@@ -6,6 +6,7 @@ ENV PATH="/home/testuser/.rbenv/shims:/home/testuser/.rbenv/bin:${PATH}"
 COPY --chown=testuser:testuser lib /home/testuser/ruby/lib
 COPY --chown=testuser:testuser spec /home/testuser/ruby/spec
 COPY --chown=testuser:testuser bin /home/testuser/ruby/bin
+COPY --chown=testuser:testuser data /home/testuser/ruby/data
 COPY --chown=testuser:testuser Gemfile /home/testuser/ruby/Gemfile
 COPY --chown=testuser:testuser Gemfile.lock /home/testuser/ruby/Gemfile.lock
 
@@ -21,6 +22,7 @@ RUN gem install bundler && \
 RUN bundle exec rspec .
 RUN bundle exec ruby bin/install.rb
 
-# Valicate Installation
+# Validate Installation
 # ohmyzsh is installed
-RUN bash scripts/validate_ohmyzsh.sh
+RUN bash bin/test/scripts/validate_ohmyzsh.sh
+RUN bash bin/test/scripts/validate_p10k.sh
