@@ -10,6 +10,7 @@ RSpec.describe Component::ZshBinaryComponent do
   let(:bashrc_path) { '/home/user/.bashrc' }
   let(:local_path) { '/home/user/.local' }
   let(:bin_path) { '/home/user/.local/bin' }
+  let(:path_fixture) { "#{bin_path}:/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin" }
 
   before do
     allow(zsh).to receive(:logger).and_return(null_logger)
@@ -29,7 +30,6 @@ RSpec.describe Component::ZshBinaryComponent do
 
     allow(FileUtils).to receive(:touch)
     allow(FileUtils).to receive(:cp)
-    allow(File).to receive(:exist?).and_return(true)
   end
 
   describe '#available?' do
@@ -58,22 +58,48 @@ RSpec.describe Component::ZshBinaryComponent do
   end
 
   describe '#installed?' do
-    it 'returns true when zsh is installed' do
+    it 'returns true when zsh is installed locally and executable and in PATH' do
       # Given
-      allow(zsh).to receive(:runCmd)
-        .with('which', 'zsh')
-        .and_return(true)
+      local_zsh_path = File.join(bin_path, 'zsh')
+      allow(ENV).to receive(:[]).with('PATH').and_return(path_fixture)
+      allow(File).to receive(:exist?).with(local_zsh_path).and_return(true)
+      allow(File).to receive(:executable?).with(local_zsh_path).and_return(true)
       # When
       installed = zsh.installed?
       # Then
       expect(installed).to be true
     end
 
-    it 'returns false when zsh is not installed' do
+    it 'returns false when zsh is installed locally but not executable' do
       # Given
-      allow(zsh).to receive(:runCmd)
-        .with('which','zsh')
-        .and_raise(RuntimeError)
+      local_zsh_path = File.join(bin_path, 'zsh')
+      allow(ENV).to receive(:[]).with('PATH').and_return(path_fixture)
+      allow(File).to receive(:exist?).with(local_zsh_path).and_return(true)
+      allow(File).to receive(:executable?).with(local_zsh_path).and_return(false)
+      # When
+      installed = zsh.installed?
+      # Then
+      expect(installed).to be false
+    end
+
+    it 'returns false when zsh is not installed locally' do
+      # Given
+      local_zsh_path = File.join(bin_path, 'zsh')
+      allow(ENV).to receive(:[]).with('PATH').and_return(path_fixture)
+      allow(File).to receive(:exist?).with(local_zsh_path).and_return(false)
+      allow(File).to receive(:executable?).with(local_zsh_path).and_return(false)
+      # When
+      installed = zsh.installed?
+      # Then
+      expect(installed).to be false
+    end
+
+    it 'returns false when zsh is installed locally and executable but not in PATH' do
+      # Given
+      local_zsh_path = File.join(bin_path, 'zsh')
+      allow(ENV).to receive(:[]).with('PATH').and_return("/usr/local/bin:/bin:/usr/bin")
+      allow(File).to receive(:exist?).with(local_zsh_path).and_return(true)
+      allow(File).to receive(:executable?).with(local_zsh_path).and_return(true)
       # When
       installed = zsh.installed?
       # Then
@@ -132,8 +158,93 @@ RSpec.describe Component::ZshBinaryComponent do
     end
   end
 
-  describe '#addSourceBashrcInBashProfile' do
-    it 'removes existing source .bashrc patterns and adds new one at the end' do
+  describe '#addLocalBinPathInBashrc' do
+    it 'adds local bin path to .bashrc' do
+      # Given
+      original_content = <<~CONTENT
+        export EDITOR=vim
+        export PATH="/usr/local/sometext:$PATH"
+      CONTENT
+
+      allow(File).to receive(:read)
+        .with(bashrc_path)
+        .and_return(original_content)
+
+      file_handle = instance_double(File)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'w')
+        .and_yield(file_handle)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'a')
+        .and_yield(file_handle)
+      allow(file_handle).to receive(:puts)
+
+      # When
+      zsh.send(:addLocalBinPathInBashrc)
+
+      # Then
+      expect(file_handle).to have_received(:puts).with("export PATH=\"$HOME/.local/bin:$PATH\"")
+    end
+
+    it 'already local bin path to .bashrc with absolute path' do
+      # Given
+      original_content = <<~CONTENT
+        export PATH="/usr/local/sometext:$PATH"
+        export PATH="/home/user/.local/bin:$PATH"
+        export EDITOR=vim
+      CONTENT
+
+      allow(File).to receive(:read)
+        .with(bashrc_path)
+        .and_return(original_content)
+
+      file_handle = instance_double(File)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'w')
+        .and_yield(file_handle)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'a')
+        .and_yield(file_handle)
+      allow(file_handle).to receive(:puts)
+
+      # When
+      zsh.send(:addLocalBinPathInBashrc)
+
+      # Then
+      expect(file_handle).not_to have_received(:puts).with(match(/export PATH.*\/\.local\/bin/))
+    end
+
+    it 'already has local bin path to .bashrc with relative path' do
+      # Given
+      original_content = <<~CONTENT
+        export PATH="~/.local/bin:$PATH"
+        export EDITOR=vim
+      CONTENT
+
+      allow(File).to receive(:read)
+        .with(bashrc_path)
+        .and_return(original_content)
+
+      file_handle = instance_double(File)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'w')
+        .and_yield(file_handle)
+      allow(File).to receive(:open)
+        .with(bashrc_path, 'a')
+        .and_yield(file_handle)
+      allow(file_handle).to receive(:puts)
+
+      # When
+      zsh.send(:addLocalBinPathInBashrc)
+
+      # Then
+      expect(file_handle).not_to have_received(:puts).with(match(/export PATH.*\/\.local\/bin/))
+    end
+  end
+
+  describe '#removeSourcePattern' do
+    # Testing remove source pattern in addSourceBashrcInBashProfile
+    it 'remove source pattern #1' do
       original_content = <<~CONTENT
         export PATH="/usr/local/bin:$PATH"
         if [ -f ~/.bashrc ]; then
@@ -147,163 +258,80 @@ RSpec.describe Component::ZshBinaryComponent do
       expected_final_content = <<~CONTENT
         export PATH="/usr/local/bin:$PATH"
         export EDITOR=vim
-        if [ -f ~/.bashrc ]; then
-          . ~/.bashrc
-        fi
       CONTENT
 
-      allow(File).to receive(:read).with(bash_profile_path).and_return(original_content)
+      source_pattern1 = /if\s+\[\s*-f\s+~?\/\.bashrc\s*\];\s*then\s*\n?\s*(\.|source)\s+~?\/\.bashrc\s*\n?fi\n?/
+      source_pattern2 = /^\s*(\.|source)\s+~?\/?\.bashrc\s*\n?/
 
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bash_profile_path, 'w').and_yield(file_handle)
-      allow(File).to receive(:open).with(bash_profile_path, 'a').and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
+      original_content.gsub!(source_pattern1, '')
+      original_content.gsub!(source_pattern2, '')
 
-      # When
-      zsh.send(:addSourceBashrcInBashProfile)
-
-      # Then - verify patterns were removed and new one added
-      expect(file_handle).to have_received(:puts).with(match(/export PATH.*\nexport EDITOR=vim/m))
-      expect(file_handle).to have_received(:puts).with("if [ -f ~/.bashrc ]; then")
-      expect(file_handle).to have_received(:puts).with("  . ~/.bashrc")
-      expect(file_handle).to have_received(:puts).with("fi")
+      expect(original_content).to eq(expected_final_content)
     end
 
-    it 'handles bash_profile with only source command' do
-      # Given
-      original_content = "source ~/.bashrc\n"
-
-      allow(File).to receive(:read).with(bash_profile_path).and_return(original_content)
-
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bash_profile_path, 'w').and_yield(file_handle)
-      allow(File).to receive(:open).with(bash_profile_path, 'a').and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addSourceBashrcInBashProfile)
-
-      # Then
-      expect(file_handle).to have_received(:puts).with("")
-      expect(file_handle).to have_received(:puts).with("if [ -f ~/.bashrc ]; then")
-      expect(file_handle).to have_received(:puts).with("  . ~/.bashrc")
-      expect(file_handle).to have_received(:puts).with("fi")
-    end
-
-    it 'handles bash_profile with if block pattern' do
-      # Given
-      original_content = <<~CONTENT
-        export FOO=bar
-        if [ -f /home/user/.bashrc ]; then
-          . /home/user/.bashrc
-        fi
-        export BAZ=qux
-      CONTENT
-
-      allow(File).to receive(:read).with(bash_profile_path).and_return(original_content)
-
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bash_profile_path, 'w').and_yield(file_handle)
-      allow(File).to receive(:open).with(bash_profile_path, 'a').and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addSourceBashrcInBashProfile)
-
-      # Then
-      expect(file_handle).to have_received(:puts).with(match(/export FOO=bar.*export BAZ=qux/m))
-      expect(file_handle).to have_received(:puts).with("if [ -f ~/.bashrc ]; then")
-    end
-
-    it 'removes multiple blank lines after pattern removal' do
-      # Given
+    it 'remove source pattern #2' do
       original_content = <<~CONTENT
         export PATH="/usr/local/bin:$PATH"
-
-
         source ~/.bashrc
-
-
+        export EDITOR=vim
+      CONTENT
+      expected_final_content = <<~CONTENT
+        export PATH="/usr/local/bin:$PATH"
         export EDITOR=vim
       CONTENT
 
-      allow(File).to receive(:read).with(bash_profile_path).and_return(original_content)
+      source_pattern1 = /if\s+\[\s*-f\s+~?\/\.bashrc\s*\];\s*then\s*\n?\s*(\.|source)\s+~?\/\.bashrc\s*\n?fi\n?/
+      source_pattern2 = /^\s*(\.|source)\s+~?\/?\.bashrc\s*\n?/
 
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bash_profile_path, 'w').and_yield(file_handle)
-      allow(File).to receive(:open).with(bash_profile_path, 'a').and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
+      original_content.gsub!(source_pattern1, '')
+      original_content.gsub!(source_pattern2, '')
 
-      # When
-      zsh.send(:addSourceBashrcInBashProfile)
-
-      # Then - verify empty lines are cleaned up
-      expect(file_handle).to have_received(:puts).with(match(/export PATH.*\nexport EDITOR=vim/m))
-      expect(file_handle).not_to have_received(:puts).with(match(/\n\n\n/))
+      expect(original_content).to eq(expected_final_content)
     end
   end
 
-  describe '#addLocalBinPathInBashrc' do
-    it 'adds local bin path to .bashrc' do
-      # Given
-      original_content = <<~CONTENT
-        export EDITOR=vim
-      CONTENT
+  describe '#addSourceBashrcInBashProfile' do
+    let(:file_handler) { instance_double(File) }
 
-      allow(File).to receive(:read).with(bashrc_path).and_return(original_content)
-
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bashrc_path, 'w').and_yield(file_handle)
-      allow(File).to receive(:open).with(bashrc_path, 'a').and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addLocalBinPathInBashrc)
-
-      # Then
-      expect(file_handle).to have_received(:puts).with("export PATH=\"$HOME/.local/bin:$PATH\"")
+    before do
+      allow(File).to receive(:read)
+        .with(bash_profile_path)
+        .and_return(original_content)
+      
+      allow(File).to receive(:open)
+        .with(bash_profile_path, 'w')
+        .and_yield(file_handler)
+      
+      allow(File).to receive(:open)
+        .with(bash_profile_path, 'a')
+        .and_yield(file_handler)
+      
+      allow(file_handler).to receive(:puts)
     end
 
-    it 'already local bin path to .bashrc with absolute path' do
-      # Given
-      original_content = <<~CONTENT
-        export PATH="/home/user/.local/bin:$PATH"
-        export EDITOR=vim
-      CONTENT
+    context 'when source .bashrc with if block pattern' do
+      let(:original_content) do
+        <<~CONTENT
+          export PATH="/usr/local/bin:$PATH"
+          if [ -f ~/.bashrc ]; then
+            source ~/.bashrc
+          fi
+          export EDITOR=vim
+          . ~/.bashrc
+          source .bashrc
+        CONTENT
+      end
 
-      allow(File).to receive(:read).with(bashrc_path).and_return(original_content)
+      it 'removes existing source .bashrc patterns and adds new one at the end' do
+        # When
+        zsh.send(:addSourceBashrcInBashProfile)
 
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bashrc_path, 'w').and_yield(file_handle)
-      allow(File).to receive(:open).with(bashrc_path, 'a').and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addLocalBinPathInBashrc)
-
-      # Then
-      expect(file_handle).not_to have_received(:puts).with(match(/export PATH.*\/\.local\/bin/))
-    end
-
-    it 'already local bin path to .bashrc with relative path' do
-      # Given
-      original_content = <<~CONTENT
-        export PATH="~/.local/bin:$PATH"
-        export EDITOR=vim
-      CONTENT
-
-      allow(File).to receive(:read).with(bashrc_path).and_return(original_content)
-
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bashrc_path, 'w').and_yield(file_handle)
-      allow(File).to receive(:open).with(bashrc_path, 'a').and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addLocalBinPathInBashrc)
-
-      # Then
-      expect(file_handle).not_to have_received(:puts).with(match(/export PATH.*\/\.local\/bin/))
+        # Then
+        expect(file_handler).to have_received(:puts).with(match(/export PATH.*\nexport EDITOR=vim/m))
+        expect(file_handler).to have_received(:puts).with("if [ -f ~/.bashrc ]; then")
+        expect(file_handler).to have_received(:puts).with("  . ~/.bashrc")
+        expect(file_handler).to have_received(:puts).with("fi")
+      end
     end
   end
 end

@@ -32,8 +32,20 @@ module Component
     end
 
     def installed?
-      available?
-      # TODO: Check zsh is installed with correct version
+      # Check if zsh is installed locally first
+      local_zsh_path = File.join(CONFIG.bin, 'zsh')
+      is_in_path = ENV['PATH']
+        &.to_s
+        &.split(':')
+        &.any? { |path| path == CONFIG.bin }
+
+      if is_in_path && File.exist?(local_zsh_path) && File.executable?(local_zsh_path)
+        logger.info("Zsh is installed locally at #{local_zsh_path}")
+        return true
+      end
+
+      logger.info("Zsh is not installed")
+      false
     end
 
     def version
@@ -67,14 +79,16 @@ module Component
     def configureAndMake
       logger.info("Configuring zsh")
       withDir(TMP_DIR_PATH) do
-        runCmd('./configure', '--prefix', CONFIG.local, showStdout: true)
+        runCmd('./configure', '--prefix', CONFIG.local, '--with-tcsetpgrp', showStdout: true)
         runCmd('make', '-j', '4')
         runCmd('make', 'install')
       end
       logger.info("Zsh installed successfully.")
     end
 
+    private
     def setPath
+      # Called explicitly in install method
       logger.info("Setting PATH to include #{CONFIG.bin}")
       # Set current environment's PATH
       paths = ENV['PATH'].to_s.split(':').reject do |path|
@@ -91,6 +105,7 @@ module Component
       addLocalBinPathInBashrc
     end
 
+    private
     def addLocalBinPathInBashrc
       time = Time.now.strftime('%Y%m%d%H%M%S')
       logger.debug("Backup existing .bashrc file to .bashrc.bak_#{time}")
@@ -112,6 +127,7 @@ module Component
       end
     end
 
+    private
     def addSourceBashrcInBashProfile
       # Set bash_profile sourcing bashrc
       logger.debug("Setting up .bash_profile to source .bashrc on last")
