@@ -25,7 +25,6 @@ module Component
 
     def installed?
       available?
-      # TODO: Check if oh-my-zsh is installed with correct version or configuration
     end
 
     def install
