@@ -214,7 +214,7 @@ RSpec.describe Component::ZshBinaryComponent do
       expect(file_handle).not_to have_received(:puts).with(match(/export PATH.*\/\.local\/bin/))
     end
 
-    it 'already local bin path to .bashrc with relative path' do
+    it 'already has local bin path to .bashrc with relative path' do
       # Given
       original_content = <<~CONTENT
         export PATH="~/.local/bin:$PATH"
