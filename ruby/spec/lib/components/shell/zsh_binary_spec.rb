@@ -72,7 +72,7 @@ RSpec.describe Component::ZshBinaryComponent do
 
     it 'returns false when zsh is installed locally but not executable' do
       # Given
-      local_zsh_path = File.join(bin_path, 'zsh') 
+      local_zsh_path = File.join(bin_path, 'zsh')
       allow(ENV).to receive(:[]).with('PATH').and_return(path_fixture)
       allow(File).to receive(:exist?).with(local_zsh_path).and_return(true)
       allow(File).to receive(:executable?).with(local_zsh_path).and_return(false)
