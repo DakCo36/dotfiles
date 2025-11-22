@@ -168,7 +168,7 @@ RSpec.describe Component::Powerlevel10kComponent do
       allow(file_double).to receive(:write)
 
       zshrc_content = <<~EOF
-        # Somthing blahblah
+        # Something blahblah
         ANOTHER=VARIABLE
         # Another thing blahblah
         ANOTHER_VARIABLE=VALUE
