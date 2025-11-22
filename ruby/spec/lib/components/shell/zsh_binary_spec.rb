@@ -275,7 +275,6 @@ RSpec.describe Component::ZshBinaryComponent do
         source ~/.bashrc
         export EDITOR=vim
       CONTENT
-      
       expected_final_content = <<~CONTENT
         export PATH="/usr/local/bin:$PATH"
         export EDITOR=vim
