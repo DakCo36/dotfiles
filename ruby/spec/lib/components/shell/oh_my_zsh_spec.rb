@@ -15,6 +15,30 @@ RSpec.describe Component::OhMyZshComponent do
     allow(oh_my_zsh).to receive(:logger).and_return(mock_logger)
   end
 
+  describe '#available?' do
+    it 'returns true when target directory exists' do
+      allow(Dir)
+        .to receive(:exist?)
+        .with(described_class::TARGET_DIR_PATH)
+        .and_return(true)
+
+      available = oh_my_zsh.available?
+
+      expect(available).to be true
+    end
+
+    it 'returns false when target directory does not exist' do
+      allow(Dir)
+        .to receive(:exist?)
+        .with(described_class::TARGET_DIR_PATH)
+        .and_return(false)
+
+      available = oh_my_zsh.available?
+
+      expect(available).to be false
+    end
+  end
+
   describe '#installed?' do
     it 'returns true when target directory exists' do
       allow(Dir)
