@@ -109,8 +109,10 @@ RSpec.describe Component::OhMyZshComponent do
       it 'replaces the existing plugins array' do
         # Given
         original_content = <<~CONTENT
+          # Welcome to oh-my-zsh!
           export ZSH="$HOME/.oh-my-zsh"
           ZSH_THEME="robbyrussell"
+          # plugins=(git)
           plugins=(git)
           source $ZSH/oh-my-zsh.sh
         CONTENT
@@ -129,6 +131,7 @@ RSpec.describe Component::OhMyZshComponent do
         # Then
         expect(file_handle).to have_received(:write) do |content|
           expect(content).to match(/plugins=\([^)\n]+\)/)
+          expect(content).to include(/\# plugins=\(git\)/)
         end
       end
     end

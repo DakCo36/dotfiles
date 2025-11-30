@@ -74,7 +74,7 @@ module Component
       end
       plugins_string += ")"
 
-      if zshrc_content.gsub!(/^[^#]*plugins=\([^)]*\)/, "#{plugins_string}")
+      if zshrc_content.gsub!(/^[^#]*plugins=\([^)]*\)/m, "#{plugins_string}")
         logger.info("Updated plugins in .zshrc")
       else
         logger.warn("plugins=() not found in .zshrc")
