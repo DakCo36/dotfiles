@@ -82,6 +82,13 @@ RSpec.describe Component::OhMyZshComponent do
         allow(mock_curl).to receive(:download).and_return(true)
         allow(oh_my_zsh).to receive(:runCmd).with('sh', '-c', described_class::TMP_SCRIPT_PATH, showStdout: true).and_return(true)
         allow(FileUtils).to receive(:rm_rf).with(described_class::TARGET_DIR_PATH)
+        
+        # Mock .zshrc file for configure step
+        zshrc_path = described_class::ZSHRC
+        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
+        allow(File).to receive(:read).with(zshrc_path).and_return("plugins=(git)")
+        allow(File).to receive(:open).with(zshrc_path, 'w').and_yield(double('file', write: true))
 
         oh_my_zsh.install
 
@@ -89,6 +96,84 @@ RSpec.describe Component::OhMyZshComponent do
         expect(mock_zsh_binary).to have_received(:available?)
         expect(mock_curl).to have_received(:download).with(described_class::DOWNLOAD_URL, described_class::TMP_SCRIPT_PATH)
         expect(oh_my_zsh).to have_received(:runCmd).with('sh', '-c', described_class::TMP_SCRIPT_PATH, showStdout: true)
+      end
+    end
+  end
+
+  # skip configure, because it just calls setPlugins
+
+  describe '#setPlugins' do
+    let(:zshrc_path) { described_class::ZSHRC }
+    
+    context 'when plugins=() already exists in .zshrc' do
+      it 'replaces the existing plugins array' do
+        # Given
+        original_content = <<~CONTENT
+          # Welcome to oh-my-zsh!
+          export ZSH="$HOME/.oh-my-zsh"
+          ZSH_THEME="robbyrussell"
+          # plugins=(git)
+          plugins=(git)
+          source $ZSH/oh-my-zsh.sh
+        CONTENT
+        
+        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
+        allow(File).to receive(:read).with(zshrc_path).and_return(original_content)
+        
+        file_handle = instance_double(File)
+        allow(File).to receive(:open).with(zshrc_path, 'w').and_yield(file_handle)
+        allow(file_handle).to receive(:write)
+        
+        # When
+        oh_my_zsh.send(:setPlugins)
+        
+        # Then
+        expect(file_handle).to have_received(:write) do |content|
+          expect(content).to match(/plugins=\([^)\n]+\)/)
+          expect(content).to include(/\# plugins=\(git\)/)
+        end
+      end
+    end
+    
+    context 'when plugins=() does not exist in .zshrc' do
+      it 'appends plugins configuration to the file' do
+        # Given
+        original_content = <<~CONTENT
+          export ZSH="$HOME/.oh-my-zsh"
+          ZSH_THEME="robbyrussell"
+          source $ZSH/oh-my-zsh.sh
+        CONTENT
+        
+        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
+        allow(File).to receive(:read).with(zshrc_path).and_return(original_content)
+        
+        file_handle = instance_double(File)
+        allow(File).to receive(:open).with(zshrc_path, 'w').and_yield(file_handle)
+        allow(file_handle).to receive(:write)
+        
+        # When
+        oh_my_zsh.send(:setPlugins)
+        
+        # Then
+        expect(file_handle).to have_received(:write) do |content|
+          expect(content).to include('# oh-my-zsh plugins configuration')
+          expect(content).to match(/plugins=\([^)\n]+\)/)
+        end
+      end
+    end
+    
+    context 'when .zshrc file does not exist' do
+      it 'raises an error' do
+        # Given
+        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:exist?).with(zshrc_path).and_return(false)
+        
+        # When & Then
+        expect {
+          oh_my_zsh.send(:setPlugins)
+        }.to raise_error(RuntimeError, '.zshrc file not found')
       end
     end
   end
