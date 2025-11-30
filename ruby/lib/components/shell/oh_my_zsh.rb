@@ -17,7 +17,7 @@ module Component
     TMP_SCRIPT_PATH = File.join(CONFIG.tmp, 'install-oh-my-zsh.sh')
 
     ZSHRC = File.join(CONFIG.home, '.zshrc')
-    PLUGINS = ['git', 'python', 'systemd', 'docker', 'pip', 'command-not-found', 'docker-compose']
+    PLUGINS = ['git', 'ruby', 'python', 'systemd', 'docker', 'pip', 'command-not-found', 'docker-compose']
 
     depends_on Component::CurlComponent
     depends_on Component::ZshBinaryComponent
@@ -68,17 +68,17 @@ module Component
 
       zshrc_content = File.read(ZSHRC)
       
-      plugins_string = "plugins=(\n"
+      plugins_string = "plugins=("
       PLUGINS.each do |plugin|
-        plugins_string += " #{plugin}\n"
+        plugins_string += " #{plugin}"
       end
       plugins_string += ")"
 
-      if zshrc_content.gsub!(/plugins=\([^)]*\)/, plugins_string)
+      if zshrc_content.gsub!(/^[^#]*plugins=\([^)]*\)/, "#{plugins_string}")
         logger.info("Updated plugins in .zshrc")
       else
         logger.warn("plugins=() not found in .zshrc")
-        zshrc_content << "\n# oh-my-zsh plugins configuration\nplugins=(#{plugins_string})\n"
+        zshrc_content << "\n# oh-my-zsh plugins configuration\n#{plugins_string}\n"
       end
 
       File.open(ZSHRC, 'w') do |file|
