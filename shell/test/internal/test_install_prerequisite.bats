@@ -15,6 +15,18 @@ setup() {
     "already_installed_package"
   )
 
+  export ROCKY_PACKAGES=(
+    "package1"
+    "package2"
+    "already_installed_package"
+  )
+
+  export OPENSUSE_PACKAGES=(
+    "package1"
+    "package2"
+    "already_installed_package"
+  )
+
   log_debug() { :; }
   log_info() { :; }
   log_warning() { :; }
@@ -47,5 +59,65 @@ teardown() {
 
   # Then
   assert_success
-  # assert_file_contains "$BATS_TEST_LOG" "Run apt-get update"
+  assert_file_contains "$BATS_TEST_LOG" "Run apt-get update"
+}
+
+@test "test_install_rocky_prerequisite" {
+  sudo() {
+    if [[ "$1" == "dnf" && "$2" == "makecache" ]]; then
+      echo "Run dnf makecache" >> "$BATS_TEST_LOG"
+    elif [[ "$1" == "dnf" && "$2" == "install" ]]; then
+      echo "Run dnf install -y $3" >> "$BATS_TEST_LOG"
+    else
+      echo "Unknown command: $*" >> "$BATS_TEST_LOG"
+    fi
+  }
+
+  rpm() {
+    if [[ "$1" == "-q" ]]; then
+      if [[ "$2" == "already_installed_package" ]]; then
+        return 0
+      else
+        return 1
+      fi
+    fi
+  }
+
+  run install_rocky_prerequisite
+
+  assert_success
+  assert_file_contains "$BATS_TEST_LOG" "Run dnf makecache"
+  assert_file_contains "$BATS_TEST_LOG" "Run dnf install -y package1"
+  assert_file_contains "$BATS_TEST_LOG" "Run dnf install -y package2"
+  refute_file_contains "$BATS_TEST_LOG" "already_installed_package"
+}
+
+@test "test_install_opensuse_prerequisite" {
+  sudo() {
+    if [[ "$1" == "zypper" && "$2" == "refresh" ]]; then
+      echo "Run zypper refresh" >> "$BATS_TEST_LOG"
+    elif [[ "$1" == "zypper" && "$2" == "install" ]]; then
+      echo "Run zypper install -y $3" >> "$BATS_TEST_LOG"
+    else
+      echo "Unknown command: $*" >> "$BATS_TEST_LOG"
+    fi
+  }
+
+  rpm() {
+    if [[ "$1" == "-q" ]]; then
+      if [[ "$2" == "already_installed_package" ]]; then
+        return 0
+      else
+        return 1
+      fi
+    fi
+  }
+
+  run install_opensuse_prerequisite
+
+  assert_success
+  assert_file_contains "$BATS_TEST_LOG" "Run zypper refresh"
+  assert_file_contains "$BATS_TEST_LOG" "Run zypper install -y package1"
+  assert_file_contains "$BATS_TEST_LOG" "Run zypper install -y package2"
+  refute_file_contains "$BATS_TEST_LOG" "already_installed_package"
 }

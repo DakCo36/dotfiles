@@ -2,7 +2,7 @@
 
 install.sh은 Bash 를 이용하여 Ruby를 설치하는 스크립트와 관련 테스트를 포함합니다.
 
-현재는 Ubuntu만 지원합니다.
+현재는 Ubuntu, Rocky Linux, openSUSE를 지원합니다.
 
 ## 설치 방법
 

@@ -1,6 +1,7 @@
 # Shell Installation Test with Docker
 
 This directory contains Docker-based testing for the shell installation script.
+For multi-distribution images (Ubuntu, Rocky Linux, openSUSE), see `../docker-test`.
 
 ## Purpose
 
