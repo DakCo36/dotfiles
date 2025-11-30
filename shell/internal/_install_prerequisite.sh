@@ -23,6 +23,38 @@ UBUNTU_PACKAGES=(
   "bison"
 )
 
+ROCKY_PACKAGES=(
+  "gcc"
+  "gcc-c++"
+  "make"
+  "openssl-devel"
+  "readline-devel"
+  "libyaml-devel"
+  "gmp-devel"
+  "zlib-devel"
+  "ncurses-devel"
+  "libffi-devel"
+  "gdbm-devel"
+  "autoconf"
+  "bison"
+)
+
+OPENSUSE_PACKAGES=(
+  "gcc"
+  "gcc-c++"
+  "make"
+  "libopenssl-devel"
+  "readline-devel"
+  "libyaml-devel"
+  "gmp-devel"
+  "zlib-devel"
+  "ncurses-devel"
+  "libffi-devel"
+  "gdbm-devel"
+  "autoconf"
+  "bison"
+)
+
 function install_ubuntu_prerequisite() {
   log_info "Updating package list..."
   sudo apt-get update &>> "$INSTALL_LOG"
@@ -32,6 +64,36 @@ function install_ubuntu_prerequisite() {
     if ! dpkg -s "${package}" &>/dev/null; then
       log_info "Installing $package..."
       sudo apt-get install -y "$package" &>> "$INSTALL_LOG"
+    else
+      log_info "$package is already installed."
+    fi
+  done
+}
+
+function install_rocky_prerequisite() {
+  log_info "Updating package metadata..."
+  sudo dnf makecache &>> "$INSTALL_LOG"
+
+  log_info "Installing Rocky Linux prerequisites..."
+  for package in "${ROCKY_PACKAGES[@]}"; do
+    if ! rpm -q "${package}" &>/dev/null; then
+      log_info "Installing $package..."
+      sudo dnf install -y "$package" &>> "$INSTALL_LOG"
+    else
+      log_info "$package is already installed."
+    fi
+  done
+}
+
+function install_opensuse_prerequisite() {
+  log_info "Refreshing package list..."
+  sudo zypper refresh &>> "$INSTALL_LOG"
+
+  log_info "Installing openSUSE prerequisites..."
+  for package in "${OPENSUSE_PACKAGES[@]}"; do
+    if ! rpm -q "${package}" &>/dev/null; then
+      log_info "Installing $package..."
+      sudo zypper install -y "$package" &>> "$INSTALL_LOG"
     else
       log_info "$package is already installed."
     fi
@@ -57,12 +119,25 @@ function install_prerequisite() {
     . /etc/os-release
   fi
 
-  if [[ "$ID" == "ubuntu" ]]; then
-    install_ubuntu_prerequisite
-  else
-    log_error "Unsupported OS: $ID"
-    return 1
-  fi
+  case "$ID" in
+    "ubuntu")
+      install_ubuntu_prerequisite
+      ;;
+    "rocky")
+      install_rocky_prerequisite
+      ;;
+    opensuse* )
+      install_opensuse_prerequisite
+      ;;
+    *)
+      if [[ "$ID_LIKE" == *"suse"* ]]; then
+        install_opensuse_prerequisite
+      else
+        log_error "Unsupported OS: ${ID:-unknown}"
+        return 1
+      fi
+      ;;
+  esac
 
   cleanup 0 "${ORIGINAL_SHELL_OPTIONS}" "${ORIGINAL_TRAP_EXIT}" "${ORIGINAL_TRAP_ERR}"
   return 0
