@@ -4,6 +4,7 @@ require 'mixins/loggable'
 require 'components/shell/zsh_binary'
 require 'components/shell/oh_my_zsh'
 require 'components/shell/powerlevel10k'
+require 'components/shell/zgenom'
 
 if __FILE__ == $0
   zsh = Component::ZshBinaryComponent.instance
@@ -14,4 +15,7 @@ if __FILE__ == $0
 
   powerlevel10k = Component::Powerlevel10kComponent.instance
   powerlevel10k.install
+
+  zgenom = Component::ZgenomComponent.instance
+  zgenom.install
 end
