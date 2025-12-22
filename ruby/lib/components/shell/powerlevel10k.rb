@@ -75,7 +75,7 @@ module Component
         logger.info("Adding source .p10k.zsh to .zshrc")
         zshrc_content << "\n[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh\n"
       end
-      
+
       File.open(ZSHRC, 'w') do |file|
         file.write(zshrc_content)
       end

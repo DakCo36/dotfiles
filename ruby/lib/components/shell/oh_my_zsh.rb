@@ -70,8 +70,9 @@ module Component
       
       plugins_string = "plugins=("
       PLUGINS.each do |plugin|
-        plugins_string += " #{plugin}"
+        plugins_string += "#{plugin} "
       end
+      plugins_string = plugins_string[0..-2] # Remove last space
       plugins_string += ")"
 
       if zshrc_content.gsub!(/^[^#]*plugins=\([^)]*\)/m, "#{plugins_string}")
