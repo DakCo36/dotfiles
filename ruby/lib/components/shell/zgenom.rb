@@ -117,7 +117,8 @@ module Component
             zgenom oh-my-zsh plugins/pip
             zgenom oh-my-zsh plugins/vi-mode
             zgenom oh-my-zsh plugins/command-not-found
-            zgenom oh-my-zsh --completions plugins/docker-compose
+            zgenom oh-my-zsh plugins/docker-compose
+            zgenom oh-my-zsh plugins/kubectl
             
             # load zsh-users plugins
             zgenom load zsh-users/zsh-syntax-highlighting
