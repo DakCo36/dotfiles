@@ -63,6 +63,8 @@ RSpec.describe Component::ZgenomComponent do
         allow(mock_zsh_binary).to receive(:available?).and_return(true)
         allow(mock_git).to receive(:clone).with(described_class::REPO_URL, described_class::TARGET_DIR_PATH)
         
+        allow(zgenom).to receive(:configure).and_return(true)
+
         # Let's spy on the dependencies method
         allow(zgenom).to receive(:dependencies).and_call_original
 
@@ -72,6 +74,29 @@ RSpec.describe Component::ZgenomComponent do
           .to have_received(:clone)
           .with(described_class::REPO_URL, described_class::TARGET_DIR_PATH)
       end
+    end
+  end
+
+  describe '#disableOhMyZshPlugins' do
+    it 'disables oh-my-zsh plugins' do
+      original_content = <<~CONTENT
+        source $ZSH/oh-my-zsh.sh
+        plugins=(git docker)
+        
+        something else
+        another thing
+      CONTENT
+
+      expected_final_content = <<~CONTENT
+        # source $ZSH/oh-my-zsh.sh
+        # plugins=(git docker)
+
+        something else
+        another thing
+      CONTENT
+
+      allow(File).to receive(:exists?).with(described_class::ZSHRC).and_return(true)
+      
     end
   end
 end
