@@ -68,7 +68,7 @@ module Component
 
       # FIXME possibly distroy .zshrc
       # if zshrc_content.gsub!(/^(\s*plugins=\([^)]*\)\s*)$/, '# \1')
-      if zshrc_content.gsub!(/^(\s*plugins=\([^)]*\))/m, "# \1")
+      if zshrc_content.gsub!(/^(\s*plugins=\([^)]*\))/m, '# \1')
         logger.info("Disabling oh-my-zsh plugins")
       end
 
