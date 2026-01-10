@@ -1,0 +1,49 @@
+FROM opensuse/leap:15.5
+
+# Update and install basic tools
+RUN zypper refresh && zypper install -y \
+    sudo \
+    curl \
+    wget \
+    git \
+    vim \
+    zsh \
+    tar \
+    gzip \
+    awk \
+    && zypper clean -a
+
+# Install bats from source
+RUN git clone https://github.com/bats-core/bats-core.git /tmp/bats && \
+    /tmp/bats/install.sh /usr/local && \
+    rm -rf /tmp/bats
+
+# Create a test user with sudo privileges
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:testuser" | chpasswd && \
+    # In openSUSE, wheel group is often used for sudoers, but we'll set explicit sudoers file
+    echo "testuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/testuser && \
+    chmod 440 /etc/sudoers.d/testuser
+
+# Switch to test user
+USER testuser
+WORKDIR /home/testuser
+
+# Copy shell directory contents including all tests
+COPY --chown=testuser:testuser ./install.sh ./shell/install.sh
+COPY --chown=testuser:testuser ./internal ./shell/internal
+COPY --chown=testuser:testuser ./lib ./shell/lib
+COPY --chown=testuser:testuser ./README.md ./shell/README.md
+COPY --chown=testuser:testuser ./test ./shell/test
+
+# Make scripts executable
+RUN chmod +x ./shell/install.sh ./shell/test/test_install.sh ./shell/test/test_units.sh
+
+# Run unit tests BEFORE installation
+RUN ./shell/test/test_units.sh
+
+# Run installation and integration tests (needs sudo)
+RUN ./shell/test/test_install.sh
+
+# Default command
+CMD ["/bin/bash", "-l"]
