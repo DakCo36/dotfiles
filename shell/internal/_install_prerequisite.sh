@@ -78,16 +78,14 @@ function install_ubuntu_prerequisite() {
 function install_rocky_prerequisite() {
   log_info "Installing Rocky Linux prerequisites..."
 
-  # Check if libyaml-devel is available, if not try to enable CRB repo (for Rocky 9)
-  if ! dnf list available libyaml-devel &>/dev/null && ! rpm -q libyaml-devel &>/dev/null; then
-    log_info "libyaml-devel not found. Attempting to enable CRB repository..."
-    sudo dnf config-manager --set-enabled crb &>> "$INSTALL_LOG" || log_warning "Failed to enable CRB repo."
-  fi
-
   local PACKAGES=("${ROCKY_PACKAGES[@]}")
+  local HAS_LIBYAML=0
 
-  # Add libyaml-devel if available or let it fail/warn if not strict
-  PACKAGES+=("libyaml-devel")
+  # Check if libyaml-devel is already installed
+  if rpm -q libyaml-devel &>/dev/null; then
+    HAS_LIBYAML=1
+    log_info "libyaml-devel is already installed."
+  fi
 
   for package in "${PACKAGES[@]}"; do
     if ! rpm -q "${package}" &>/dev/null; then
@@ -97,6 +95,20 @@ function install_rocky_prerequisite() {
       log_info "$package is already installed."
     fi
   done
+
+  # Special handling for libyaml-devel which might be in CRB repo
+  if [[ $HAS_LIBYAML -eq 0 ]]; then
+    if ! rpm -q libyaml-devel &>/dev/null; then
+      log_info "Installing libyaml-devel (trying CRB repo if needed)..."
+      # Try installing normally first, if fails, try enabling CRB
+      if ! sudo dnf install -y libyaml-devel &>> "$INSTALL_LOG"; then
+        log_info "Standard install failed. Trying with --enablerepo=crb..."
+        sudo dnf install -y --enablerepo=crb libyaml-devel &>> "$INSTALL_LOG"
+      fi
+    else
+      log_info "libyaml-devel is already installed."
+    fi
+  fi
 }
 
 function install_opensuse_prerequisite() {

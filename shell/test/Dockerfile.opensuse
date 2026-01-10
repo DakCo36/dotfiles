@@ -1,13 +1,10 @@
 FROM opensuse/leap:15.5
 
-# Update and install basic tools
+# Update and install ONLY basic tools needed for test runner
+# Avoid development tools
 RUN zypper refresh && zypper install -y \
     sudo \
-    curl \
-    wget \
     git \
-    vim \
-    zsh \
     tar \
     gzip \
     awk \
@@ -21,7 +18,6 @@ RUN git clone https://github.com/bats-core/bats-core.git /tmp/bats && \
 # Create a test user with sudo privileges
 RUN useradd -m -s /bin/bash testuser && \
     echo "testuser:testuser" | chpasswd && \
-    # In openSUSE, wheel group is often used for sudoers, but we'll set explicit sudoers file
     echo "testuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/testuser && \
     chmod 440 /etc/sudoers.d/testuser
 
@@ -30,11 +26,11 @@ USER testuser
 WORKDIR /home/testuser
 
 # Copy shell directory contents including all tests
-COPY --chown=testuser:testuser ./install.sh ./shell/install.sh
-COPY --chown=testuser:testuser ./internal ./shell/internal
-COPY --chown=testuser:testuser ./lib ./shell/lib
-COPY --chown=testuser:testuser ./README.md ./shell/README.md
-COPY --chown=testuser:testuser ./test ./shell/test
+COPY --chown=testuser:testuser shell/install.sh ./shell/install.sh
+COPY --chown=testuser:testuser shell/internal ./shell/internal
+COPY --chown=testuser:testuser shell/lib ./shell/lib
+COPY --chown=testuser:testuser shell/README.md ./shell/README.md
+COPY --chown=testuser:testuser shell/test ./shell/test
 
 # Make scripts executable
 RUN chmod +x ./shell/install.sh ./shell/test/test_install.sh ./shell/test/test_units.sh

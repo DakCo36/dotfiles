@@ -3,20 +3,27 @@ FROM ubuntu:20.04
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update and install basic tools
+# Update and install ONLY basic tools needed for test runner
+# We deliberately avoid installing build-essential, libssl-dev, etc. to test the prerequisite script.
+# We need 'git' to clone bats (or install bats via apt if available without many deps).
+# We need 'sudo' for the script to elevate.
+# We need 'curl' or 'wget' if the script uses them (the script installs them, but we might need one to setup environment).
+# logic: install_prerequisite installs git and curl. So we should try NOT to have them?
+# But we need to copy files.
+# Let's install 'sudo', 'locales'.
+# 'bats' is needed for tests. apt install bats might pull in things.
+# Let's use git to install bats, then maybe remove git? Or just keep git as a test runner dependency and assume the script handles "already installed" git correctly.
+# Ideally, we start with a bare OS.
 RUN apt-get update && apt-get install -y \
     sudo \
-    curl \
-    wget \
-    git \
-    vim \
-    zsh \
-    build-essential \
-    software-properties-common \
     locales \
-    bats \
     git \
     && rm -rf /var/lib/apt/lists/*
+
+# Install bats from source
+RUN git clone https://github.com/bats-core/bats-core.git /tmp/bats && \
+    /tmp/bats/install.sh /usr/local && \
+    rm -rf /tmp/bats
 
 # Create a test user with sudo privileges
 RUN useradd -m -s /bin/bash testuser && \
@@ -30,11 +37,11 @@ USER testuser
 WORKDIR /home/testuser
 
 # Copy shell directory contents including all tests
-COPY --chown=testuser:testuser ./install.sh ./shell/install.sh
-COPY --chown=testuser:testuser ./internal ./shell/internal
-COPY --chown=testuser:testuser ./lib ./shell/lib
-COPY --chown=testuser:testuser ./README.md ./shell/README.md
-COPY --chown=testuser:testuser ./test ./shell/test
+COPY --chown=testuser:testuser shell/install.sh ./shell/install.sh
+COPY --chown=testuser:testuser shell/internal ./shell/internal
+COPY --chown=testuser:testuser shell/lib ./shell/lib
+COPY --chown=testuser:testuser shell/README.md ./shell/README.md
+COPY --chown=testuser:testuser shell/test ./shell/test
 
 # Make scripts executable
 RUN chmod +x ./shell/install.sh ./shell/test/test_install.sh ./shell/test/test_units.sh
@@ -42,7 +49,7 @@ RUN chmod +x ./shell/install.sh ./shell/test/test_install.sh ./shell/test/test_u
 # Run unit tests BEFORE installation
 RUN ./shell/test/test_units.sh
 
-# # Run installation and integration tests (needs sudo)
+# Run installation and integration tests (needs sudo)
 RUN ./shell/test/test_install.sh
 
 # Default command
