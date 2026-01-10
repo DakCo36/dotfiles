@@ -83,6 +83,56 @@ RSpec.describe Component::Powerlevel10kComponent do
   end
 
   # Skip '#configure' test since it just call setTheme and setConfig
+
+  describe '#setInstantPrompt' do
+    it 'raises an error if .zshrc file does not exist' do
+      allow(File)
+        .to receive(:exist?)
+        .with(described_class::ZSHRC)
+        .and_return(false)
+
+      expect { p10k.send(:setInstantPrompt) }
+        .to raise_error(RuntimeError, /.*file not found.*/)
+    end
+
+    it 'skips if instant prompt already exists' do
+      zshrc_content = <<~EOF
+        # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+        if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+            source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+        fi
+        # Other content
+      EOF
+
+      allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
+      allow(File).to receive(:read).with(described_class::ZSHRC).and_return(zshrc_content)
+      allow(File).to receive(:open)
+
+      p10k.send(:setInstantPrompt)
+
+      expect(File).not_to have_received(:open)
+    end
+
+    it 'prepends instant prompt block to .zshrc' do
+      file_double = instance_double(File)
+      allow(file_double).to receive(:write)
+
+      zshrc_content = <<~EOF
+        # Existing content
+        ZSH_THEME="robbyrussell"
+      EOF
+
+      allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
+      allow(File).to receive(:read).with(described_class::ZSHRC).and_return(zshrc_content)
+      allow(File).to receive(:open).with(described_class::ZSHRC, 'w').and_yield(file_double)
+
+      p10k.send(:setInstantPrompt)
+
+      expect(file_double)
+        .to have_received(:write)
+        .with(match(/^# Enable Powerlevel10k instant prompt/))
+    end
+  end
   
   describe '#setTheme' do
     it 'raises an error if .zsh file does not exist' do
