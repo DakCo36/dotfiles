@@ -15,6 +15,16 @@ module Component
     ZSHRC = File.join(CONFIG.home, '.zshrc')
     CONFIG_DIR = File.join(DATA_ROOT, 'p10k')
 
+    # Instant prompt block to be added at the top of .zshrc
+    INSTANT_PROMPT_BLOCK = <<~'ZSH'
+      # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+      # Initialization code that may require console input (password prompts, [y/n]
+      # confirmations, etc.) must go above this block; everything else may go below.
+      if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+          source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+      fi
+    ZSH
+
     depends_on Component::GitComponent
     depends_on Component::OhMyZshComponent
 
@@ -49,8 +59,34 @@ module Component
 
     private
     def configure
+      setInstantPrompt()
       setTheme()
       setConfig()
+    end
+
+    private
+    def setInstantPrompt
+      # Add instant prompt block at the top of .zshrc for faster shell startup
+      if (!File.exist?(ZSHRC))
+        logger.error(".zshrc file not found")
+        raise ".zshrc file not found"
+      end
+
+      zshrc_content = File.read(ZSHRC)
+
+      # Check if instant prompt already exists
+      if zshrc_content.match?(/# Enable Powerlevel10k instant prompt/)
+        logger.info("Instant prompt already exists in .zshrc, skipping")
+        return
+      end
+
+      logger.info("Adding instant prompt to the top of .zshrc")
+      # Prepend instant prompt block to the beginning of .zshrc
+      new_content = INSTANT_PROMPT_BLOCK + "\n" + zshrc_content
+
+      File.open(ZSHRC, 'w') do |file|
+        file.write(new_content)
+      end
     end
 
     private 
