@@ -22,12 +22,6 @@ module Component
     depends_on Component::CurlComponent
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
-
-    def initialize
-      @github = GithubComponent.instance
-      @curl = CurlComponent.instance
-      @tar = TarComponent.instance
-    end
  
     def available?
       system('bat', '--version', out: File::NULL, err: File::NULL)
@@ -53,13 +47,13 @@ module Component
     end
 
     def install!
-      tag = @github.get_latest_release_tag(OWNER, REPO)
+      tag = github.get_latest_release_tag(OWNER, REPO)
       logger.info("Latest release tag: #{tag}")
-      url = @github.get_latest_release_asset_download_url(OWNER, REPO, TARGET_ASSET_PATTERN)      
+      url = github.get_latest_release_asset_download_url(OWNER, REPO, TARGET_ASSET_PATTERN)      
       logger.info("Downloading asset from: #{url}")
-      @curl.download(url, TMP_ASSET_PATH)
+      curl.download(url, TMP_ASSET_PATH)
 
-      @tar.extract(TMP_ASSET_PATH, TMP_DIR_PATH, 1)
+      tar.extract(TMP_ASSET_PATH, TMP_DIR_PATH, 1)
       runCmd('cp', File.join(TMP_DIR_PATH, 'bat'), File.join(CONFIG.bin, 'bat'))
 
       setup_man_page
