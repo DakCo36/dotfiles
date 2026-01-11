@@ -5,25 +5,21 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Update and install basic tools
 RUN apt-get update && apt-get install -y \
-    sudo \
-    curl \
-    wget \
-    git \
-    vim \
-    zsh \
-    build-essential \
-    software-properties-common \
-    locales \
-    bats \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+  sudo \
+  curl \
+  build-essential \
+  software-properties-common \
+  locales \
+  bats \
+  git \
+  && rm -rf /var/lib/apt/lists/*
 
 # Create a test user with sudo privileges
 RUN useradd -m -s /bin/bash testuser && \
-    echo "testuser:testuser" | chpasswd && \
-    usermod -aG sudo testuser && \
-    echo "testuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/testuser && \
-    chmod 440 /etc/sudoers.d/testuser
+  echo "testuser:testuser" | chpasswd && \
+  usermod -aG sudo testuser && \
+  echo "testuser ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/testuser && \
+  chmod 440 /etc/sudoers.d/testuser
 
 # Switch to test user
 USER testuser
