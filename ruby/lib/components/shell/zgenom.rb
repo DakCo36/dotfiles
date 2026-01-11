@@ -2,7 +2,7 @@ require 'fileutils'
 require 'components/base'
 require 'components/configuration'
 require 'mixins/installable'
-require 'components/fetch/git'
+require 'components/tools/git'
 require 'components/shell/zsh_binary'
 
 module Component
@@ -19,7 +19,7 @@ module Component
     depends_on Component::ZshBinaryComponent
 
     def available?
-      Dir.exist?(TARGET_DIR_PATH)
+      Dir.exist?(TARGET_DIR_PATH) && File.exist?(File.join(TARGET_DIR_PATH, 'zgenom.zsh'))
     end
 
     def installed?

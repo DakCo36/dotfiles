@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'components/shell/zgenom'
-require 'components/fetch/git'
+require 'components/tools/git'
 require 'components/shell/zsh_binary'
 require 'components/shell/zgenom'
 
@@ -22,25 +22,29 @@ RSpec.describe Component::ZgenomComponent do
   end
 
   describe '#available?' do
-    it 'returns true when zgenom directory exists' do
+    it 'returns true when zgenom directory and zgenom.zsh file exist' do
       allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(true)
+      allow(File).to receive(:exist?).and_return(true)
       expect(zgenom.available?).to be true
     end
 
     it 'returns false when zgenom directory does not exist' do
       allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(false)
+      allow(File).to receive(:exist?).and_return(false)
       expect(zgenom.available?).to be false
     end
   end
 
   describe '#installed?' do
-    it 'returns true when zgenom directory exists' do
+    it 'returns true when zgenom directory and zgenom.zsh file exist' do
       allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(true)
+      allow(File).to receive(:exist?).and_return(true)
       expect(zgenom.installed?).to be true
     end
 
     it 'returns false when zgenom directory is missing' do
       allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(false)
+      allow(File).to receive(:exist?).and_return(false)
       expect(zgenom.installed?).to be false
     end
   end

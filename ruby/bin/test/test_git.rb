@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 require_relative '../bin_helper'
-require 'components/fetch/git'
+require 'components/tools/git'
 require 'fileutils'
 
 if __FILE__ == $0

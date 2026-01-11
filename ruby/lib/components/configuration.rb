@@ -10,8 +10,11 @@ module Components
     attr_accessor :tmp
     attr_accessor :bashrc
     attr_accessor :bash_profile
+    attr_accessor :bash_completions
     attr_accessor :zshrc
     attr_accessor :zsh_profile
+    attr_accessor :zsh_completions
+    attr_accessor :man1
 
     def initialize
       @home = Dir.home
@@ -20,8 +23,11 @@ module Components
       @tmp = Dir.tmpdir + '/' + generateTimestamp()
       @bashrc = File.join(home, '.bashrc')
       @bash_profile = File.join(home, '.bash_profile')
+      @bash_completions = File.join(home, '.local', 'share', 'bash-completion', 'completions')
       @zshrc = File.join(home, '.zshrc')
       @zsh_profile = File.join(home, '.zsh_profile')
+      @zsh_completions = File.join(home, '.local', 'share', 'zsh', 'site-functions')
+      @man1 = File.join(home, '.local', 'share', 'man', 'man1')
 
       FileUtils.mkdir_p(@tmp) unless Dir.exist?(@tmp)
     end
