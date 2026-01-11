@@ -21,6 +21,10 @@ UBUNTU_PACKAGES=(
   "libgdbm-dev"
   "autoconf"
   "bison"
+  "git"
+  "curl"
+  "man-db"
+  "vim"
 )
 
 function install_ubuntu_prerequisite() {
