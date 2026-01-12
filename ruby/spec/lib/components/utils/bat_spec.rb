@@ -56,4 +56,32 @@ RSpec.describe Component::BatComponent do
       expect(available).to be false
     end
   end
-end 
+
+  describe '#version' do
+    it 'returns the installed bat version' do
+      status = instance_double(Process::Status, success?: true)
+      allow(Open3).to receive(:capture2)
+        .with('bat', '--version')
+        .and_return(["bat 0.21.0 (405edf)\n", status])
+      
+      expect(bat.version).to eq('0.21.0')
+    end
+
+    it 'returns nil when command fails' do
+      status = instance_double(Process::Status, success?: false)
+      allow(Open3).to receive(:capture2)
+        .with('bat', '--version')
+        .and_return(["", status])
+      
+      expect(bat.version).to be_nil
+    end
+    
+    it 'returns nil when bat is not installed' do
+      allow(Open3).to receive(:capture2)
+        .with('bat', '--version')
+        .and_raise(Errno::ENOENT)
+      
+      expect(bat.version).to be_nil
+    end
+  end
+end

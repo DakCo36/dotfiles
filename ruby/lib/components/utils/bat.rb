@@ -28,8 +28,8 @@ module Component
     end
 
     def version
-      output = `bat --version 2>&1`
-      output.split[1] if $?.success? # example) bat 0.21.0 (405edf)
+      output, status = Open3.capture2('bat', '--version')
+      output.split[1] if status.success? # example) bat 0.21.0 (405edf)
     rescue Errno::ENOENT
       nil
     end
