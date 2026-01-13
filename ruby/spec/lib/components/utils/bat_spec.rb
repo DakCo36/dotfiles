@@ -71,7 +71,7 @@ RSpec.describe Component::BatComponent do
       status = instance_double(Process::Status, success?: false)
       allow(Open3).to receive(:capture2)
         .with('bat', '--version')
-        .and_return(["", status])
+        .and_return(["Unknown result", status])
       
       expect(bat.version).to be_nil
     end
@@ -82,6 +82,22 @@ RSpec.describe Component::BatComponent do
         .and_raise(Errno::ENOENT)
       
       expect(bat.version).to be_nil
+    end
+  end
+
+  describe '#installed?' do
+    it 'returns true if bat is installed' do
+      allow(bat).to receive(:available?).and_return(true)
+      allow(bat).to receive(:version).and_return("0.21.0")
+
+      expect(bat.installed?).to be true
+    end
+
+    it 'returns false if bat is not installed' do
+      allow(bat).to receive(:available?).and_return(false)
+      allow(bat).to receive(:version).and_return(nil)
+
+      expect(bat.installed?).to be false
     end
   end
 end
