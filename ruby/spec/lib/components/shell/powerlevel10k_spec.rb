@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'components/shell/powerlevel10k'
 require 'components/shell/oh_my_zsh'
-require 'components/fetch/git'
+require 'components/tools/git'
 
 RSpec.describe Component::Powerlevel10kComponent do
   subject(:p10k) { described_class.instance }

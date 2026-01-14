@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'components/fetch/git'
+require 'components/tools/git'
 
 RSpec.describe Component::GitComponent do
   subject(:git) { described_class.instance }

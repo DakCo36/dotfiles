@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'components/fetch/curl'
+require 'components/tools/curl'
 
 RSpec.describe Component::CurlComponent do
   subject(:curl) { described_class.instance }

@@ -2,7 +2,7 @@ require 'fileutils'
 require 'components/base'
 require 'components/configuration'
 require 'mixins/installable'
-require 'components/fetch/curl'
+require 'components/tools/curl'
 
 module Component
   class ZshBinaryComponent < BaseComponent

@@ -21,5 +21,13 @@ module Component
 
       runCmd('curl', '-L', '-o', destination, url)
     end
+
+    def get(url)
+      if !available?
+        raise "curl is not installed"
+      end
+
+      runCmdWithOutput('curl', '-L', url)
+    end
   end
 end

@@ -2,7 +2,7 @@ require 'fileutils'
 require 'components/base'
 require 'components/configuration'
 require 'mixins/installable'
-require 'components/fetch/git'
+require 'components/tools/git'
 require 'components/shell/oh_my_zsh'
 
 module Component
