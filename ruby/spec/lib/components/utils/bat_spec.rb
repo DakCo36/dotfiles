@@ -129,6 +129,34 @@ RSpec.describe Component::BatComponent do
   end
 
   describe '#setup_man_page' do
-    
+    before do
+      stub_const("#{described_class}::TMP_DIR_PATH", '/tmp/test/bat-assets')
+      allow(FileUtils).to receive(:mkdir_p)
+      allow(bat).to receive(:runCmd).and_return(["", "", instance_double(Process::Status, success?: true)])
+    end
+
+    it 'creates directory and copies bat.1' do
+      bat.send(:setup_man_page)
+
+      expect(FileUtils).to have_received(:mkdir_p).with(man1_path)
+      expect(bat).to have_received(:runCmd).with('cp', '/tmp/test/bat-assets/bat.1', "#{man1_path}/bat.1")
+    end
+  end
+
+  describe '#setup_completions' do
+    before do
+      stub_const("#{described_class}::TMP_DIR_PATH", '/tmp/test/bat-assets')
+      allow(FileUtils).to receive(:mkdir_p)
+      allow(bat).to receive(:runCmd).and_return(["", "", instance_double(Process::Status, success?: true)])
+    end
+
+    it 'creates directories and copies completion files' do
+      bat.send(:setup_completions)
+
+      expect(FileUtils).to have_received(:mkdir_p).with(zsh_completions_path)
+      expect(FileUtils).to have_received(:mkdir_p).with(bash_completions_path)
+      expect(bat).to have_received(:runCmd).with('cp', '/tmp/test/bat-assets/autocomplete/bat.zsh', "#{zsh_completions_path}/_bat")
+      expect(bat).to have_received(:runCmd).with('cp', '/tmp/test/bat-assets/autocomplete/bat.bash', "#{bash_completions_path}/bat")
+    end
   end
 end
