@@ -100,4 +100,35 @@ RSpec.describe Component::BatComponent do
       expect(bat.installed?).to be false
     end
   end
+
+  # Skip test 'install'
+
+  describe '#install!' do
+    it 'installs bat' do
+      allow(mock_github).to receive(:get_latest_release_tag).and_return('0.21.0')
+      allow(mock_github)
+        .to receive(:get_latest_release_asset_download_url)
+        .and_return('https://github.com/sharkdp/bat/releases/download/0.21.0/bat-0.21.0-x86_64-unknown-linux-musl.tar.gz')
+      allow(mock_curl).to receive(:download).and_return(["", "", instance_double(Process::Status, success?: true)])
+      allow(mock_tar).to receive(:extract).and_return(["", "", instance_double(Process::Status, success?: true)])
+      allow(bat).to receive(:setup_man_page).and_return(["", "", instance_double(Process::Status, success?: true)])
+      allow(bat).to receive(:setup_completions).and_return(["", "", instance_double(Process::Status, success?: true)])
+      allow(bat).to receive(:runCmd)
+        .with('cp', anything, anything)
+        .and_return(["", "", instance_double(Process::Status, success?: true)])
+
+      bat.install!
+
+      expect(mock_github).to have_received(:get_latest_release_tag)
+      expect(mock_github).to have_received(:get_latest_release_asset_download_url)
+      expect(mock_curl).to have_received(:download)
+      expect(mock_tar).to have_received(:extract)
+      expect(bat).to have_received(:setup_man_page)
+      expect(bat).to have_received(:setup_completions)
+    end
+  end
+
+  describe '#setup_man_page' do
+    
+  end
 end
