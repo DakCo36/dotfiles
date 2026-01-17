@@ -99,31 +99,57 @@ function configure_mise_shell() {
 
   log_info "Configuring mise for shell..."
 
-  # Add mise to .bashrc if not already present
+  # .bashrc 설정
+  # non-interactive에서도 실행되도록 PATH export는 맨 앞에 추가
+  # interactive에서만 로딩하도록 mise activate는 맨 끝에 추가
   if ! grep -q 'mise activate' "$BASHRC" 2>/dev/null; then
-    log_info "Adding mise activation to ~/.bashrc..."
+    log_info "Adding mise configuration to ~/.bashrc..."
+    
+    if ! grep -q '# mise PATH' "$BASHRC" 2>/dev/null; then
+      log_info "Prepending mise PATH to ~/.bashrc (for non-interactive shells)..."
+      local tmp_bashrc=$(mktemp)
+      {
+        echo "# mise PATH - must be before interactive check for non-interactive shells (e.g., IDE)"
+        echo 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"'
+        echo ""
+        cat "$BASHRC"
+      } > "$tmp_bashrc"
+      mv "$tmp_bashrc" "$BASHRC"
+    fi
+    
     {
       echo ""
-      echo "# mise - polyglot version manager"
-      echo 'export PATH="$HOME/.local/bin:$PATH"'
+      echo "# mise activation - for interactive shells"
       echo 'eval "$(~/.local/bin/mise activate bash)"'
     } >> "$BASHRC"
-    log_info "mise activation added to ~/.bashrc"
+    log_info "mise configuration added to ~/.bashrc"
   else
     log_info "mise activation already exists in ~/.bashrc"
   fi
 
-  # Add mise to .zshrc if it exists
   if [[ -f "$ZSHRC" ]]; then
     if ! grep -q 'mise activate' "$ZSHRC" 2>/dev/null; then
-      log_info "Adding mise activation to ~/.zshrc..."
+      log_info "Adding mise configuration to ~/.zshrc..."
+      
+      if ! grep -q '# mise PATH' "$ZSHRC" 2>/dev/null; then
+        log_info "Prepending mise PATH to ~/.zshrc..."
+        local tmp_zshrc=$(mktemp)
+        {
+          echo "# mise PATH - must be before interactive check for non-interactive shells"
+          echo 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"'
+          echo ""
+          cat "$ZSHRC"
+        } > "$tmp_zshrc"
+        mv "$tmp_zshrc" "$ZSHRC"
+      fi
+      
+      # mise activate를 맨 끝에 추가
       {
         echo ""
-        echo "# mise - polyglot version manager"
-        echo 'export PATH="$HOME/.local/bin:$PATH"'
+        echo "# mise activation - for interactive shells"
         echo 'eval "$(~/.local/bin/mise activate zsh)"'
       } >> "$ZSHRC"
-      log_info "mise activation added to ~/.zshrc"
+      log_info "mise configuration added to ~/.zshrc"
     else
       log_info "mise activation already exists in ~/.zshrc"
     fi
