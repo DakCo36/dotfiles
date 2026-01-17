@@ -6,6 +6,8 @@ require 'components/shell/oh_my_zsh'
 require 'components/shell/powerlevel10k'
 require 'components/shell/zgenom'
 require 'components/utils/bat'
+require 'components/utils/fastfetch'
+require 'components/utils/fd'
 
 if __FILE__ == $0
   zsh = Component::ZshBinaryComponent.instance
@@ -22,4 +24,10 @@ if __FILE__ == $0
 
   bat = Component::BatComponent.instance
   bat.install
+
+  fastfetch = Component::FastfetchComponent.instance
+  fastfetch.install
+
+  fd = Component::FdComponent.instance
+  fd.install
 end
