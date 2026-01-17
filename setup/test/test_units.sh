@@ -8,7 +8,10 @@ echo "========================================="
 
 # Install bats for testing
 echo "Installing bats testing framework..."
-cd /home/testuser/shell/test
+
+# 스크립트 위치 기준으로 test 디렉토리로 이동 (하드코딩된 경로 대신 상대 경로 사용)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # Install bats helper libraries if not present
 echo "Setting up bats helper libraries..."

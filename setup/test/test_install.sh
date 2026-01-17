@@ -8,14 +8,18 @@ echo "========================================="
 
 # Run install.sh
 echo "Running install.sh..."
-cd /home/testuser/shell
+
+# 스크립트 위치 기준으로 setup 디렉토리 경로 계산
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SETUP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$SETUP_DIR"
 
 # Should test prerequisite installer and mise installer separately
 echo "Running prerequisite installer..."
-sudo bash -c "source /home/testuser/shell/internal/_install_prerequisite.sh && install_prerequisite"
+sudo bash -c "source $SETUP_DIR/internal/_install_prerequisite.sh && install_prerequisite"
 
 echo "Running mise installer..."
-bash -c "source /home/testuser/shell/internal/_install_mise.sh && install_mise"
+bash -c "source $SETUP_DIR/internal/_install_mise.sh && install_mise"
 
 echo ""
 echo "========================================="

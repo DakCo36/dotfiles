@@ -25,21 +25,21 @@ RUN useradd -m -s /bin/bash testuser && \
 USER testuser
 WORKDIR /home/testuser
 
-# Copy shell directory contents including all tests
-COPY --chown=testuser:testuser ./install.sh ./shell/install.sh
-COPY --chown=testuser:testuser ./internal ./shell/internal
-COPY --chown=testuser:testuser ./lib ./shell/lib
-COPY --chown=testuser:testuser ./README.md ./shell/README.md
-COPY --chown=testuser:testuser ./test ./shell/test
+# Copy setup directory contents including all tests
+COPY --chown=testuser:testuser ./install.sh ./setup/install.sh
+COPY --chown=testuser:testuser ./internal ./setup/internal
+COPY --chown=testuser:testuser ./lib ./setup/lib
+COPY --chown=testuser:testuser ./README.md ./setup/README.md
+COPY --chown=testuser:testuser ./test ./setup/test
 
 # Make scripts executable
-RUN chmod +x ./shell/install.sh ./shell/test/test_install.sh ./shell/test/test_units.sh
+RUN chmod +x ./setup/install.sh ./setup/test/test_install.sh ./setup/test/test_units.sh
 
 # Run unit tests BEFORE installation
-RUN ./shell/test/test_units.sh
+RUN ./setup/test/test_units.sh
 
 # # Run installation and integration tests (needs sudo)
-RUN ./shell/test/test_install.sh
+RUN ./setup/test/test_install.sh
 
 # Default command
 CMD ["/bin/bash", "-l"]
