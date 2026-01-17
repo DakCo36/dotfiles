@@ -10,12 +10,12 @@ echo "========================================="
 echo "Running install.sh..."
 cd /home/testuser/shell
 
-# Should test prerequisite installer and ruby installer separately
+# Should test prerequisite installer and mise installer separately
 echo "Running prerequisite installer..."
 sudo bash -c "source /home/testuser/shell/internal/_install_prerequisite.sh && install_prerequisite"
 
-echo "Running ruby installer..."
-bash -c "source /home/testuser/shell/internal/_install_ruby.sh && install_ruby"
+echo "Running mise installer..."
+bash -c "source /home/testuser/shell/internal/_install_mise.sh && install_mise"
 
 echo ""
 echo "========================================="
@@ -37,36 +37,36 @@ echo "Current PATH after sourcing .bashrc:"
 echo "$PATH"
 echo ""
 
-# Test rbenv installation
-echo -n "Checking rbenv... "
-if /bin/bash -lc "rbenv --version" &>/dev/null; then
-    RBENV_VERSION=$(/bin/bash -lc "rbenv --version" 2>&1)
-    echo "✅ PASSED - $RBENV_VERSION"
+# Test mise installation
+echo -n "Checking mise... "
+if /bin/bash -lc "~/.local/bin/mise --version" &>/dev/null; then
+    MISE_VERSION=$(/bin/bash -lc "~/.local/bin/mise --version 2>&1 | tail -1")
+    echo "✅ PASSED - $MISE_VERSION"
 else
-    echo "❌ FAILED - rbenv not found!"
+    echo "❌ FAILED - mise not found!"
     exit 1
 fi
 
-# Test ruby installation
+# Test ruby installation via mise
 echo -n "Checking ruby... "
-if /bin/bash -lc "ruby --version" &>/dev/null; then
-    RUBY_VERSION=$(/bin/bash -lc "ruby --version" 2>&1)
+if /bin/bash -lc "~/.local/bin/mise exec -- ruby --version" &>/dev/null; then
+    RUBY_VERSION=$(/bin/bash -lc "~/.local/bin/mise exec -- ruby --version" 2>&1)
     echo "✅ PASSED - $RUBY_VERSION"
 else
     echo "❌ FAILED - ruby not found!"
     exit 1
 fi
 
-# Test that PATH is properly set
-echo -n "Checking PATH contains rbenv... "
-if /bin/bash -lc 'echo $PATH | grep -q rbenv'; then
+# Test that PATH contains mise
+echo -n "Checking PATH contains mise... "
+if /bin/bash -lc 'echo $PATH | grep -q ".local/bin"'; then
     echo "✅ PASSED"
 else
-    echo "❌ FAILED - rbenv not in PATH!"
+    echo "❌ FAILED - mise not in PATH!"
     exit 1
 fi
 
 echo ""
 echo "========================================="
-echo "✅ Ruby installed!!"
+echo "✅ mise and Ruby installed!!"
 echo "========================================="
