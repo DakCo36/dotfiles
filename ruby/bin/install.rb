@@ -9,6 +9,7 @@ require 'components/utils/bat'
 require 'components/utils/fastfetch'
 require 'components/utils/fd'
 require 'components/utils/ripgrep'
+require 'components/utils/fzf'
 
 if __FILE__ == $0
   zsh = Component::ZshBinaryComponent.instance
@@ -34,4 +35,7 @@ if __FILE__ == $0
 
   ripgrep = Component::RipgrepComponent.instance
   ripgrep.install
+
+  fzf = Component::FzfComponent.instance
+  fzf.install
 end
