@@ -1,8 +1,9 @@
-FROM dotfiles:shell
+FROM dotfiles:setup
 
 ENV TERM=xterm-256color
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PATH="/home/testuser/.rbenv/shims:/home/testuser/.rbenv/bin:${PATH}"
+
+ENV PATH="/home/testuser/.local/share/mise/installs/ruby/3.4.3/bin:/home/testuser/.local/bin:$PATH"
 
 COPY --chown=testuser:testuser lib /home/testuser/ruby/lib
 COPY --chown=testuser:testuser spec /home/testuser/ruby/spec
@@ -16,7 +17,7 @@ RUN ls -altrh
 RUN echo "$PATH"
 WORKDIR /home/testuser/ruby
 
-RUN rbenv --version
+RUN ruby -v
 RUN gem install bundler && \
   bundler install
 
