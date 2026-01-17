@@ -10,6 +10,7 @@ require 'components/utils/fastfetch'
 require 'components/utils/fd'
 require 'components/utils/ripgrep'
 require 'components/utils/fzf'
+require 'components/editors/neovim'
 
 if __FILE__ == $0
   zsh = Component::ZshBinaryComponent.instance
@@ -38,4 +39,7 @@ if __FILE__ == $0
 
   fzf = Component::FzfComponent.instance
   fzf.install
+
+  neovim = Component::NeovimComponent.instance
+  neovim.install
 end
