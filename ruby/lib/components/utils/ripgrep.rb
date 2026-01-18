@@ -39,6 +39,16 @@ module Component
       available? && version != nil
     end
 
+    # GitHub에서 최신 릴리즈 태그를 가져와 최신 버전 반환
+    def latest_version
+      tag = github.get_latest_release_tag(OWNER, REPO)
+      # 태그에서 숫자 버전만 추출 (예: 14.1.0)
+      tag&.gsub(/^v/, '')
+    rescue => e
+      logger.warn("Failed to get latest version for ripgrep: #{e.message}")
+      nil
+    end
+
     def install
       if installed?
         logger.info('ripgrep already installed.')

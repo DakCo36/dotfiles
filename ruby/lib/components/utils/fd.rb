@@ -38,6 +38,14 @@ module Component
       available? && version != nil
     end
 
+    def latest_version
+      tag = github.get_latest_release_tag(OWNER, REPO)
+      tag&.gsub(/^v/, '')
+    rescue => e
+      logger.warn("Failed to get latest version for fd: #{e.message}")
+      nil
+    end
+
     def install
       if installed?
         logger.info('fd already installed.')
