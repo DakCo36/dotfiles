@@ -22,7 +22,7 @@ RUN gem install bundler && \
   bundler install
 
 RUN bundle exec rspec .
-RUN bundle exec ruby bin/install.rb
+RUN bundle exec ruby bin/cli.rb install
 
 # Validate Installation
 # ohmyzsh is installed

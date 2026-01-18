@@ -53,6 +53,10 @@ module Component
       out.split(' ')[1] # example zsh 5.8 (x86_64-pc-linux-musl)
     end
 
+    def latest_version
+      TARGET_VERSION
+    end
+
     # Assume current default shell is bash
     def install
       if installed?

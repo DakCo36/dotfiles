@@ -37,6 +37,29 @@ module Component
       # TODO: Check if the theme is properly configured in .zshrc
     end
 
+    def version
+      return nil unless available?
+      Dir.chdir(TARGET_DIR_PATH) do
+        output, status = Open3.capture2('git', 'rev-parse', '--short=7', 'HEAD')
+        output.strip if status.success?
+      end
+    rescue => e
+      logger.warn("Failed to get powerlevel10k version: #{e.message}")
+      nil
+    end
+
+    def latest_version
+      return nil unless available?
+      Dir.chdir(TARGET_DIR_PATH) do
+        Open3.capture2('git', 'fetch', '--quiet', 'origin')
+        output, status = Open3.capture2('git', 'rev-parse', '--short=7', 'origin/master')
+        output.strip if status.success?
+      end
+    rescue => e
+      logger.warn("Failed to get latest powerlevel10k version: #{e.message}")
+      nil
+    end
+
     def install
       if installed?
         logger.info('Powerlevel10k already installed.')

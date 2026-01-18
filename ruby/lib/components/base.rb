@@ -4,7 +4,6 @@ require 'mixins/loggable'
 module Component
   class DependencyError < StandardError; end
 
-  # This module defined the interface for an component.
   class BaseComponent
     include Loggable
     
@@ -19,6 +18,45 @@ module Component
 
     def version
       raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
+    end
+
+    def latest_version
+      raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
+    end
+
+    def upgradable?
+      return false unless installed?
+      
+      current = version
+      latest = latest_version
+      return false if current.nil? || latest.nil?
+      
+      current_clean = current.to_s.gsub(/^v/, '')
+      latest_clean = latest.to_s.gsub(/^v/, '')
+      
+      begin
+        Gem::Version.new(latest_clean) > Gem::Version.new(current_clean)
+      rescue ArgumentError
+        # Semantic versioning is not supported
+        latest_clean != current_clean
+      end
+    end
+
+    def update
+      if upgradable?
+        logger.info("Updating #{self.class.name}...")
+        install!
+      else
+        logger.info("#{self.class.name} is already up to date.")
+      end
+    end
+
+    def display_name
+      class_name = self.class.name.split('::').last
+      class_name
+        .gsub(/Component$/, '')
+        .gsub(/([a-z])([A-Z])/, '\1-\2')
+        .downcase
     end
     
     def self.dependencies(&block)
