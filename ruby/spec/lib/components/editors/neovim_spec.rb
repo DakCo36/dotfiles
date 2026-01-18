@@ -1,5 +1,5 @@
 require "spec_helper"
-require "components/tools/neovim"
+require "components/editors/neovim"
 
 RSpec.describe Component::NeovimComponent do
   subject(:neovim) { described_class.instance }
