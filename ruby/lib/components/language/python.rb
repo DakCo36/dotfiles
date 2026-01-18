@@ -56,7 +56,6 @@ module Component
     def install!
       logger.info("Installing Python #{PYTHON_VERSION} via mise...")
 
-      # mise use --global for global installation
       runCmd("mise", "use", "--global", "python@#{PYTHON_VERSION}")
 
       logger.info("Python #{PYTHON_VERSION} installed successfully via mise.")
