@@ -99,19 +99,14 @@ RSpec.describe Component::ZgenomComponent do
         another thing
       CONTENT
 
-      # mocking file
-      file_mock = double("file", write: true)
-      allow(file_mock).to receive(:write)
-
       # Given
       allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
       allow(File).to receive(:read).with(described_class::ZSHRC).and_return(original_content)
-      allow(File).to receive(:open).with(described_class::ZSHRC, "w").and_yield(file_mock)
+      allow(File).to receive(:write)
 
       zgenom.send(:disableOhMyZshPlugins)
 
-      expect(File).to have_received(:open).with(described_class::ZSHRC, "w")
-      expect(file_mock).to have_received(:write).with(expected_final_content)
+      expect(File).to have_received(:write).with(described_class::ZSHRC, expected_final_content)
     end
   end
 
@@ -148,19 +143,16 @@ RSpec.describe Component::ZgenomComponent do
         PATH="$PATH"
       CONTENT
 
-      # mocking file
-      file_mock = double("file", write: true)
-      allow(file_mock).to receive(:write)
-
       allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
       allow(File).to receive(:read).with(described_class::ZSHRC).and_return(content)
-      allow(File).to receive(:open).with(described_class::ZSHRC, "w").and_yield(file_mock)
+      allow(File).to receive(:write)
 
       zgenom.send(:setPlugins)
 
-      expect(file_mock).to have_received(:write) do
-        expect(content).to match(/zgenom autoupdate/)
-        expect(content).to match(/Something blah/)
+      expect(File).to have_received(:write) do |path, written_content|
+        expect(path).to eq(described_class::ZSHRC)
+        expect(written_content).to match(/zgenom autoupdate/)
+        expect(written_content).to match(/Something blah/)
       end
     end
   end
