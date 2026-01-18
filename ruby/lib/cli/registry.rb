@@ -18,6 +18,7 @@ module CLI
       Component::FastfetchComponent,
 
       Component::PythonComponent,
+      Component::NeovimComponent,
     ].freeze
 
     def all
