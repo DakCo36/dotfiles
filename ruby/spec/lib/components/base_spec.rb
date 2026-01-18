@@ -1,2 +1,2 @@
-require 'rspec'
-require 'spec_helper'
+require "rspec"
+require "spec_helper"

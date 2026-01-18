@@ -1,7 +1,8 @@
-require 'singleton'
+require "singleton"
 
 module CLI
   class Registry
+
     include Singleton
 
     COMPONENTS = [
@@ -14,7 +15,7 @@ module CLI
       Component::FdComponent,
       Component::FzfComponent,
       Component::RipgrepComponent,
-      Component::FastfetchComponent
+      Component::FastfetchComponent,
     ].freeze
 
     def all
@@ -34,11 +35,11 @@ module CLI
     end
 
     def find(name)
-      normalized = name.downcase.gsub(/[-_]/, '')
+      normalized = name.downcase.gsub(/[-_]/, "")
       all.find do |component|
-        class_name = component.class.name.split('::').last
+        class_name = component.class.name.split("::").last
         # OhMyZshComponent -> ohmyzsh
-        component_name = class_name.gsub(/Component$/, '').downcase
+        component_name = class_name.gsub(/Component$/, "").downcase
         component_name == normalized || component_name.include?(normalized)
       end
     end
@@ -49,9 +50,10 @@ module CLI
 
     def component_names
       all.map do |component|
-        class_name = component.class.name.split('::').last
-        class_name.gsub(/Component$/, '').gsub(/([a-z])([A-Z])/, '\1-\2').downcase
+        class_name = component.class.name.split("::").last
+        class_name.gsub(/Component$/, "").gsub(/([a-z])([A-Z])/, '\1-\2').downcase
       end
     end
+
   end
 end

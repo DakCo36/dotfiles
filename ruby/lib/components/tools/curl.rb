@@ -1,10 +1,11 @@
-require 'open3'
-require 'components/base'
+require "open3"
+require "components/base"
 
 module Component
   class CurlComponent < BaseComponent
+
     def available?
-      system('curl', '--version', out: File::NULL, err: File::NULL)
+      system("curl", "--version", out: File::NULL, err: File::NULL)
     end
 
     def version
@@ -15,19 +16,16 @@ module Component
     end
 
     def download(url, destination)
-      if !available?
-        raise "curl is not installed"
-      end
+      raise "curl is not installed" unless available?
 
-      runCmd('curl', '-L', '-o', destination, url)
+      runCmd("curl", "-L", "-o", destination, url)
     end
 
     def get(url)
-      if !available?
-        raise "curl is not installed"
-      end
+      raise "curl is not installed" unless available?
 
-      runCmdWithOutput('curl', '-L', url)
+      runCmdWithOutput("curl", "-L", url)
     end
+
   end
 end

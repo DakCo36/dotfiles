@@ -1,14 +1,15 @@
-require 'singleton'
-require 'components/base'
-require 'components/configuration'
-require 'mixins/installable'
-require 'components/tools/github'
-require 'components/tools/curl'
-require 'components/tools/tar'
-require 'mixins/loggable'
+require "singleton"
+require "components/base"
+require "components/configuration"
+require "mixins/installable"
+require "components/tools/github"
+require "components/tools/curl"
+require "components/tools/tar"
+require "mixins/loggable"
 
 module Component
   class RipgrepComponent < BaseComponent
+
     prepend Installable
 
     TARGET_ASSET_PATTERN = "ripgrep-.*-x86_64-unknown-linux-musl\\.tar\\.gz"
@@ -24,11 +25,11 @@ module Component
     depends_on Component::TarComponent
 
     def available?
-      system('rg', '--version', out: File::NULL, err: File::NULL)
+      system("rg", "--version", out: File::NULL, err: File::NULL)
     end
 
     def version
-      output, status = Open3.capture2('rg', '--version')
+      output, status = Open3.capture2("rg", "--version")
       # ripgrep outputs "ripgrep 14.1.0" format
       output.split[1] if status.success?
     rescue Errno::ENOENT
@@ -36,22 +37,22 @@ module Component
     end
 
     def installed?
-      available? && version != nil
+      available? && !version.nil?
     end
 
     # GitHub에서 최신 릴리즈 태그를 가져와 최신 버전 반환
     def latest_version
       tag = github.get_latest_release_tag(OWNER, REPO)
       # 태그에서 숫자 버전만 추출 (예: 14.1.0)
-      tag&.gsub(/^v/, '')
-    rescue => e
+      tag&.gsub(/^v/, "")
+    rescue StandardError => e
       logger.warn("Failed to get latest version for ripgrep: #{e.message}")
       nil
     end
 
     def install
       if installed?
-        logger.info('ripgrep already installed.')
+        logger.info("ripgrep already installed.")
         return
       end
       install!
@@ -65,29 +66,30 @@ module Component
       curl.download(url, TMP_ASSET_PATH)
 
       tar.extract(TMP_ASSET_PATH, TMP_DIR_PATH, 1)
-      runCmd('cp', File.join(TMP_DIR_PATH, 'rg'), File.join(CONFIG.bin, 'rg'))
+      runCmd("cp", File.join(TMP_DIR_PATH, "rg"), File.join(CONFIG.bin, "rg"))
 
       setup_man_page
       setup_completions
 
-      logger.info('ripgrep installed successfully.')
+      logger.info("ripgrep installed successfully.")
     end
 
     private
 
     def setup_man_page
       FileUtils.mkdir_p(CONFIG.man1)
-      runCmd('cp', File.join(TMP_DIR_PATH, 'doc', 'rg.1'), File.join(CONFIG.man1, 'rg.1'))
+      runCmd("cp", File.join(TMP_DIR_PATH, "doc", "rg.1"), File.join(CONFIG.man1, "rg.1"))
     end
 
     def setup_completions
       # zsh completions
       FileUtils.mkdir_p(CONFIG.zsh_completions)
-      runCmd('cp', File.join(TMP_DIR_PATH, 'complete', '_rg'), File.join(CONFIG.zsh_completions, '_rg'))
+      runCmd("cp", File.join(TMP_DIR_PATH, "complete", "_rg"), File.join(CONFIG.zsh_completions, "_rg"))
 
       # bash completions
       FileUtils.mkdir_p(CONFIG.bash_completions)
-      runCmd('cp', File.join(TMP_DIR_PATH, 'complete', 'rg.bash'), File.join(CONFIG.bash_completions, 'rg'))
+      runCmd("cp", File.join(TMP_DIR_PATH, "complete", "rg.bash"), File.join(CONFIG.bash_completions, "rg"))
     end
+
   end
 end

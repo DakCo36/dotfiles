@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
-require_relative '../bin_helper'
-require 'components/tools/git'
-require 'fileutils'
+require_relative "../bin_helper"
+require "components/tools/git"
+require "fileutils"
 
 if __FILE__ == $0
   git = Component::GitComponent.instance
@@ -12,8 +12,8 @@ if __FILE__ == $0
     puts "Git is not installed."
   end
 
-  url = 'https://github.com/dakco36/dotfiles.git'
-  destination = '/tmp/dotfiles'
+  url = "https://github.com/dakco36/dotfiles.git"
+  destination = "/tmp/dotfiles"
   FileUtils.rm_rf(destination) if File.exist?(destination)
   git.clone(url, destination)
 end

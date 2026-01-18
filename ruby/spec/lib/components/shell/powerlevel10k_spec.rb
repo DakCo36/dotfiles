@@ -1,23 +1,23 @@
-require 'spec_helper'
-require 'components/shell/powerlevel10k'
-require 'components/shell/oh_my_zsh'
-require 'components/tools/git'
+require "spec_helper"
+require "components/shell/powerlevel10k"
+require "components/shell/oh_my_zsh"
+require "components/tools/git"
 
 RSpec.describe Component::Powerlevel10kComponent do
   subject(:p10k) { described_class.instance }
-  
+
   let(:mock_git) { instance_spy(Component::GitComponent) }
   let(:mock_ohmyzsh) { instance_spy(Component::OhMyZshComponent) }
   let(:mock_logger) { Logger.new(File::NULL) }
-  
+
   before do
     allow(Component::GitComponent).to receive(:instance).and_return(mock_git)
     allow(Component::OhMyZshComponent).to receive(:instance).and_return(mock_ohmyzsh)
     allow(p10k).to receive(:logger).and_return(mock_logger)
   end
 
-  describe '#available?' do
-    it 'returns true when theme directory exists' do
+  describe "#available?" do
+    it "returns true when theme directory exists" do
       allow(Dir)
         .to receive(:exist?)
         .with(anything)
@@ -25,39 +25,39 @@ RSpec.describe Component::Powerlevel10kComponent do
       expect(p10k.available?).to be true
     end
 
-    it 'returns false when theme directory does not exist' do
+    it "returns false when theme directory does not exist" do
       allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(false)
       expect(p10k.available?).to be false
     end
   end
 
-  describe '#installed?' do
-    it 'returns true when theme directory exists' do
+  describe "#installed?" do
+    it "returns true when theme directory exists" do
       allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(true)
       expect(p10k.installed?).to be true
     end
 
-    it 'returns false when theme directory is missing' do
+    it "returns false when theme directory is missing" do
       allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(false)
       expect(p10k.installed?).to be false
     end
   end
 
-  describe '#install' do
-    context 'when already installed' do
-      it 'does nothing' do
+  describe "#install" do
+    context "when already installed" do
+      it "does nothing" do
         allow(p10k).to receive(:installed?).and_return(true)
         allow(p10k).to receive(:configure)
-        
+
         p10k.install
-        
+
         expect(mock_git).not_to have_received(:clone)
         expect(p10k).not_to have_received(:configure)
       end
     end
 
-    context 'when not installed' do
-      it 'clones the repository' do
+    context "when not installed" do
+      it "clones the repository" do
         allow(p10k).to receive(:installed?).and_return(false)
         allow(p10k).to receive(:configure)
         allow(mock_ohmyzsh).to receive(:available?).and_return(true)
@@ -74,7 +74,7 @@ RSpec.describe Component::Powerlevel10kComponent do
           .with(described_class::REPO_URL, described_class::TARGET_DIR_PATH)
 
         p10k.install
-        
+
         expect(FileUtils).to have_received(:mkdir_p).with(described_class::TARGET_DIR_PATH)
         expect(mock_git).to have_received(:clone).with(described_class::REPO_URL, described_class::TARGET_DIR_PATH)
         expect(p10k).to have_received(:configure)
@@ -84,8 +84,8 @@ RSpec.describe Component::Powerlevel10kComponent do
 
   # Skip '#configure' test since it just call setTheme and setConfig
 
-  describe '#setInstantPrompt' do
-    it 'raises an error if .zshrc file does not exist' do
+  describe "#setInstantPrompt" do
+    it "raises an error if .zshrc file does not exist" do
       allow(File)
         .to receive(:exist?)
         .with(described_class::ZSHRC)
@@ -95,7 +95,7 @@ RSpec.describe Component::Powerlevel10kComponent do
         .to raise_error(RuntimeError, /.*file not found.*/)
     end
 
-    it 'skips if instant prompt already exists' do
+    it "skips if instant prompt already exists" do
       zshrc_content = <<~EOF
         # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
         if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
@@ -113,7 +113,7 @@ RSpec.describe Component::Powerlevel10kComponent do
       expect(File).not_to have_received(:open)
     end
 
-    it 'prepends instant prompt block to .zshrc' do
+    it "prepends instant prompt block to .zshrc" do
       file_double = instance_double(File)
       allow(file_double).to receive(:write)
 
@@ -124,7 +124,7 @@ RSpec.describe Component::Powerlevel10kComponent do
 
       allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
       allow(File).to receive(:read).with(described_class::ZSHRC).and_return(zshrc_content)
-      allow(File).to receive(:open).with(described_class::ZSHRC, 'w').and_yield(file_double)
+      allow(File).to receive(:open).with(described_class::ZSHRC, "w").and_yield(file_double)
 
       p10k.send(:setInstantPrompt)
 
@@ -133,9 +133,9 @@ RSpec.describe Component::Powerlevel10kComponent do
         .with(match(/^# Enable Powerlevel10k instant prompt/))
     end
   end
-  
-  describe '#setTheme' do
-    it 'raises an error if .zsh file does not exist' do
+
+  describe "#setTheme" do
+    it "raises an error if .zsh file does not exist" do
       allow(File)
         .to receive(:exist?)
         .with(described_class::ZSHRC)
@@ -145,7 +145,7 @@ RSpec.describe Component::Powerlevel10kComponent do
         .to raise_error(RuntimeError, /.*file not found.*/)
     end
 
-    it 'substitute zsh theme in .zshrc file' do
+    it "substitute zsh theme in .zshrc file" do
       file_double = instance_double(File)
       allow(file_double).to receive(:write)
 
@@ -170,17 +170,17 @@ RSpec.describe Component::Powerlevel10kComponent do
 
       allow(File)
         .to receive(:open)
-        .with(described_class::ZSHRC, 'w')
+        .with(described_class::ZSHRC, "w")
         .and_yield(file_double)
-      
+
       p10k.send(:setTheme)
 
       expect(file_double)
         .to have_received(:write)
-        .with(match(/ZSH_THEME="powerlevel10k\/powerlevel10k"/))
+        .with(match(%r{ZSH_THEME="powerlevel10k/powerlevel10k"}))
     end
 
-    it 'add zsh theme to .zshrc file if not exist' do
+    it "add zsh theme to .zshrc file if not exist" do
       file_double = instance_double(File)
       allow(file_double).to receive(:write)
 
@@ -203,17 +203,17 @@ RSpec.describe Component::Powerlevel10kComponent do
 
       allow(File)
         .to receive(:open)
-        .with(described_class::ZSHRC, 'w')
+        .with(described_class::ZSHRC, "w")
         .and_yield(file_double)
-      
+
       p10k.send(:setTheme)
 
       expect(file_double)
         .to have_received(:write)
-        .with(match(/ZSH_THEME="powerlevel10k\/powerlevel10k"/))
+        .with(match(%r{ZSH_THEME="powerlevel10k/powerlevel10k"}))
     end
 
-    it 'add source .p10k.zsh to .zshrc file if not exist' do
+    it "add source .p10k.zsh to .zshrc file if not exist" do
       file_double = instance_double(File)
       allow(file_double).to receive(:write)
 
@@ -236,19 +236,19 @@ RSpec.describe Component::Powerlevel10kComponent do
 
       allow(File)
         .to receive(:open)
-        .with(described_class::ZSHRC, 'w')
+        .with(described_class::ZSHRC, "w")
         .and_yield(file_double)
-        
+
       p10k.send(:setTheme)
 
       expect(file_double)
         .to have_received(:write)
-        .with(match(/\[\[ ! -f ~\/.p10k.zsh \]\] \|\| source ~\/.p10k.zsh\n$/))
+        .with(match(%r{\[\[ ! -f ~/.p10k.zsh \]\] \|\| source ~/.p10k.zsh\n$}))
     end
   end
 
-  describe '#setConfig' do
-    it 'raises an error if source file does not exist' do
+  describe "#setConfig" do
+    it "raises an error if source file does not exist" do
       allow(File)
         .to receive(:exist?)
         .with(anything)
@@ -258,7 +258,7 @@ RSpec.describe Component::Powerlevel10kComponent do
         .to raise_error(RuntimeError, /Config file .* not found/)
     end
 
-    it 'Backups destination file if it exists' do
+    it "Backups destination file if it exists" do
       allow(File)
         .to receive(:exist?)
         .with(anything)

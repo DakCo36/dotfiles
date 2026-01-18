@@ -1,11 +1,11 @@
-require 'open3'
-require 'components/base'
+require "open3"
+require "components/base"
 
 module Component
   class GitComponent < BaseComponent
 
     def available?
-      system('git', '--version', out: File::NULL, err: File::NULL)
+      system("git", "--version", out: File::NULL, err: File::NULL)
     end
 
     def version
@@ -16,11 +16,10 @@ module Component
     end
 
     def clone(url, destination)
-      if !available?
-        raise "git is not installed"
-      end
+      raise "git is not installed" unless available?
 
-      runCmd('git', 'clone', '--depth', '1', url, destination)
+      runCmd("git", "clone", "--depth", "1", url, destination)
     end
+
   end
 end

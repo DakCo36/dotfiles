@@ -1,5 +1,5 @@
-require 'spec_helper'
-require 'components/utils/fzf'
+require "spec_helper"
+require "components/utils/fzf"
 
 RSpec.describe Component::FzfComponent do
   subject(:fzf) { described_class.instance }
@@ -7,8 +7,8 @@ RSpec.describe Component::FzfComponent do
   let(:mock_curl) { instance_spy(Component::CurlComponent) }
   let(:mock_tar) { instance_spy(Component::TarComponent) }
   let(:mock_github) { instance_spy(Component::GithubComponent) }
-  let(:bin_path) { '/home/user/.local/bin' }
-  let(:home_path) { '/home/user' }
+  let(:bin_path) { "/home/user/.local/bin" }
+  let(:home_path) { "/home/user" }
 
   before do
     allow(fzf).to receive(:logger).and_return(null_logger)
@@ -17,19 +17,19 @@ RSpec.describe Component::FzfComponent do
     allow(fzf).to receive(:github).and_return(mock_github)
 
     mock_config = instance_double(Components::Configuration)
-    allow(mock_config).to receive(:tmp).and_return('/tmp/test')
+    allow(mock_config).to receive(:tmp).and_return("/tmp/test")
     allow(mock_config).to receive(:bin).and_return(bin_path)
     allow(mock_config).to receive(:home).and_return(home_path)
 
     stub_const("#{described_class}::CONFIG", mock_config)
   end
 
-  describe '#available?' do
-    it 'returns true when fzf command is available' do
+  describe "#available?" do
+    it "returns true when fzf command is available" do
       # Given
       allow(fzf)
         .to receive(:system)
-        .with('fzf', '--version', out: File::NULL, err: File::NULL)
+        .with("fzf", "--version", out: File::NULL, err: File::NULL)
         .and_return(true)
 
       # When
@@ -39,11 +39,11 @@ RSpec.describe Component::FzfComponent do
       expect(available).to be true
     end
 
-    it 'returns false when fzf command is missing' do
+    it "returns false when fzf command is missing" do
       # Given
       allow(fzf)
         .to receive(:system)
-        .with('fzf', '--version', out: File::NULL, err: File::NULL)
+        .with("fzf", "--version", out: File::NULL, err: File::NULL)
         .and_return(false)
 
       # When
@@ -54,26 +54,26 @@ RSpec.describe Component::FzfComponent do
     end
   end
 
-  describe '#version' do
-    it 'returns the installed fzf version' do
+  describe "#version" do
+    it "returns the installed fzf version" do
       # Given
       status = instance_double(Process::Status, success?: true)
       allow(Open3).to receive(:capture2)
-        .with('fzf', '--version')
+        .with("fzf", "--version")
         .and_return(["0.57.0 (fc7630a)\n", status])
 
       # When
       version = fzf.version
 
       # Then
-      expect(version).to eq('0.57.0')
+      expect(version).to eq("0.57.0")
     end
 
-    it 'returns nil when command fails' do
+    it "returns nil when command fails" do
       # Given
       status = instance_double(Process::Status, success?: false)
       allow(Open3).to receive(:capture2)
-        .with('fzf', '--version')
+        .with("fzf", "--version")
         .and_return(["Unknown result", status])
 
       # When
@@ -83,10 +83,10 @@ RSpec.describe Component::FzfComponent do
       expect(version).to be_nil
     end
 
-    it 'returns nil when fzf is not installed' do
+    it "returns nil when fzf is not installed" do
       # Given
       allow(Open3).to receive(:capture2)
-        .with('fzf', '--version')
+        .with("fzf", "--version")
         .and_raise(Errno::ENOENT)
 
       # When
@@ -97,8 +97,8 @@ RSpec.describe Component::FzfComponent do
     end
   end
 
-  describe '#installed?' do
-    it 'returns true if fzf is installed' do
+  describe "#installed?" do
+    it "returns true if fzf is installed" do
       # Given
       allow(fzf).to receive(:available?).and_return(true)
       allow(fzf).to receive(:version).and_return("0.57.0")
@@ -107,7 +107,7 @@ RSpec.describe Component::FzfComponent do
       expect(fzf.installed?).to be true
     end
 
-    it 'returns false if fzf is not installed' do
+    it "returns false if fzf is not installed" do
       # Given
       allow(fzf).to receive(:available?).and_return(false)
       allow(fzf).to receive(:version).and_return(nil)
@@ -117,18 +117,18 @@ RSpec.describe Component::FzfComponent do
     end
   end
 
-  describe '#install!' do
-    it 'installs fzf from GitHub releases' do
+  describe "#install!" do
+    it "installs fzf from GitHub releases" do
       # Given
-      allow(mock_github).to receive(:get_latest_release_tag).and_return('v0.57.0')
+      allow(mock_github).to receive(:get_latest_release_tag).and_return("v0.57.0")
       allow(mock_github)
         .to receive(:get_latest_release_asset_download_url)
-        .and_return('https://github.com/junegunn/fzf/releases/download/v0.57.0/fzf-0.57.0-linux_amd64.tar.gz')
+        .and_return("https://github.com/junegunn/fzf/releases/download/v0.57.0/fzf-0.57.0-linux_amd64.tar.gz")
       allow(mock_curl).to receive(:download).and_return(["", "", instance_double(Process::Status, success?: true)])
       allow(mock_tar).to receive(:extract).and_return(["", "", instance_double(Process::Status, success?: true)])
       allow(fzf).to receive(:setup_shell_integration)
       allow(fzf).to receive(:runCmd)
-        .with('cp', anything, anything)
+        .with("cp", anything, anything)
         .and_return(["", "", instance_double(Process::Status, success?: true)])
 
       # When
@@ -143,11 +143,11 @@ RSpec.describe Component::FzfComponent do
     end
   end
 
-  describe '#setup_shell_integration' do
-    let(:zshrc_path) { '/home/user/.zshrc' }
+  describe "#setup_shell_integration" do
+    let(:zshrc_path) { "/home/user/.zshrc" }
 
-    context 'when .zshrc does not exist' do
-      it 'does nothing' do
+    context "when .zshrc does not exist" do
+      it "does nothing" do
         # Given
         allow(File).to receive(:exist?).with(zshrc_path).and_return(false)
         allow(File).to receive(:read)
@@ -162,8 +162,8 @@ RSpec.describe Component::FzfComponent do
       end
     end
 
-    context 'when fzf integration already exists' do
-      it 'skips adding integration' do
+    context "when fzf integration already exists" do
+      it "skips adding integration" do
         # Given
         zshrc_content = <<~EOF
           # existing config
@@ -183,8 +183,8 @@ RSpec.describe Component::FzfComponent do
       end
     end
 
-    context 'when fzf integration does not exist' do
-      it 'adds fzf shell integration to .zshrc' do
+    context "when fzf integration does not exist" do
+      it "adds fzf shell integration to .zshrc" do
         # Given
         file_double = instance_double(File)
         allow(file_double).to receive(:write)
@@ -196,7 +196,7 @@ RSpec.describe Component::FzfComponent do
 
         allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
         allow(File).to receive(:read).with(zshrc_path).and_return(zshrc_content)
-        allow(File).to receive(:open).with(zshrc_path, 'a').and_yield(file_double)
+        allow(File).to receive(:open).with(zshrc_path, "a").and_yield(file_double)
 
         # When
         fzf.send(:setup_shell_integration)

@@ -7,25 +7,26 @@
 #   ruby bin/cli.rb check                           # 업데이트 가능 목록 표시
 #   ruby bin/cli.rb help                            # 도움말 표시
 
-require_relative 'bin_helper'
-require 'optparse'
-require 'mixins/loggable'
+require_relative "bin_helper"
+require "optparse"
+require "mixins/loggable"
 
-require 'components/shell/zsh_binary'
-require 'components/shell/oh_my_zsh'
-require 'components/shell/powerlevel10k'
-require 'components/shell/zgenom'
-require 'components/utils/bat'
-require 'components/utils/fastfetch'
-require 'components/utils/fd'
-require 'components/utils/ripgrep'
-require 'components/utils/fzf'
+require "components/shell/zsh_binary"
+require "components/shell/oh_my_zsh"
+require "components/shell/powerlevel10k"
+require "components/shell/zgenom"
+require "components/utils/bat"
+require "components/utils/fastfetch"
+require "components/utils/fd"
+require "components/utils/ripgrep"
+require "components/utils/fzf"
 
-require 'cli/registry'
-require 'cli/dependency_resolver'
+require "cli/registry"
+require "cli/dependency_resolver"
 
 module CLI
   class Runner
+
     include Loggable
 
     def initialize
@@ -35,16 +36,16 @@ module CLI
     end
 
     def run(args)
-      command = args.shift || 'help'
+      command = args.shift || "help"
 
       case command
-      when 'install'
+      when "install"
         install_command(args)
-      when 'update'
+      when "update"
         update_command(args)
-      when 'check'
+      when "check"
         check_command(args)
-      when 'help', '-h', '--help'
+      when "help", "-h", "--help"
         help_command
       else
         logger.error("알 수 없는 명령어: #{command}")
@@ -54,6 +55,7 @@ module CLI
     end
 
     private
+
     def install_command(args)
       parse_options!(args)
 
@@ -91,7 +93,7 @@ module CLI
       unless @auto_yes
         print "계속 하시겠습니까? [Y/n] "
         response = $stdin.gets&.strip&.downcase
-        unless response.nil? || response.empty? || response == 'y' || response == 'yes'
+        unless response.nil? || response.empty? || response == "y" || response == "yes"
           logger.info("설치가 취소되었습니다.")
           return
         end
@@ -102,7 +104,7 @@ module CLI
         begin
           component.install
           logger.info(">>> #{component.display_name} 설치 완료")
-        rescue => e
+        rescue StandardError => e
           logger.error(">>> #{component.display_name} 설치 실패: #{e.message}")
           logger.error("설치가 중단되었습니다.")
           return
@@ -122,13 +124,17 @@ module CLI
       logger.info("설치 계획:")
       install_plan.each_with_index do |component, idx|
         deps = component.dependencies.keys
-        dep_info = deps.empty? ? "(의존성 없음)" : "(← #{deps.join(', ')})"
-        
+        dep_info = deps.empty? ? "(의존성 없음)" : "(← #{deps.join(", ")})"
+
         marker = requested_classes.include?(component.class) ? "" : "[의존성] "
-        
-        latest = component.latest_version rescue nil
+
+        latest = begin
+          component.latest_version
+        rescue StandardError
+          nil
+        end
         version_info = latest ? " v#{latest}" : ""
-        
+
         logger.info("  #{idx + 1}. #{marker}#{component.display_name}#{version_info} #{dep_info}")
       end
     end
@@ -144,13 +150,17 @@ module CLI
 
       if components.empty?
         logger.info("업데이트할 컴포넌트가 없습니다.")
-        
+
         installed = @registry.installed
         if installed.any?
           logger.info("현재 설치된 컴포넌트:")
           installed.each do |component|
-            current = component.version rescue nil
-            logger.info("  #{component.display_name} (#{current || 'unknown'})")
+            current = begin
+              component.version
+            rescue StandardError
+              nil
+            end
+            logger.info("  #{component.display_name} (#{current || "unknown"})")
           end
         end
         return
@@ -158,15 +168,23 @@ module CLI
 
       logger.info("다음 컴포넌트가 업데이트됩니다:")
       components.each do |component|
-        current = component.version rescue nil
-        latest = component.latest_version rescue nil
-        logger.info("  #{component.display_name} (#{current || '?'} -> #{latest || '?'})")
+        current = begin
+          component.version
+        rescue StandardError
+          nil
+        end
+        latest = begin
+          component.latest_version
+        rescue StandardError
+          nil
+        end
+        logger.info("  #{component.display_name} (#{current || "?"} -> #{latest || "?"})")
       end
 
       unless @auto_yes
         print "계속 하시겠습니까? [Y/n] "
         response = $stdin.gets&.strip&.downcase
-        unless response.nil? || response.empty? || response == 'y' || response == 'yes'
+        unless response.nil? || response.empty? || response == "y" || response == "yes"
           logger.info("업데이트가 취소되었습니다.")
           return
         end
@@ -177,7 +195,7 @@ module CLI
         begin
           component.update
           logger.info(">>> #{component.display_name} 업데이트 완료")
-        rescue => e
+        rescue StandardError => e
           logger.error(">>> #{component.display_name} 업데이트 실패: #{e.message}")
         end
       end
@@ -196,9 +214,7 @@ module CLI
       all_components.each do |component|
         if component.installed?
           installed_components << component
-          if component.respond_to?(:upgradable?) && component.upgradable?
-            upgradable_components << component
-          end
+          upgradable_components << component if component.respond_to?(:upgradable?) && component.upgradable?
         else
           not_installed_components << component
         end
@@ -207,9 +223,17 @@ module CLI
       if upgradable_components.any?
         logger.info("업데이트 가능한 컴포넌트:")
         upgradable_components.each do |component|
-          current = component.version rescue nil
-          latest = component.latest_version rescue nil
-          logger.info("  #{component.display_name} (#{current || '?'} -> #{latest || '?'})")
+          current = begin
+            component.version
+          rescue StandardError
+            nil
+          end
+          latest = begin
+            component.latest_version
+          rescue StandardError
+            nil
+          end
+          logger.info("  #{component.display_name} (#{current || "?"} -> #{latest || "?"})")
         end
       end
 
@@ -217,22 +241,30 @@ module CLI
       if up_to_date.any?
         logger.info("최신 상태인 컴포넌트:")
         up_to_date.each do |component|
-          current = component.version rescue nil
-          logger.info("  #{component.display_name} (#{current || 'installed'})")
+          current = begin
+            component.version
+          rescue StandardError
+            nil
+          end
+          logger.info("  #{component.display_name} (#{current || "installed"})")
         end
       end
 
       if not_installed_components.any?
         logger.info("미설치 컴포넌트:")
         not_installed_components.each do |component|
-          latest = component.latest_version rescue nil
+          latest = begin
+            component.latest_version
+          rescue StandardError
+            nil
+          end
           version_info = latest ? " (latest: #{latest})" : ""
           logger.info("  #{component.display_name}#{version_info}")
         end
       end
 
       logger.info("전체: #{all_components.size}개, 설치됨: #{installed_components.size}개, " \
-           "업데이트 가능: #{upgradable_components.size}개, 미설치: #{not_installed_components.size}개")
+                  "업데이트 가능: #{upgradable_components.size}개, 미설치: #{not_installed_components.size}개")
     end
 
     def help_command
@@ -243,11 +275,11 @@ module CLI
       @option_parser ||= OptionParser.new do |opts|
         opts.banner = "dotfiles CLI - 컴포넌트 설치 및 관리 도구\n\n" \
                       "사용법: ruby bin/cli.rb <command> [options] [components...]\n\n" \
-                      "명령어:\n" \
-                      "  install   컴포넌트를 설치합니다\n" \
-                      "  update    설치된 컴포넌트를 업데이트합니다\n" \
-                      "  check     컴포넌트 상태를 확인합니다\n" \
-                      "  help      이 도움말을 표시합니다\n\n" \
+                      "명령어:\n  " \
+                      "install   컴포넌트를 설치합니다\n  " \
+                      "update    설치된 컴포넌트를 업데이트합니다\n  " \
+                      "check     컴포넌트 상태를 확인합니다\n  " \
+                      "help      이 도움말을 표시합니다\n\n" \
                       "옵션:"
 
         opts.on("-y", "--yes", "확인 없이 바로 실행합니다") do
@@ -273,7 +305,7 @@ module CLI
         opts.separator "  ruby bin/cli.rb check                # 상태 확인"
         opts.separator ""
         opts.separator "사용 가능한 컴포넌트:"
-        opts.separator "  #{@registry.component_names.join(', ')}"
+        opts.separator "  #{@registry.component_names.join(", ")}"
       end
     end
 
@@ -284,9 +316,8 @@ module CLI
       puts option_parser
       exit 1
     end
+
   end
 end
 
-if __FILE__ == $0
-  CLI::Runner.new.run(ARGV)
-end
+CLI::Runner.new.run(ARGV) if __FILE__ == $0
