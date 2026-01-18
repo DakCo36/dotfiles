@@ -22,6 +22,7 @@ require 'components/utils/ripgrep'
 require 'components/utils/fzf'
 
 require 'cli/registry'
+require 'cli/dependency_resolver'
 
 module CLI
   class Runner
@@ -30,6 +31,7 @@ module CLI
     def initialize
       @registry = Registry.instance
       @auto_yes = false
+      @dry_run = false
     end
 
     def run(args)
@@ -55,22 +57,35 @@ module CLI
     def install_command(args)
       parse_options!(args)
 
-      components = if args.empty?
-                     @registry.not_installed
-                   else
-                     @registry.find_all(args).reject(&:installed?)
-                   end
+      requested_components = if args.empty?
+                               @registry.not_installed
+                             else
+                               @registry.find_all(args).reject(&:installed?)
+                             end
 
-      if components.empty?
+      if requested_components.empty?
         logger.info("설치할 컴포넌트가 없습니다. 모든 컴포넌트가 이미 설치되어 있습니다.")
         return
       end
 
-      logger.info("다음 컴포넌트가 새로 설치됩니다:")
-      components.each do |component|
-        latest = component.latest_version rescue nil
-        version_info = latest ? " (latest: #{latest})" : ""
-        logger.info("  #{component.display_name}#{version_info}")
+      resolver = DependencyResolver.new
+      begin
+        install_plan = resolver.resolve(requested_components)
+      rescue DependencyResolver::CircularDependencyError => e
+        logger.error("의존성 오류: #{e.message}")
+        return
+      end
+
+      if install_plan.empty?
+        logger.info("설치할 컴포넌트가 없습니다. 모든 컴포넌트가 이미 설치되어 있습니다.")
+        return
+      end
+
+      show_install_plan(install_plan, requested_components)
+
+      if @dry_run
+        logger.info("(dry-run 모드: 실제 설치는 수행되지 않았습니다)")
+        return
       end
 
       unless @auto_yes
@@ -82,17 +97,40 @@ module CLI
         end
       end
 
-      components.each do |component|
+      install_plan.each do |component|
         logger.info(">>> #{component.display_name} 설치 중...")
         begin
           component.install
           logger.info(">>> #{component.display_name} 설치 완료")
         rescue => e
           logger.error(">>> #{component.display_name} 설치 실패: #{e.message}")
+          logger.error("설치가 중단되었습니다.")
+          return
         end
       end
 
       logger.info("설치가 완료되었습니다.")
+    end
+
+    # Show the install plan to the user
+    #
+    # @param install_plan [Array<Component::BaseComponent>] an array of components to install (in order)
+    # @param requested [Array<Component::BaseComponent>] an array of components requested by the user
+    def show_install_plan(install_plan, requested)
+      requested_classes = requested.map(&:class)
+
+      logger.info("설치 계획:")
+      install_plan.each_with_index do |component, idx|
+        deps = component.dependencies.keys
+        dep_info = deps.empty? ? "(의존성 없음)" : "(← #{deps.join(', ')})"
+        
+        marker = requested_classes.include?(component.class) ? "" : "[의존성] "
+        
+        latest = component.latest_version rescue nil
+        version_info = latest ? " v#{latest}" : ""
+        
+        logger.info("  #{idx + 1}. #{marker}#{component.display_name}#{version_info} #{dep_info}")
+      end
     end
 
     def update_command(args)
@@ -216,6 +254,10 @@ module CLI
           @auto_yes = true
         end
 
+        opts.on("-n", "--dry-run", "설치하지 않고 계획만 표시합니다") do
+          @dry_run = true
+        end
+
         opts.on("-h", "--help", "도움말을 표시합니다") do
           puts opts
           exit
@@ -225,6 +267,7 @@ module CLI
         opts.separator "예시:"
         opts.separator "  ruby bin/cli.rb install              # 모든 미설치 컴포넌트 설치"
         opts.separator "  ruby bin/cli.rb install --yes        # 확인 없이 설치"
+        opts.separator "  ruby bin/cli.rb install --dry-run    # 설치 계획만 확인"
         opts.separator "  ruby bin/cli.rb install bat fzf      # bat, fzf만 설치"
         opts.separator "  ruby bin/cli.rb update               # 설치된 컴포넌트 업데이트"
         opts.separator "  ruby bin/cli.rb check                # 상태 확인"
