@@ -20,6 +20,7 @@ require "components/utils/fastfetch"
 require "components/utils/fd"
 require "components/utils/ripgrep"
 require "components/utils/fzf"
+require "components/language/python"
 
 require "cli/registry"
 require "cli/dependency_resolver"

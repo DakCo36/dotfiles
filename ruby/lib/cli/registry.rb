@@ -16,6 +16,8 @@ module CLI
       Component::FzfComponent,
       Component::RipgrepComponent,
       Component::FastfetchComponent,
+
+      Component::PythonComponent,
     ].freeze
 
     def all
