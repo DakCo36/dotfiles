@@ -45,8 +45,7 @@ module CLI
       when 'help', '-h', '--help'
         help_command
       else
-        puts "알 수 없는 명령어: #{command}"
-        puts
+        logger.error("알 수 없는 명령어: #{command}")
         help_command
         exit 1
       end
@@ -63,41 +62,37 @@ module CLI
                    end
 
       if components.empty?
-        puts "설치할 컴포넌트가 없습니다. 모든 컴포넌트가 이미 설치되어 있습니다."
+        logger.info("설치할 컴포넌트가 없습니다. 모든 컴포넌트가 이미 설치되어 있습니다.")
         return
       end
 
-      puts "다음 컴포넌트가 새로 설치됩니다:"
+      logger.info("다음 컴포넌트가 새로 설치됩니다:")
       components.each do |component|
         latest = component.latest_version rescue nil
         version_info = latest ? " (latest: #{latest})" : ""
-        puts "  #{component.display_name}#{version_info}"
+        logger.info("  #{component.display_name}#{version_info}")
       end
-      puts
 
       unless @auto_yes
         print "계속 하시겠습니까? [Y/n] "
         response = $stdin.gets&.strip&.downcase
         unless response.nil? || response.empty? || response == 'y' || response == 'yes'
-          puts "설치가 취소되었습니다."
+          logger.info("설치가 취소되었습니다.")
           return
         end
       end
 
-      puts
       components.each do |component|
-        puts ">>> #{component.display_name} 설치 중..."
+        logger.info(">>> #{component.display_name} 설치 중...")
         begin
           component.install
-          puts ">>> #{component.display_name} 설치 완료"
+          logger.info(">>> #{component.display_name} 설치 완료")
         rescue => e
-          puts ">>> #{component.display_name} 설치 실패: #{e.message}"
-          logger.error("Failed to install #{component.display_name}: #{e.message}")
+          logger.error(">>> #{component.display_name} 설치 실패: #{e.message}")
         end
-        puts
       end
 
-      puts "설치가 완료되었습니다."
+      logger.info("설치가 완료되었습니다.")
     end
 
     def update_command(args)
@@ -110,54 +105,50 @@ module CLI
                    end
 
       if components.empty?
-        puts "업데이트할 컴포넌트가 없습니다."
+        logger.info("업데이트할 컴포넌트가 없습니다.")
         
         installed = @registry.installed
         if installed.any?
-          puts "\n현재 설치된 컴포넌트:"
+          logger.info("현재 설치된 컴포넌트:")
           installed.each do |component|
             current = component.version rescue nil
-            puts "  #{component.display_name} (#{current || 'unknown'})"
+            logger.info("  #{component.display_name} (#{current || 'unknown'})")
           end
         end
         return
       end
 
-      puts "다음 컴포넌트가 업데이트됩니다:"
+      logger.info("다음 컴포넌트가 업데이트됩니다:")
       components.each do |component|
         current = component.version rescue nil
         latest = component.latest_version rescue nil
-        puts "  #{component.display_name} (#{current || '?'} -> #{latest || '?'})"
+        logger.info("  #{component.display_name} (#{current || '?'} -> #{latest || '?'})")
       end
-      puts
 
       unless @auto_yes
         print "계속 하시겠습니까? [Y/n] "
         response = $stdin.gets&.strip&.downcase
         unless response.nil? || response.empty? || response == 'y' || response == 'yes'
-          puts "업데이트가 취소되었습니다."
+          logger.info("업데이트가 취소되었습니다.")
           return
         end
       end
 
-      puts
       components.each do |component|
-        puts ">>> #{component.display_name} 업데이트 중..."
+        logger.info(">>> #{component.display_name} 업데이트 중...")
         begin
           component.update
-          puts ">>> #{component.display_name} 업데이트 완료"
+          logger.info(">>> #{component.display_name} 업데이트 완료")
         rescue => e
-          puts ">>> #{component.display_name} 업데이트 실패: #{e.message}"
-          logger.error("Failed to update #{component.display_name}: #{e.message}")
+          logger.error(">>> #{component.display_name} 업데이트 실패: #{e.message}")
         end
-        puts
       end
 
-      puts "업데이트가 완료되었습니다."
+      logger.info("업데이트가 완료되었습니다.")
     end
 
     def check_command(_args)
-      puts "컴포넌트 상태 확인 중...\n\n"
+      logger.info("컴포넌트 상태 확인 중...")
 
       all_components = @registry.all
       installed_components = []
@@ -176,38 +167,34 @@ module CLI
       end
 
       if upgradable_components.any?
-        puts "업데이트 가능한 컴포넌트:"
+        logger.info("업데이트 가능한 컴포넌트:")
         upgradable_components.each do |component|
           current = component.version rescue nil
           latest = component.latest_version rescue nil
-          puts "  #{component.display_name} (#{current || '?'} -> #{latest || '?'})"
+          logger.info("  #{component.display_name} (#{current || '?'} -> #{latest || '?'})")
         end
-        puts
       end
 
       up_to_date = installed_components - upgradable_components
       if up_to_date.any?
-        puts "최신 상태인 컴포넌트:"
+        logger.info("최신 상태인 컴포넌트:")
         up_to_date.each do |component|
           current = component.version rescue nil
-          puts "  #{component.display_name} (#{current || 'installed'})"
+          logger.info("  #{component.display_name} (#{current || 'installed'})")
         end
-        puts
       end
 
       if not_installed_components.any?
-        puts "미설치 컴포넌트:"
+        logger.info("미설치 컴포넌트:")
         not_installed_components.each do |component|
           latest = component.latest_version rescue nil
           version_info = latest ? " (latest: #{latest})" : ""
-          puts "  #{component.display_name}#{version_info}"
+          logger.info("  #{component.display_name}#{version_info}")
         end
-        puts
       end
 
-      puts "---"
-      puts "전체: #{all_components.size}개, 설치됨: #{installed_components.size}개, " \
-           "업데이트 가능: #{upgradable_components.size}개, 미설치: #{not_installed_components.size}개"
+      logger.info("전체: #{all_components.size}개, 설치됨: #{installed_components.size}개, " \
+           "업데이트 가능: #{upgradable_components.size}개, 미설치: #{not_installed_components.size}개")
     end
 
     def help_command
@@ -250,7 +237,7 @@ module CLI
     def parse_options!(args)
       option_parser.parse!(args)
     rescue OptionParser::InvalidOption => e
-      puts "오류: #{e.message}"
+      logger.error("오류: #{e.message}")
       puts option_parser
       exit 1
     end
