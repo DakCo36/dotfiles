@@ -15,7 +15,7 @@ module Component
 
     OWNER = "neovim"
     REPO = "neovim"
-    TARGET_ASSET_PATTERN = "nvim-linux64\\.tar\\.gz"
+    TARGET_ASSET_PATTERN = "nvim-linux-x86_64\\.tar\\.gz"
 
     CONFIG = Components::Configuration.instance
     TMP_ASSET_PATH = File.join(CONFIG.tmp, "nvim-linux64.tar.gz")
