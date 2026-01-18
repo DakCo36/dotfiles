@@ -81,6 +81,7 @@ module Component
       install_vim_plug
       install_pynvim
       copy_config_files
+      install_plugins
 
       logger.info("Neovim installed successfully.")
     end
@@ -121,6 +122,13 @@ module Component
       logger.info("Installing pynvim...")
       runCmd("mise", "exec", "--", "python", "-m", "pip", "install", "pynvim")
       logger.info("pynvim installed successfully")
+    end
+
+    # Installs vim plugins using vim-plug
+    def install_plugins
+      logger.info("Installing vim plugins via vim-plug...")
+      runCmd("nvim", "--headless", "+PlugInstall", "+qall")
+      logger.info("Vim plugins installed successfully")
     end
 
     # Copies init.vim and .vimrc to home directory
