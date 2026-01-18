@@ -3,11 +3,11 @@ module Installable
 
   def self.prepended(base)
     # Ensure this module is only prepended to BaseComponent subclasses
-    unless base < Component::BaseComponent
-      raise TypeError, "Installable can only be prepended to classes that inherit from Component::BaseComponent"
-    end
+    return if base < Component::BaseComponent
+
+    raise TypeError, "Installable can only be prepended to classes that inherit from Component::BaseComponent"
   end
-  
+
   def install
     # 1. Validate all dependencies inherit from BaseComponent
     dependencies.each do |name, component_class|
@@ -15,13 +15,13 @@ module Installable
         raise TypeError, "Dependency #{name} (#{component_class}) must inherit from Component::BaseComponent"
       end
     end
-    
+
     # 2. Filter out dependencies that are already available
-    needs_to_install = dependencies.reject do |name, component_class|
+    needs_to_install = dependencies.reject do |_name, component_class|
       component = component_class.instance
       component.respond_to?(:available?) && component.available?
     end
-    
+
     # 3. Raise error if any dependency is not installable
     needs_to_install.each do |name, component_class|
       component = component_class.instance
@@ -29,19 +29,19 @@ module Installable
         raise Component::DependencyError, "Dependency #{name} is not installable and not available"
       end
     end
-    
+
     # 4. Install dependencies
     needs_to_install.each do |name, component_class|
       logger.info("Installing dependency: #{name}")
       component_class.instance.install unless component_class.instance.installed?
     end
-    
+
     # Call the original install method
     super
   end
 
   def installed?
-  	super
+    super
   end
 
   def rollback

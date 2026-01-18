@@ -1,10 +1,11 @@
-require 'open3'
-require 'components/base'
-require 'components/tools/curl'
-require 'json'
+require "open3"
+require "components/base"
+require "components/tools/curl"
+require "json"
 
 module Component
   class GithubComponent < BaseComponent
+
     RELEASE_BASE_URL = "https://api.github.com/repos/%s/%s/releases/latest"
 
     def initialize
@@ -18,22 +19,20 @@ module Component
     end
 
     def get_latest_release_tag(owner, repo)
-      begin
-        JSON.parse(get_latest_release(owner, repo))["tag_name"]
-      rescue JSON::ParserError
-        logger.error("Failed to parse JSON response: #{owner}/#{repo}")
-        raise "Failed to parse JSON response"
-      end
+      JSON.parse(get_latest_release(owner, repo))["tag_name"]
+    rescue JSON::ParserError
+      logger.error("Failed to parse JSON response: #{owner}/#{repo}")
+      raise "Failed to parse JSON response"
     end
 
     def get_latest_release_asset_download_url(owner, repo, asset_pattern)
       regex = Regexp.new(asset_pattern)
       begin
-        url = JSON.parse(get_latest_release(owner, repo))["assets"].find { |asset| 
+        url = JSON.parse(get_latest_release(owner, repo))["assets"].find do |asset|
           asset["name"] =~ regex
-        }["browser_download_url"]
+        end["browser_download_url"]
         logger.debug("Found asset: #{url}")
-        return url
+        url
       rescue JSON::ParserError
         logger.error("Failed to parse JSON response: #{owner}/#{repo}")
         raise "Failed to parse JSON response"
@@ -41,8 +40,9 @@ module Component
     end
 
     private
+
     def get_latest_release_url(owner, repo)
-      RELEASE_BASE_URL % [owner, repo]
+      format(RELEASE_BASE_URL, owner, repo)
     end
 
     def get_latest_release(owner, repo)
@@ -50,6 +50,7 @@ module Component
       @release_cache[key] ||= @curl.get(get_latest_release_url(owner, repo))
       @release_cache[key]
     end
+
   end
 end
 

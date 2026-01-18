@@ -1,10 +1,11 @@
 module CLI
   class DependencyResolver
+
     # Occur when a circular dependency is detected
     class CircularDependencyError < StandardError; end
 
     # Return an array of components sorted by dependencies
-    
+
     # @param components [Array<Component::BaseComponent>] an array of components to install
     # @return [Array<Component::BaseComponent>] an array of components sorted by dependencies
     # @raise [CircularDependencyError] when a circular dependency is detected
@@ -32,7 +33,7 @@ module CLI
     # @return [Set<Component::BaseComponent>] a set of all related components
     def collect_all_dependencies(components)
       visited = Set.new
-      
+
       components.each do |component|
         collect_dependencies_recursive(component, visited)
       end
@@ -71,9 +72,7 @@ module CLI
       in_degree = Hash.new(0)
       components_array.each do |component|
         component.dependencies.each_value do |dep_class|
-          if class_to_instance.key?(dep_class)
-            in_degree[component] += 1
-          end
+          in_degree[component] += 1 if class_to_instance.key?(dep_class)
         end
       end
 
@@ -94,12 +93,13 @@ module CLI
 
       if result.size < components_array.size
         unprocessed = components_array - result
-        cycle_names = unprocessed.map(&:display_name).join(', ')
-        raise CircularDependencyError, 
-          "순환 의존성이 감지되었습니다: #{cycle_names}"
+        cycle_names = unprocessed.map(&:display_name).join(", ")
+        raise CircularDependencyError,
+              "순환 의존성이 감지되었습니다: #{cycle_names}"
       end
 
       result
     end
+
   end
 end

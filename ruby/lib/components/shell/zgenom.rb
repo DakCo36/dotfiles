@@ -1,25 +1,26 @@
-require 'fileutils'
-require 'components/base'
-require 'components/configuration'
-require 'mixins/installable'
-require 'components/tools/git'
-require 'components/shell/zsh_binary'
+require "fileutils"
+require "components/base"
+require "components/configuration"
+require "mixins/installable"
+require "components/tools/git"
+require "components/shell/zsh_binary"
 
 module Component
   class ZgenomComponent < BaseComponent
+
     prepend Installable
 
     CONFIG = Components::Configuration.instance
     REPO_URL = "https://github.com/jandamm/zgenom.git"
-    TARGET_DIR_PATH = File.join(CONFIG.home, '.zgenom')
+    TARGET_DIR_PATH = File.join(CONFIG.home, ".zgenom")
 
-    ZSHRC = File.join(CONFIG.home, '.zshrc') # FIXME Get from ZshBinaryComponent
+    ZSHRC = File.join(CONFIG.home, ".zshrc") # FIXME: Get from ZshBinaryComponent
 
     depends_on Component::GitComponent
     depends_on Component::ZshBinaryComponent
 
     def available?
-      Dir.exist?(TARGET_DIR_PATH) && File.exist?(File.join(TARGET_DIR_PATH, 'zgenom.zsh'))
+      Dir.exist?(TARGET_DIR_PATH) && File.exist?(File.join(TARGET_DIR_PATH, "zgenom.zsh"))
     end
 
     def installed?
@@ -29,86 +30,83 @@ module Component
 
     def version
       return nil unless available?
+
       Dir.chdir(TARGET_DIR_PATH) do
-        output, status = Open3.capture2('git', 'rev-parse', '--short=7', 'HEAD')
+        output, status = Open3.capture2("git", "rev-parse", "--short=7", "HEAD")
         output.strip if status.success?
       end
-    rescue => e
+    rescue StandardError => e
       logger.warn("Failed to get zgenom version: #{e.message}")
       nil
     end
 
     def latest_version
       return nil unless available?
+
       Dir.chdir(TARGET_DIR_PATH) do
-        Open3.capture2('git', 'fetch', '--quiet', 'origin')
-        output, status = Open3.capture2('git', 'rev-parse', '--short=7', 'origin/main')
+        Open3.capture2("git", "fetch", "--quiet", "origin")
+        output, status = Open3.capture2("git", "rev-parse", "--short=7", "origin/main")
         output.strip if status.success?
       end
-    rescue => e
+    rescue StandardError => e
       logger.warn("Failed to get latest zgenom version: #{e.message}")
       nil
     end
 
     def install
       if installed?
-        logger.info('Zgenom already installed.')
+        logger.info("Zgenom already installed.")
         return
       end
       install!
-      configure()
+      configure
     end
 
     def install!
       FileUtils.rm_rf(TARGET_DIR_PATH) if Dir.exist?(TARGET_DIR_PATH)
-      logger.info('Installing Zgenom...')
+      logger.info("Installing Zgenom...")
       FileUtils.mkdir_p(TARGET_DIR_PATH) unless Dir.exist?(TARGET_DIR_PATH)
 
       git.clone(REPO_URL, TARGET_DIR_PATH)
-    rescue => e
+    rescue StandardError => e
       logger.error("Failed to install Zgenom: #{e}")
       raise e
     end
 
     def rollback
-      raise NotImplementedError, 'Rollback not implemented for ZgenomComponent'
+      raise NotImplementedError, "Rollback not implemented for ZgenomComponent"
     end
 
     private
+
     def configure
       disableOhMyZshPlugins
       setPlugins
     end
 
-    private
     def disableOhMyZshPlugins
-      if !File.exist?(ZSHRC)
+      unless File.exist?(ZSHRC)
         logger.error(".zshrc file not found")
         raise ".zshrc file not found"
       end
 
       zshrc_content = File.read(ZSHRC)
 
-      # FIXME possibly distroy .zshrc
+      # FIXME: possibly distroy .zshrc
       # if zshrc_content.gsub!(/^(\s*plugins=\([^)]*\)\s*)$/, '# \1')
-      if zshrc_content.gsub!(/^(\s*plugins=\([^)]*\))/m, '# \1')
-        logger.info("Disabling oh-my-zsh plugins")
-      end
+      logger.info("Disabling oh-my-zsh plugins") if zshrc_content.gsub!(/^(\s*plugins=\([^)]*\))/m, '# \1')
 
-      # FIXME possibly distroy .zshrc
+      # FIXME: possibly distroy .zshrc
       #   if zshrc_content.gsub!(/^(\s*source \$ZSH\/oh-my-zsh.sh)$/, '# \1')
-      if zshrc_content.gsub!(/^(\s*source \$ZSH\/oh-my-zsh.sh)/m, '# \1')
+      if zshrc_content.gsub!(%r{^(\s*source \$ZSH/oh-my-zsh.sh)}m, '# \1')
         logger.info("Disabling source oh-my-zsh script")
       end
 
-      File.open(ZSHRC, 'w') do |file|
-        file.write(zshrc_content)
-      end
+      File.write(ZSHRC, zshrc_content)
     end
 
-    private
     def setPlugins
-      if !File.exist?(ZSHRC)
+      unless File.exist?(ZSHRC)
         logger.error(".zshrc file not found")
         raise ".zshrc file not found"
       end
@@ -142,7 +140,7 @@ module Component
             zgenom oh-my-zsh plugins/command-not-found
             zgenom oh-my-zsh plugins/docker-compose
             zgenom oh-my-zsh plugins/kubectl
-            
+          #{"  "}
             # load zsh-users plugins
             zgenom load zsh-users/zsh-syntax-highlighting
             zgenom load zsh-users/zsh-history-substring-search
@@ -156,8 +154,8 @@ module Component
             zgenom load lukechilds/zsh-nvm
 
             # load fzf-tab
-            zgenom load Aloxaf/fzf-tab 
-            
+            zgenom load Aloxaf/fzf-tab#{" "}
+          #{"  "}
             # Save and compile .zshrc
             zgenom save
             zgenom compile "$HOME/.zshrc"
@@ -166,9 +164,8 @@ module Component
       end
 
       zshrc_content << zgenom_config
-      File.open(ZSHRC, 'w') do |file|
-        file.write(zshrc_content)
-      end
+      File.write(ZSHRC, zshrc_content)
     end
+
   end
 end

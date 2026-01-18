@@ -1,5 +1,5 @@
-require 'spec_helper'
-require 'components/utils/fd'
+require "spec_helper"
+require "components/utils/fd"
 
 RSpec.describe Component::FdComponent do
   subject(:fd) { described_class.instance }
@@ -7,10 +7,10 @@ RSpec.describe Component::FdComponent do
   let(:mock_curl) { instance_spy(Component::CurlComponent) }
   let(:mock_tar) { instance_spy(Component::TarComponent) }
   let(:mock_github) { instance_spy(Component::GithubComponent) }
-  let(:bin_path) { '/home/user/.local/bin' }
-  let(:man1_path) { '/home/user/.local/share/man/man1' }
-  let(:zsh_completions_path) { '/home/user/.local/share/zsh/site-functions' }
-  let(:bash_completions_path) { '/home/user/.local/share/bash-completion/completions' }
+  let(:bin_path) { "/home/user/.local/bin" }
+  let(:man1_path) { "/home/user/.local/share/man/man1" }
+  let(:zsh_completions_path) { "/home/user/.local/share/zsh/site-functions" }
+  let(:bash_completions_path) { "/home/user/.local/share/bash-completion/completions" }
 
   before do
     allow(fd).to receive(:logger).and_return(null_logger)
@@ -19,7 +19,7 @@ RSpec.describe Component::FdComponent do
     allow(fd).to receive(:github).and_return(mock_github)
 
     mock_config = instance_double(Components::Configuration)
-    allow(mock_config).to receive(:tmp).and_return('/tmp/test')
+    allow(mock_config).to receive(:tmp).and_return("/tmp/test")
     allow(mock_config).to receive(:bin).and_return(bin_path)
     allow(mock_config).to receive(:man1).and_return(man1_path)
     allow(mock_config).to receive(:zsh_completions).and_return(zsh_completions_path)
@@ -28,12 +28,12 @@ RSpec.describe Component::FdComponent do
     stub_const("#{described_class}::CONFIG", mock_config)
   end
 
-  describe '#available?' do
-    it 'returns true when fd command is available' do
+  describe "#available?" do
+    it "returns true when fd command is available" do
       # Given
       allow(fd)
         .to receive(:system)
-        .with('fd', '--version', out: File::NULL, err: File::NULL)
+        .with("fd", "--version", out: File::NULL, err: File::NULL)
         .and_return(true)
 
       # When
@@ -43,11 +43,11 @@ RSpec.describe Component::FdComponent do
       expect(available).to be true
     end
 
-    it 'returns false when fd command is missing' do
+    it "returns false when fd command is missing" do
       # Given
       allow(fd)
         .to receive(:system)
-        .with('fd', '--version', out: File::NULL, err: File::NULL)
+        .with("fd", "--version", out: File::NULL, err: File::NULL)
         .and_return(false)
 
       # When
@@ -58,26 +58,26 @@ RSpec.describe Component::FdComponent do
     end
   end
 
-  describe '#version' do
-    it 'returns the installed fd version' do
+  describe "#version" do
+    it "returns the installed fd version" do
       # Given
       status = instance_double(Process::Status, success?: true)
       allow(Open3).to receive(:capture2)
-        .with('fd', '--version')
+        .with("fd", "--version")
         .and_return(["fd 10.3.0\n", status])
 
       # When
       version = fd.version
 
       # Then
-      expect(version).to eq('10.3.0')
+      expect(version).to eq("10.3.0")
     end
 
-    it 'returns nil when command fails' do
+    it "returns nil when command fails" do
       # Given
       status = instance_double(Process::Status, success?: false)
       allow(Open3).to receive(:capture2)
-        .with('fd', '--version')
+        .with("fd", "--version")
         .and_return(["Unknown result", status])
 
       # When
@@ -87,10 +87,10 @@ RSpec.describe Component::FdComponent do
       expect(version).to be_nil
     end
 
-    it 'returns nil when fd is not installed' do
+    it "returns nil when fd is not installed" do
       # Given
       allow(Open3).to receive(:capture2)
-        .with('fd', '--version')
+        .with("fd", "--version")
         .and_raise(Errno::ENOENT)
 
       # When
@@ -101,8 +101,8 @@ RSpec.describe Component::FdComponent do
     end
   end
 
-  describe '#installed?' do
-    it 'returns true if fd is installed' do
+  describe "#installed?" do
+    it "returns true if fd is installed" do
       # Given
       allow(fd).to receive(:available?).and_return(true)
       allow(fd).to receive(:version).and_return("10.3.0")
@@ -111,7 +111,7 @@ RSpec.describe Component::FdComponent do
       expect(fd.installed?).to be true
     end
 
-    it 'returns false if fd is not installed' do
+    it "returns false if fd is not installed" do
       # Given
       allow(fd).to receive(:available?).and_return(false)
       allow(fd).to receive(:version).and_return(nil)
@@ -121,19 +121,19 @@ RSpec.describe Component::FdComponent do
     end
   end
 
-  describe '#install!' do
-    it 'installs fd from GitHub releases' do
+  describe "#install!" do
+    it "installs fd from GitHub releases" do
       # Given
-      allow(mock_github).to receive(:get_latest_release_tag).and_return('v10.3.0')
+      allow(mock_github).to receive(:get_latest_release_tag).and_return("v10.3.0")
       allow(mock_github)
         .to receive(:get_latest_release_asset_download_url)
-        .and_return('https://github.com/sharkdp/fd/releases/download/v10.3.0/fd-v10.3.0-x86_64-unknown-linux-musl.tar.gz')
+        .and_return("https://github.com/sharkdp/fd/releases/download/v10.3.0/fd-v10.3.0-x86_64-unknown-linux-musl.tar.gz")
       allow(mock_curl).to receive(:download).and_return(["", "", instance_double(Process::Status, success?: true)])
       allow(mock_tar).to receive(:extract).and_return(["", "", instance_double(Process::Status, success?: true)])
       allow(fd).to receive(:setup_man_page).and_return(["", "", instance_double(Process::Status, success?: true)])
       allow(fd).to receive(:setup_completions).and_return(["", "", instance_double(Process::Status, success?: true)])
       allow(fd).to receive(:runCmd)
-        .with('cp', anything, anything)
+        .with("cp", anything, anything)
         .and_return(["", "", instance_double(Process::Status, success?: true)])
 
       # When
@@ -149,39 +149,41 @@ RSpec.describe Component::FdComponent do
     end
   end
 
-  describe '#setup_man_page' do
+  describe "#setup_man_page" do
     before do
-      stub_const("#{described_class}::TMP_DIR_PATH", '/tmp/test/fd-assets')
+      stub_const("#{described_class}::TMP_DIR_PATH", "/tmp/test/fd-assets")
       allow(FileUtils).to receive(:mkdir_p)
       allow(fd).to receive(:runCmd).and_return(["", "", instance_double(Process::Status, success?: true)])
     end
 
-    it 'creates directory and copies fd.1' do
+    it "creates directory and copies fd.1" do
       # When
       fd.send(:setup_man_page)
 
       # Then
       expect(FileUtils).to have_received(:mkdir_p).with(man1_path)
-      expect(fd).to have_received(:runCmd).with('cp', '/tmp/test/fd-assets/fd.1', "#{man1_path}/fd.1")
+      expect(fd).to have_received(:runCmd).with("cp", "/tmp/test/fd-assets/fd.1", "#{man1_path}/fd.1")
     end
   end
 
-  describe '#setup_completions' do
+  describe "#setup_completions" do
     before do
-      stub_const("#{described_class}::TMP_DIR_PATH", '/tmp/test/fd-assets')
+      stub_const("#{described_class}::TMP_DIR_PATH", "/tmp/test/fd-assets")
       allow(FileUtils).to receive(:mkdir_p)
       allow(fd).to receive(:runCmd).and_return(["", "", instance_double(Process::Status, success?: true)])
     end
 
-    it 'creates directories and copies completion files' do
+    it "creates directories and copies completion files" do
       # When
       fd.send(:setup_completions)
 
       # Then
       expect(FileUtils).to have_received(:mkdir_p).with(zsh_completions_path)
       expect(FileUtils).to have_received(:mkdir_p).with(bash_completions_path)
-      expect(fd).to have_received(:runCmd).with('cp', '/tmp/test/fd-assets/autocomplete/_fd', "#{zsh_completions_path}/_fd")
-      expect(fd).to have_received(:runCmd).with('cp', '/tmp/test/fd-assets/autocomplete/fd.bash', "#{bash_completions_path}/fd")
+      expect(fd).to have_received(:runCmd).with("cp", "/tmp/test/fd-assets/autocomplete/_fd",
+                                                "#{zsh_completions_path}/_fd")
+      expect(fd).to have_received(:runCmd).with("cp", "/tmp/test/fd-assets/autocomplete/fd.bash",
+                                                "#{bash_completions_path}/fd")
     end
   end
 end

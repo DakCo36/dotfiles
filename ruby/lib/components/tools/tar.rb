@@ -1,10 +1,11 @@
-require 'open3'
-require 'components/base'
+require "open3"
+require "components/base"
 
 module Component
   class TarComponent < BaseComponent
+
     def available?
-      system('tar', '--version', out: File::NULL, err: File::NULL)
+      system("tar", "--version", out: File::NULL, err: File::NULL)
     end
 
     def version
@@ -15,16 +16,15 @@ module Component
     end
 
     def installed?
-      available? && version != nil
+      available? && !version.nil?
     end
 
     def extract(source, destination, stripComponents = 1)
-      if !available?
-        raise "tar is not installed"
-      end
+      raise "tar is not installed" unless available?
 
       FileUtils.mkdir_p(destination)
-      runCmd('tar', '-xf', source, '-C', destination, '--strip-components', stripComponents.to_s)
+      runCmd("tar", "-xf", source, "-C", destination, "--strip-components", stripComponents.to_s)
     end
+
   end
 end
