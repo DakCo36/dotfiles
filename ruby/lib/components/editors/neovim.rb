@@ -119,7 +119,7 @@ module Component
     # Installs pynvim Python package for neovim integration
     def install_pynvim
       logger.info("Installing pynvim...")
-      runCmd("python", "-m", "pip", "install", "pynvim")
+      runCmd("mise", "exec", "--", "python", "-m", "pip", "install", "pynvim")
       logger.info("pynvim installed successfully")
     end
 
