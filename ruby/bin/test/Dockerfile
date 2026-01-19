@@ -8,7 +8,7 @@ ENV PATH="/home/testuser/.local/share/mise/installs/ruby/3.4.3/bin:/home/testuse
 COPY --chown=testuser:testuser lib /home/testuser/ruby/lib
 COPY --chown=testuser:testuser spec /home/testuser/ruby/spec
 COPY --chown=testuser:testuser bin /home/testuser/ruby/bin
-COPY --chown=testuser:testuser data /home/testuser/ruby/data
+COPY --chown=testuser:testuser resources /home/testuser/ruby/resources
 COPY --chown=testuser:testuser Gemfile /home/testuser/ruby/Gemfile
 COPY --chown=testuser:testuser Gemfile.lock /home/testuser/ruby/Gemfile.lock
 
