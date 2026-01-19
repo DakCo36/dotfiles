@@ -14,7 +14,7 @@ module Component
     REPO_URL = "https://github.com/romkatv/powerlevel10k.git"
     TARGET_DIR_PATH = File.join(CONFIG.home, ".oh-my-zsh/custom/themes/powerlevel10k")
     ZSHRC = File.join(CONFIG.home, ".zshrc")
-    CONFIG_DIR = File.join(DATA_ROOT, "p10k")
+    CONFIG_DIR = File.join(RESOURCES_ROOT, "p10k")
 
     # Instant prompt block to be added at the top of .zshrc
     INSTANT_PROMPT_BLOCK = <<~ZSH

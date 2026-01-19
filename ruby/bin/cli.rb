@@ -21,6 +21,7 @@ require "components/utils/fd"
 require "components/utils/ripgrep"
 require "components/utils/fzf"
 require "components/language/python"
+require "components/editors/neovim"
 
 require "cli/registry"
 require "cli/dependency_resolver"

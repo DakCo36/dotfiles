@@ -114,9 +114,6 @@ RSpec.describe Component::Powerlevel10kComponent do
     end
 
     it "prepends instant prompt block to .zshrc" do
-      file_double = instance_double(File)
-      allow(file_double).to receive(:write)
-
       zshrc_content = <<~EOF
         # Existing content
         ZSH_THEME="robbyrussell"
@@ -124,13 +121,13 @@ RSpec.describe Component::Powerlevel10kComponent do
 
       allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
       allow(File).to receive(:read).with(described_class::ZSHRC).and_return(zshrc_content)
-      allow(File).to receive(:open).with(described_class::ZSHRC, "w").and_yield(file_double)
+      allow(File).to receive(:write)
 
       p10k.send(:setInstantPrompt)
 
-      expect(file_double)
+      expect(File)
         .to have_received(:write)
-        .with(match(/^# Enable Powerlevel10k instant prompt/))
+        .with(described_class::ZSHRC, match(/^# Enable Powerlevel10k instant prompt/))
     end
   end
 
@@ -146,9 +143,6 @@ RSpec.describe Component::Powerlevel10kComponent do
     end
 
     it "substitute zsh theme in .zshrc file" do
-      file_double = instance_double(File)
-      allow(file_double).to receive(:write)
-
       zshrc_content = <<~EOF
         # Something blahblah
         ANOTHER=VARIABLE
@@ -168,22 +162,16 @@ RSpec.describe Component::Powerlevel10kComponent do
         .with(described_class::ZSHRC)
         .and_return(zshrc_content)
 
-      allow(File)
-        .to receive(:open)
-        .with(described_class::ZSHRC, "w")
-        .and_yield(file_double)
+      allow(File).to receive(:write)
 
       p10k.send(:setTheme)
 
-      expect(file_double)
+      expect(File)
         .to have_received(:write)
-        .with(match(%r{ZSH_THEME="powerlevel10k/powerlevel10k"}))
+        .with(described_class::ZSHRC, match(%r{ZSH_THEME="powerlevel10k/powerlevel10k"}))
     end
 
     it "add zsh theme to .zshrc file if not exist" do
-      file_double = instance_double(File)
-      allow(file_double).to receive(:write)
-
       zshrc_content = <<~EOF
         # Somthing blahblah
         ANOTHER=VARIABLE
@@ -201,22 +189,16 @@ RSpec.describe Component::Powerlevel10kComponent do
         .with(described_class::ZSHRC)
         .and_return(zshrc_content)
 
-      allow(File)
-        .to receive(:open)
-        .with(described_class::ZSHRC, "w")
-        .and_yield(file_double)
+      allow(File).to receive(:write)
 
       p10k.send(:setTheme)
 
-      expect(file_double)
+      expect(File)
         .to have_received(:write)
-        .with(match(%r{ZSH_THEME="powerlevel10k/powerlevel10k"}))
+        .with(described_class::ZSHRC, match(%r{ZSH_THEME="powerlevel10k/powerlevel10k"}))
     end
 
     it "add source .p10k.zsh to .zshrc file if not exist" do
-      file_double = instance_double(File)
-      allow(file_double).to receive(:write)
-
       zshrc_content = <<~EOF
         # Something blahblah
         ANOTHER=VARIABLE
@@ -234,16 +216,13 @@ RSpec.describe Component::Powerlevel10kComponent do
         .with(described_class::ZSHRC)
         .and_return(zshrc_content)
 
-      allow(File)
-        .to receive(:open)
-        .with(described_class::ZSHRC, "w")
-        .and_yield(file_double)
+      allow(File).to receive(:write)
 
       p10k.send(:setTheme)
 
-      expect(file_double)
+      expect(File)
         .to have_received(:write)
-        .with(match(%r{\[\[ ! -f ~/.p10k.zsh \]\] \|\| source ~/.p10k.zsh\n$}))
+        .with(described_class::ZSHRC, match(%r{\[\[ ! -f ~/.p10k.zsh \]\] \|\| source ~/.p10k.zsh\n$}))
     end
   end
 

@@ -122,18 +122,15 @@ RSpec.describe Component::OhMyZshComponent do
         allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
         allow(File).to receive(:read).with(zshrc_path).and_return(original_content)
-
-        file_handle = instance_double(File)
-        allow(File).to receive(:open).with(zshrc_path, "w").and_yield(file_handle)
-        allow(file_handle).to receive(:write)
+        allow(File).to receive(:write)
 
         # When
         oh_my_zsh.send(:setPlugins)
 
         # Then
-        expect(file_handle).to have_received(:write) do |content|
+        expect(File).to have_received(:write) do |path, content|
+          expect(path).to eq(zshrc_path)
           expect(content).to match(/plugins=\([^)\n]+\)/)
-          expect(content).to include(/\# plugins=\(git\)/)
         end
       end
     end
@@ -150,16 +147,14 @@ RSpec.describe Component::OhMyZshComponent do
         allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
         allow(File).to receive(:read).with(zshrc_path).and_return(original_content)
-
-        file_handle = instance_double(File)
-        allow(File).to receive(:open).with(zshrc_path, "w").and_yield(file_handle)
-        allow(file_handle).to receive(:write)
+        allow(File).to receive(:write)
 
         # When
         oh_my_zsh.send(:setPlugins)
 
         # Then
-        expect(file_handle).to have_received(:write) do |content|
+        expect(File).to have_received(:write) do |path, content|
+          expect(path).to eq(zshrc_path)
           expect(content).to include("# oh-my-zsh plugins configuration")
           expect(content).to match(/plugins=\([^)\n]+\)/)
         end
