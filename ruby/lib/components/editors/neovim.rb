@@ -7,6 +7,7 @@ require "components/tools/github"
 require "components/tools/curl"
 require "components/tools/tar"
 require "components/language/python"
+require "components/language/node"
 
 module Component
   class NeovimComponent < BaseComponent
@@ -27,6 +28,7 @@ module Component
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
     depends_on Component::PythonComponent
+    depends_on Component::NodeComponent
 
     # Checks if nvim command is available in PATH
     #
