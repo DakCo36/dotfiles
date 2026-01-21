@@ -61,7 +61,7 @@ function install_prerequisite() {
     . /etc/os-release
   fi
 
-  if [[ "$ID" == "ubuntu" ]]; then
+  if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "zorin" ]]; then
     install_ubuntu_prerequisite
   else
     log_error "Unsupported OS: $ID"
