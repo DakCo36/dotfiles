@@ -28,7 +28,7 @@ module Loggable
   # @param level [String, nil] Log level (debug/info/warn/error), overrides ENV['LOG_LEVEL']
   def self.setup(verbose: false, level: nil)
     @verbose = verbose
-    @log_level = determine_log_level(level)
+    @log_level = set_log_level(level)
   end
 
   def self.verbose?
@@ -36,10 +36,10 @@ module Loggable
   end
 
   def self.log_level
-    @log_level || determine_log_level(nil)
+    @log_level || set_log_level(nil)
   end
 
-  def self.determine_log_level(level)
+  def self.set_log_level(level)
     level_str = level || ENV["LOG_LEVEL"] || "info"
     LOG_LEVELS[level_str.to_s.downcase] || Logger::INFO
   end
