@@ -150,8 +150,8 @@ RSpec.describe Component::FzfComponent do
       it "does nothing" do
         # Given
         allow(File).to receive(:exist?).with(zshrc_path).and_return(false)
-        allow(File).to receive(:read)
-        allow(File).to receive(:open)
+        allow(File).to receive(:read).and_return(nil)
+        allow(File).to receive(:open).and_return(nil)
 
         # When
         fzf.send(:setup_shell_integration)
@@ -173,7 +173,7 @@ RSpec.describe Component::FzfComponent do
 
         allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
         allow(File).to receive(:read).with(zshrc_path).and_return(zshrc_content)
-        allow(File).to receive(:open)
+        allow(File).to receive(:open).and_return(nil)
 
         # When
         fzf.send(:setup_shell_integration)
