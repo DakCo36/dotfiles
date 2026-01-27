@@ -1,6 +1,18 @@
 require "logger"
 
 module Loggable
+  # ANSI color codes for log levels
+  COLORS = {
+    "TRACE" => "\e[90m",  # 회색 (Gray)
+    "DEBUG" => "\e[34m",  # 파랑 (Blue)
+    "INFO"  => "\e[32m",  # 녹색 (Green)
+    "WARN"  => "\e[33m",  # 노랑 (Yellow)
+    "ERROR" => "\e[31m",  # 빨강 (Red)
+  }.freeze
+  CYAN = "\e[36m"     # 청록색 - 파일명용
+  MAGENTA = "\e[35m"  # 자주색 - 메서드명용
+  RESET = "\e[0m"
+
   attr_reader :logger
 
   def self.setup(verbose: false)
@@ -9,6 +21,11 @@ module Loggable
 
   def self.verbose?
     @verbose
+  end
+
+  def self.colorize(severity, text)
+    color = COLORS[severity] || ""
+    "#{color}#{text}#{RESET}"
   end
 
   def logger
@@ -20,16 +37,17 @@ module Loggable
         file = caller_info&.path&.split("/")&.last || "unknown"
         method = caller_info&.label || "unknown"
         line = caller_info&.lineno || 0
+        level_color = Loggable::COLORS[severity] || ""
 
         if Loggable.verbose?
-          # Verbose Mode: [2026-01-20 23:37:36 +0000] INFO cli.rb:141 block in CLI::Runner#show_install_plan - ...
+          # Verbose Mode: [2026-01-20 23:37:36 +0000] INFO cli.rb:141 method - ...
           timestamp = datetime.strftime("%Y-%m-%d %H:%M:%S %z")
-          "[#{timestamp}] #{severity} #{file}:#{line} #{method} - #{msg}\n"
+          "#{level_color}[#{timestamp}] #{severity}#{RESET} #{CYAN}#{file}:#{line}#{RESET} #{MAGENTA}#{method}#{RESET} - #{msg}\n"
         else
-          # Compact Mode: 12:31:59 [I] cli.rb install - message
+          # Compact Mode: 12:31:59 [I] cli.rb method - message
           time = datetime.strftime("%H:%M:%S")
           level_char = severity[0]
-          "#{time} [#{level_char}] #{file} #{method} - #{msg}\n"
+          "#{level_color}#{time} [#{level_char}]#{RESET} #{CYAN}#{file}#{RESET} #{MAGENTA}#{method}#{RESET} - #{msg}\n"
         end
       end
     end
