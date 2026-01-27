@@ -44,10 +44,11 @@ module Loggable
           timestamp = datetime.strftime("%Y-%m-%d %H:%M:%S %z")
           "#{level_color}[#{timestamp}] #{severity}#{RESET} #{CYAN}#{file}:#{line}#{RESET} #{MAGENTA}#{method}#{RESET} - #{msg}\n"
         else
-          # Compact Mode: 12:31:59 [I] cli.rb method - message
+          # Compact Mode: 12:31:59 [I] cli.rb:141 method - message
           time = datetime.strftime("%H:%M:%S")
           level_char = severity[0]
-          "#{level_color}#{time} [#{level_char}]#{RESET} #{CYAN}#{file}#{RESET} #{MAGENTA}#{method}#{RESET} - #{msg}\n"
+          func_name = method.to_s.split("#").last || method
+          "#{level_color}#{time} [#{level_char}]#{RESET} #{CYAN}#{file}:#{line}#{RESET} #{MAGENTA}#{func_name}#{RESET} - #{msg}\n"
         end
       end
     end
