@@ -102,4 +102,21 @@ RSpec.describe Loggable do
       )
     end
   end
+
+  describe "BroadcastLogger" do
+    it "logs to multiple outputs" do
+      output1 = StringIO.new
+      output2 = StringIO.new
+      logger1 = Logger.new(output1)
+      logger2 = Logger.new(output2)
+      logger1.formatter = proc { |_, _, _, msg| "#{msg}\n" }
+      logger2.formatter = proc { |_, _, _, msg| "#{msg}\n" }
+
+      broadcast = Loggable::BroadcastLogger.new(logger1, logger2)
+      broadcast.info("broadcast message")
+
+      expect(output1.string).to include("broadcast message")
+      expect(output2.string).to include("broadcast message")
+    end
+  end
 end
