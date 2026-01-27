@@ -12,7 +12,7 @@ module Loggable
   end
 
   def logger
-    @logger ||= Logger.new(STDOUT).tap do |log|
+    @logger ||= Logger.new($stdout).tap do |log|
       log.level = Loggable.verbose? ? Logger::DEBUG : Logger::INFO
       
       log.formatter = proc do |severity, datetime, _progname, msg|
