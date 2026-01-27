@@ -4,6 +4,18 @@ PROJECT_ROOT = File.expand_path("..", __dir__)
 RESOURCES_ROOT = File.join(PROJECT_ROOT, "resources")
 
 RSpec.configure do |config|
+  # Suppress logger output during tests
+  config.before(:each) do
+    original_logger_new = Logger.method(:new)
+    allow(Logger).to receive(:new) do |output, *args|
+      if output == $stdout
+        original_logger_new.call(File::NULL, *args)
+      else
+        original_logger_new.call(output, *args)
+      end
+    end
+  end
+
   # Home directory protection - prevents unmocked file writes during tests
   config.before(:each) do
     home_dir = ENV["HOME"] || Dir.home
