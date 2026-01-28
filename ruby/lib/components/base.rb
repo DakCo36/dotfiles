@@ -1,5 +1,6 @@
 require "singleton"
 require "mixins/loggable"
+require "mixins/configurable"
 
 module Component
   class DependencyError < StandardError; end
@@ -7,6 +8,7 @@ module Component
   class BaseComponent
 
     include Loggable
+    include Configurable
 
     def self.inherited(subclass)
       super
