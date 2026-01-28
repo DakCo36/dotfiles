@@ -106,7 +106,7 @@ RSpec.describe Component::Powerlevel10kComponent do
 
       allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
       allow(File).to receive(:read).with(described_class::ZSHRC).and_return(zshrc_content)
-      allow(File).to receive(:open)
+      allow(File).to receive(:open).and_return(nil)
 
       p10k.send(:setInstantPrompt)
 
@@ -121,7 +121,7 @@ RSpec.describe Component::Powerlevel10kComponent do
 
       allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
       allow(File).to receive(:read).with(described_class::ZSHRC).and_return(zshrc_content)
-      allow(File).to receive(:write)
+      allow(File).to receive(:write).and_return(nil)
 
       p10k.send(:setInstantPrompt)
 
@@ -162,7 +162,7 @@ RSpec.describe Component::Powerlevel10kComponent do
         .with(described_class::ZSHRC)
         .and_return(zshrc_content)
 
-      allow(File).to receive(:write)
+      allow(File).to receive(:write).and_return(nil)
 
       p10k.send(:setTheme)
 
@@ -189,7 +189,7 @@ RSpec.describe Component::Powerlevel10kComponent do
         .with(described_class::ZSHRC)
         .and_return(zshrc_content)
 
-      allow(File).to receive(:write)
+      allow(File).to receive(:write).and_return(nil)
 
       p10k.send(:setTheme)
 
@@ -216,7 +216,7 @@ RSpec.describe Component::Powerlevel10kComponent do
         .with(described_class::ZSHRC)
         .and_return(zshrc_content)
 
-      allow(File).to receive(:write)
+      allow(File).to receive(:write).and_return(nil)
 
       p10k.send(:setTheme)
 

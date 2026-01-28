@@ -102,7 +102,7 @@ RSpec.describe Component::ZgenomComponent do
       # Given
       allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
       allow(File).to receive(:read).with(described_class::ZSHRC).and_return(original_content)
-      allow(File).to receive(:write)
+      allow(File).to receive(:write).and_return(nil)
 
       zgenom.send(:disableOhMyZshPlugins)
 
@@ -145,15 +145,20 @@ RSpec.describe Component::ZgenomComponent do
 
       allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
       allow(File).to receive(:read).with(described_class::ZSHRC).and_return(content)
-      allow(File).to receive(:write)
+      # Capture the arguments passed to File.write
+      captured_path = nil
+      captured_content = nil
+      allow(File).to receive(:write) do |path, written_content|
+        captured_path = path
+        captured_content = written_content
+        nil
+      end
 
       zgenom.send(:setPlugins)
 
-      expect(File).to have_received(:write) do |path, written_content|
-        expect(path).to eq(described_class::ZSHRC)
-        expect(written_content).to match(/zgenom autoupdate/)
-        expect(written_content).to match(/Something blah/)
-      end
+      expect(captured_path).to eq(described_class::ZSHRC)
+      expect(captured_content).to match(/zgenom autoupdate/)
+      expect(captured_content).to match(/Something blah/)
     end
   end
 end

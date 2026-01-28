@@ -90,6 +90,7 @@ RSpec.describe Component::OhMyZshComponent do
         allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
         allow(File).to receive(:read).with(zshrc_path).and_return("plugins=(git)")
         allow(File).to receive(:open).with(zshrc_path, "w").and_yield(double("file", write: true))
+        allow(File).to receive(:write).and_return(nil)
 
         oh_my_zsh.install
 
@@ -122,16 +123,21 @@ RSpec.describe Component::OhMyZshComponent do
         allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
         allow(File).to receive(:read).with(zshrc_path).and_return(original_content)
-        allow(File).to receive(:write)
+        # Capture the arguments passed to File.write
+        captured_path = nil
+        captured_content = nil
+        allow(File).to receive(:write) do |path, content|
+          captured_path = path
+          captured_content = content
+          nil
+        end
 
         # When
         oh_my_zsh.send(:setPlugins)
 
         # Then
-        expect(File).to have_received(:write) do |path, content|
-          expect(path).to eq(zshrc_path)
-          expect(content).to match(/plugins=\([^)\n]+\)/)
-        end
+        expect(captured_path).to eq(zshrc_path)
+        expect(captured_content).to match(/plugins=\([^)\n]+\)/)
       end
     end
 
@@ -147,17 +153,22 @@ RSpec.describe Component::OhMyZshComponent do
         allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
         allow(File).to receive(:read).with(zshrc_path).and_return(original_content)
-        allow(File).to receive(:write)
+        # Capture the arguments passed to File.write
+        captured_path = nil
+        captured_content = nil
+        allow(File).to receive(:write) do |path, content|
+          captured_path = path
+          captured_content = content
+          nil
+        end
 
         # When
         oh_my_zsh.send(:setPlugins)
 
         # Then
-        expect(File).to have_received(:write) do |path, content|
-          expect(path).to eq(zshrc_path)
-          expect(content).to include("# oh-my-zsh plugins configuration")
-          expect(content).to match(/plugins=\([^)\n]+\)/)
-        end
+        expect(captured_path).to eq(zshrc_path)
+        expect(captured_content).to include("# oh-my-zsh plugins configuration")
+        expect(captured_content).to match(/plugins=\([^)\n]+\)/)
       end
     end
 
