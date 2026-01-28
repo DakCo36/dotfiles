@@ -1,0 +1,113 @@
+# Dotfiles Configuration
+#
+# version: "latest" = 항상 최신, "x.y.z" = 특정 버전 고정
+# Git 기반은 branch 또는 commit으로 지정
+
+[settings]
+log_level = "debug"
+
+### Editors
+[neovim]
+enabled = true
+version = "0.10.0"
+source = "github"
+owner = "neovim"
+repo = "neovim"
+
+[[neovim.resources]]
+source = "resources/neovim/init.vim"
+destination = "~/.config/nvim/init.vim"
+action = "copy"
+
+[[neovim.resources]]
+source = "resources/neovim/.vimrc"
+destination = "~/.vimrc"
+action = "copy"
+
+### Shell
+[zsh]
+enabled = true
+version = "latest"
+source = "system"
+
+[oh-my-zsh]
+enabled = true
+source = "git"
+repo = "https://github.com/ohmyzsh/ohmyzsh.git"
+branch = "master"
+
+[zgenom]
+enabled = true
+source = "git"
+repo = "https://github.com/jandamm/zgenom.git"
+branch = "main"
+
+[powerlevel10k]
+enabled = true
+source = "git"
+repo = "https://github.com/romkatv/powerlevel10k.git"
+branch = "master"
+theme = "simple"
+
+[[powerlevel10k.resources]]
+source = "resources/p10k/simple.zsh"
+destination = "~/.p10k.zsh"
+action = "copy"
+
+### CLI Utilities
+[fzf]
+enabled = true
+version = "latest"
+source = "github"
+owner = "junegunn"
+repo = "fzf"
+
+[bat]
+enabled = true
+version = "0.24.0"
+source = "github"
+owner = "sharkdp"
+repo = "bat"
+
+[fd]
+enabled = true
+version = "latest"
+source = "github"
+owner = "sharkdp"
+repo = "fd"
+
+[ripgrep]
+enabled = true
+version = "14.1.0"
+source = "github"
+owner = "BurntSushi"
+repo = "ripgrep"
+
+[fastfetch]
+enabled = true
+version = "latest"
+source = "github"
+owner = "fastfetch-cli"
+repo = "fastfetch"
+
+### Language Runtimes
+[python]
+enabled = true
+version = "3.12"
+source = "mise"
+
+[node]
+enabled = true
+version = "20"
+source = "mise"
+
+### Tmux
+[tmux]
+enabled = true
+version = "latest"
+source = "system"
+
+[[tmux.resources]]
+source = "resources/tmux/.tmux.conf"
+destination = "~/.tmux.conf"
+action = "symlink"

@@ -6,5 +6,7 @@
 *.swp
 *.swo
 
-ruby/vendor
-ruby/.bundle
+### Devkit
+devkit/vendor
+devkit/.bundle
+devkit/config/devkit.toml
