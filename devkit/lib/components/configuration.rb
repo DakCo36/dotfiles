@@ -53,7 +53,7 @@ module Components
     end
 
     def load_manifest
-      config_path = File.join(File.dirname(__FILE__), "..", "..", "config", "dotfiles.toml")
+      config_path = File.join(File.dirname(__FILE__), "..", "..", "config", "devkit.toml")
 
       unless File.exist?(config_path)
         raise "Manifest file not found: #{config_path}. This file is required."
