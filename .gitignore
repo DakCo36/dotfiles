@@ -8,3 +8,4 @@
 
 ruby/vendor
 ruby/.bundle
+ruby/config/dotfiles.toml
