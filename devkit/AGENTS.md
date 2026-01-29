@@ -127,6 +127,41 @@ def withDir(dir, &)
 end
 ```
 
+## Test 코드 작성 규칙
+
+- Test 코드에 인라인 주석을 최소화할 것
+- 코드 자체가 무엇을 하는지 설명하는 주석은 피할 것 (코드가 스스로 설명하도록)
+- Given, When, Then 패턴으로 작성하고, 각 시작점에 대해 주석 남겨줄 것 (# Given, # When, # Then)
+
+**피해야 할 예시:**
+
+```ruby
+it "returns the installed version" do
+  # Create a mock status object that returns true for success
+  status = instance_double(Process::Status, success?: true)
+  # Mock the capture2 call to return version string
+  allow(Open3).to receive(:capture2).with("bat", "--version").and_return(["bat 0.21.0\n", status])
+  # Get the version
+  version = bat.version
+  # Verify the version is correct
+  expect(version).to eq("0.21.0")
+end
+```
+
+**권장하는 예시:**
+
+```ruby
+it "returns the installed version" do
+  # Given
+  status = instance_double(Process::Status, success?: true)
+  allow(Open3).to receive(:capture2).with("bat", "--version").and_return(["bat 0.21.0\n", status])
+  # When
+  version = bat.version
+  # Then
+  expect(version).to eq("0.21.0")
+end
+```
+
 ## 기타 규칙
 
 - 기존 코드의 lint 오류는 수정하지 말 것 (git diff 가독성을 위해)
