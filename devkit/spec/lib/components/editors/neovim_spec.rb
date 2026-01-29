@@ -25,6 +25,9 @@ RSpec.describe Component::NeovimComponent do
     allow(mock_config).to receive(:tmp).and_return(tmp_path)
     allow(mock_config).to receive(:local).and_return(local_path)
     allow(mock_config).to receive(:home).and_return(home_path)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
+    allow(mock_config).to receive(:os).and_return("linux-gnu")
+    allow(mock_config).to receive(:component_config).with("neovim").and_return({ "version" => "latest", "fallback_version" => "0.10.0" })
   end
 
   describe "#available?" do
@@ -54,6 +57,75 @@ RSpec.describe Component::NeovimComponent do
 
       # Then
       expect(result).to be false
+    end
+  end
+
+  describe "#target_asset_pattern" do
+    context "when on macOS arm64 (Apple Silicon)" do
+      it "returns the arm64 macOS asset pattern" do
+        # Given
+        allow(mock_config).to receive(:arch).and_return("arm64")
+        allow(mock_config).to receive(:os).and_return("darwin23")
+
+        # When
+        result = neovim.send(:target_asset_pattern)
+
+        # Then
+        expect(result).to eq("nvim-macos-arm64\\.tar\\.gz")
+      end
+    end
+
+    context "when on macOS x86_64 (Intel)" do
+      it "returns the x86_64 macOS asset pattern" do
+        # Given
+        allow(mock_config).to receive(:arch).and_return("x86_64")
+        allow(mock_config).to receive(:os).and_return("darwin21")
+
+        # When
+        result = neovim.send(:target_asset_pattern)
+
+        # Then
+        expect(result).to eq("nvim-macos-x86_64\\.tar\\.gz")
+      end
+    end
+
+    context "when on Linux x86_64" do
+      it "returns the x86_64 Linux asset pattern" do
+        # Given
+        allow(mock_config).to receive(:arch).and_return("x86_64")
+        allow(mock_config).to receive(:os).and_return("linux-gnu")
+
+        # When
+        result = neovim.send(:target_asset_pattern)
+
+        # Then
+        expect(result).to eq("nvim-linux-x86_64\\.tar\\.gz")
+      end
+    end
+
+    context "when on Linux arm64" do
+      it "returns the arm64 Linux asset pattern" do
+        # Given
+        allow(mock_config).to receive(:arch).and_return("aarch64")
+        allow(mock_config).to receive(:os).and_return("linux-gnu")
+
+        # When
+        result = neovim.send(:target_asset_pattern)
+
+        # Then
+        expect(result).to eq("nvim-linux-arm64\\.tar\\.gz")
+      end
+    end
+
+    context "when on unsupported architecture" do
+      it "raises an error" do
+        # Given
+        allow(mock_config).to receive(:arch).and_return("arm32")
+        allow(mock_config).to receive(:os).and_return("linux-gnu")
+
+        # When/Then
+        expect { neovim.send(:target_asset_pattern) }.to raise_error("Unsupported architecture: arm32 on linux-gnu")
+      end
     end
   end
 
@@ -265,6 +337,55 @@ RSpec.describe Component::NeovimComponent do
 
       # Then
       expect(FileUtils).not_to have_received(:cp)
+    end
+  end
+
+  describe "#resolve_version_and_url" do
+    context "when specific version is configured" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("neovim")
+          .and_return({ "version" => "0.9.0" })
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/neovim/neovim/releases/download/v0.9.0/nvim-linux-x86_64.tar.gz")
+      end
+
+      it "returns URL without API call" do
+        tag, url = neovim.send(:resolve_version_and_url)
+        expect(tag).to eq("v0.9.0")
+        expect(url).to include("v0.9.0")
+        expect(mock_github).not_to have_received(:get_latest_release_tag)
+      end
+    end
+
+    context "when latest version and API fails with fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("neovim")
+          .and_return({ "version" => "latest", "fallback_version" => "0.10.0" })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/neovim/neovim/releases/download/v0.10.0/nvim-fallback.tar.gz")
+      end
+
+      it "uses fallback version" do
+        tag, _url = neovim.send(:resolve_version_and_url)
+        expect(tag).to eq("v0.10.0")
+      end
+    end
+
+    context "when API fails without fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("neovim")
+          .and_return({ "version" => "latest", "fallback_version" => nil })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+      end
+
+      it "raises error" do
+        expect { neovim.send(:resolve_version_and_url) }
+          .to raise_error(/no fallback_version configured/)
+      end
     end
   end
 end

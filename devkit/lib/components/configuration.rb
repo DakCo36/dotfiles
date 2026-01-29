@@ -1,6 +1,7 @@
 require "singleton"
 require "tmpdir"
 require "toml-rb"
+require "rbconfig"
 
 module Components
   class Configuration
@@ -9,8 +10,11 @@ module Components
 
     attr_accessor :home, :local, :bin, :tmp, :bashrc, :bash_profile, :bash_completions, :zshrc, :zsh_profile,
                   :zsh_completions, :man1
+    attr_reader :arch, :os
 
     def initialize
+      @arch = RbConfig::CONFIG["host_cpu"]
+      @os = RbConfig::CONFIG["host_os"]
       @home = Dir.home
       @local = Dir.home + "/.local"
       @bin = local + "/bin"

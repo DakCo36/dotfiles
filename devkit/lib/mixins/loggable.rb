@@ -21,6 +21,9 @@ module Loggable
     "error" => Logger::ERROR,
   }.freeze
 
+  # Log entry with caller info captured at call site
+  LogEntry = Struct.new(:message, :file, :line, :method_name)
+
   attr_reader :logger
 
   # Setup logging configuration
@@ -79,37 +82,39 @@ module Loggable
 
   def console_formatter
     proc do |severity, datetime, _progname, msg|
-      caller_info = caller_locations(5, 1)&.first
-      file = caller_info&.path&.split("/")&.last || "unknown"
-      method = caller_info&.label || "unknown"
-      line = caller_info&.lineno || 0
+      file, line, method_name, text = extract_log_info(msg)
       level_color = Loggable::COLORS[severity] || ""
 
       if Loggable.verbose?
         timestamp = datetime.strftime("%Y-%m-%d %H:%M:%S %z")
-        "#{level_color}[#{timestamp}] #{severity}#{RESET} #{CYAN}#{file}:#{line}#{RESET} #{MAGENTA}#{method}#{RESET} - #{msg}\n"
+        "#{level_color}[#{timestamp}] #{severity}#{RESET} #{CYAN}#{file}:#{line}#{RESET} #{MAGENTA}#{method_name}#{RESET} - #{text}\n"
       else
         time = datetime.strftime("%H:%M:%S")
         level_char = severity[0]
-        func_name = method.to_s.split("#").last || method
-        "#{level_color}#{time} [#{level_char}]#{RESET} #{CYAN}#{file}:#{line}#{RESET} #{MAGENTA}#{func_name}#{RESET} - #{msg}\n"
+        func_name = method_name.to_s.split("#").last || method_name
+        "#{level_color}#{time} [#{level_char}]#{RESET} #{CYAN}#{file}:#{line}#{RESET} #{MAGENTA}#{func_name}#{RESET} - #{text}\n"
       end
     end
   end
 
   def file_formatter
     proc do |severity, datetime, _progname, msg|
-      caller_info = caller_locations(5, 1)&.first
-      file = caller_info&.path&.split("/")&.last || "unknown"
-      method = caller_info&.label || "unknown"
-      line = caller_info&.lineno || 0
-
+      file, line, method_name, text = extract_log_info(msg)
       timestamp = datetime.strftime("%Y-%m-%d %H:%M:%S %z")
-      "[#{timestamp}] #{severity} #{file}:#{line} #{method} - #{msg}\n"
+      "[#{timestamp}] #{severity} #{file}:#{line} #{method_name} - #{text}\n"
     end
   end
 
-  # Simple broadcast logger that forwards to multiple loggers
+  def extract_log_info(msg)
+    if msg.is_a?(LogEntry)
+      [msg.file, msg.line, msg.method_name, msg.message]
+    else
+      # Fallback for direct Logger usage
+      ["unknown", 0, "unknown", msg.to_s]
+    end
+  end
+
+  # Broadcast logger that captures caller info and forwards to multiple loggers
   class BroadcastLogger
     def initialize(*loggers)
       @loggers = loggers
@@ -117,7 +122,14 @@ module Loggable
 
     %i[debug info warn error fatal unknown].each do |level|
       define_method(level) do |msg = nil, &block|
-        @loggers.each { |logger| logger.send(level, msg, &block) }
+        # Capture caller info at call site (before stack gets deeper)
+        caller_info = caller_locations(1, 1)&.first
+        file = caller_info&.path&.split("/")&.last || "unknown"
+        line = caller_info&.lineno || 0
+        method_name = caller_info&.label || "unknown"
+
+        entry = Loggable::LogEntry.new(msg, file, line, method_name)
+        @loggers.each { |logger| logger.send(level, entry, &block) }
       end
     end
 

@@ -26,6 +26,9 @@ RSpec.describe Component::RipgrepComponent do
     allow(mock_config).to receive(:man1).and_return(man1_path)
     allow(mock_config).to receive(:zsh_completions).and_return(zsh_completions_path)
     allow(mock_config).to receive(:bash_completions).and_return(bash_completions_path)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
+    allow(mock_config).to receive(:os).and_return("linux-gnu")
+    allow(mock_config).to receive(:component_config).with("ripgrep").and_return({ "version" => "latest", "fallback_version" => "14.1.0" })
   end
 
   describe "#available?" do
@@ -236,6 +239,55 @@ RSpec.describe Component::RipgrepComponent do
                                                      "#{zsh_completions_path}/_rg")
       expect(ripgrep).to have_received(:runCmd).with("cp", "#{tmp_path}/ripgrep-assets/complete/rg.bash",
                                                      "#{bash_completions_path}/rg")
+    end
+  end
+
+  describe "#resolve_version_and_url" do
+    context "when specific version is configured" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("ripgrep")
+          .and_return({ "version" => "14.0.0" })
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/BurntSushi/ripgrep/releases/download/14.0.0/ripgrep-14.0.0-x86_64-unknown-linux-musl.tar.gz")
+      end
+
+      it "returns URL without API call" do
+        tag, url = ripgrep.send(:resolve_version_and_url)
+        expect(tag).to eq("14.0.0")
+        expect(url).to include("14.0.0")
+        expect(mock_github).not_to have_received(:get_latest_release_tag)
+      end
+    end
+
+    context "when latest version and API fails with fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("ripgrep")
+          .and_return({ "version" => "latest", "fallback_version" => "14.1.0" })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-fallback.tar.gz")
+      end
+
+      it "uses fallback version" do
+        tag, _url = ripgrep.send(:resolve_version_and_url)
+        expect(tag).to eq("14.1.0")
+      end
+    end
+
+    context "when API fails without fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("ripgrep")
+          .and_return({ "version" => "latest", "fallback_version" => nil })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+      end
+
+      it "raises error" do
+        expect { ripgrep.send(:resolve_version_and_url) }
+          .to raise_error(/no fallback_version configured/)
+      end
     end
   end
 end
