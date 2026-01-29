@@ -39,6 +39,18 @@ module Component
       end
     end
 
+    # Builds a release asset URL directly without API call.
+    # Useful as fallback when rate limited.
+    #
+    # @param owner [String] Repository owner
+    # @param repo [String] Repository name
+    # @param tag [String] Release tag (e.g., "v0.24.0")
+    # @param asset_name [String] Asset filename (e.g., "bat-v0.24.0-x86_64-unknown-linux-musl.tar.gz")
+    # @return [String] Direct download URL
+    def build_release_asset_url(owner, repo, tag, asset_name)
+      "https://github.com/#{owner}/#{repo}/releases/download/#{tag}/#{asset_name}"
+    end
+
     private
 
     def get_latest_release_url(owner, repo)

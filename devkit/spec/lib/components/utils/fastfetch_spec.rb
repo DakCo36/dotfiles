@@ -26,6 +26,9 @@ RSpec.describe Component::FastfetchComponent do
     allow(mock_config).to receive(:man1).and_return(man1_path)
     allow(mock_config).to receive(:zsh_completions).and_return(zsh_completions_path)
     allow(mock_config).to receive(:bash_completions).and_return(bash_completions_path)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
+    allow(mock_config).to receive(:os).and_return("linux-gnu")
+    allow(mock_config).to receive(:component_config).with("fastfetch").and_return({ "version" => "latest", "fallback_version" => "2.30.1" })
   end
 
   describe "#available?" do
@@ -247,6 +250,55 @@ RSpec.describe Component::FastfetchComponent do
         "#{tmp_path}/fastfetch-assets/usr/share/bash-completion/completions/fastfetch",
         "#{bash_completions_path}/fastfetch"
       )
+    end
+  end
+
+  describe "#resolve_version_and_url" do
+    context "when specific version is configured" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("fastfetch")
+          .and_return({ "version" => "2.30.0" })
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/fastfetch-cli/fastfetch/releases/download/2.30.0/fastfetch-linux-amd64.tar.gz")
+      end
+
+      it "returns URL without API call" do
+        tag, url = fastfetch.send(:resolve_version_and_url)
+        expect(tag).to eq("2.30.0")
+        expect(url).to include("2.30.0")
+        expect(mock_github).not_to have_received(:get_latest_release_tag)
+      end
+    end
+
+    context "when latest version and API fails with fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("fastfetch")
+          .and_return({ "version" => "latest", "fallback_version" => "2.30.1" })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/fastfetch-cli/fastfetch/releases/download/2.30.1/fastfetch-fallback.tar.gz")
+      end
+
+      it "uses fallback version" do
+        tag, _url = fastfetch.send(:resolve_version_and_url)
+        expect(tag).to eq("2.30.1")
+      end
+    end
+
+    context "when API fails without fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("fastfetch")
+          .and_return({ "version" => "latest", "fallback_version" => nil })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+      end
+
+      it "raises error" do
+        expect { fastfetch.send(:resolve_version_and_url) }
+          .to raise_error(/no fallback_version configured/)
+      end
     end
   end
 end

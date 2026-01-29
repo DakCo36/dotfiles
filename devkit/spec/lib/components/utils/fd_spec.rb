@@ -26,6 +26,9 @@ RSpec.describe Component::FdComponent do
     allow(mock_config).to receive(:man1).and_return(man1_path)
     allow(mock_config).to receive(:zsh_completions).and_return(zsh_completions_path)
     allow(mock_config).to receive(:bash_completions).and_return(bash_completions_path)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
+    allow(mock_config).to receive(:os).and_return("linux-gnu")
+    allow(mock_config).to receive(:component_config).with("fd").and_return({ "version" => "latest", "fallback_version" => "10.2.0" })
   end
 
   describe "#available?" do
@@ -236,6 +239,55 @@ RSpec.describe Component::FdComponent do
                                                 "#{zsh_completions_path}/_fd")
       expect(fd).to have_received(:runCmd).with("cp", "#{tmp_path}/fd-assets/autocomplete/fd.bash",
                                                 "#{bash_completions_path}/fd")
+    end
+  end
+
+  describe "#resolve_version_and_url" do
+    context "when specific version is configured" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("fd")
+          .and_return({ "version" => "10.2.0" })
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/sharkdp/fd/releases/download/v10.2.0/fd-v10.2.0-x86_64-unknown-linux-musl.tar.gz")
+      end
+
+      it "returns URL without API call" do
+        tag, url = fd.send(:resolve_version_and_url)
+        expect(tag).to eq("v10.2.0")
+        expect(url).to include("v10.2.0")
+        expect(mock_github).not_to have_received(:get_latest_release_tag)
+      end
+    end
+
+    context "when latest version and API fails with fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("fd")
+          .and_return({ "version" => "latest", "fallback_version" => "10.2.0" })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/sharkdp/fd/releases/download/v10.2.0/fd-fallback.tar.gz")
+      end
+
+      it "uses fallback version" do
+        tag, _url = fd.send(:resolve_version_and_url)
+        expect(tag).to eq("v10.2.0")
+      end
+    end
+
+    context "when API fails without fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("fd")
+          .and_return({ "version" => "latest", "fallback_version" => nil })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+      end
+
+      it "raises error" do
+        expect { fd.send(:resolve_version_and_url) }
+          .to raise_error(/no fallback_version configured/)
+      end
     end
   end
 end

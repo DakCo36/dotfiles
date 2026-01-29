@@ -22,6 +22,9 @@ RSpec.describe Component::FzfComponent do
     allow(mock_config).to receive(:tmp).and_return(tmp_path)
     allow(mock_config).to receive(:bin).and_return(bin_path)
     allow(mock_config).to receive(:home).and_return(home_path)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
+    allow(mock_config).to receive(:os).and_return("linux-gnu")
+    allow(mock_config).to receive(:component_config).with("fzf").and_return({ "version" => "latest", "fallback_version" => "0.57.0" })
   end
 
   describe "#available?" do
@@ -262,6 +265,55 @@ RSpec.describe Component::FzfComponent do
         expect(file_double)
           .to have_received(:write)
           .with(match(/eval.*fzf --zsh/))
+      end
+    end
+  end
+
+  describe "#resolve_version_and_url" do
+    context "when specific version is configured" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("fzf")
+          .and_return({ "version" => "0.56.0" })
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/junegunn/fzf/releases/download/0.56.0/fzf-0.56.0-linux_amd64.tar.gz")
+      end
+
+      it "returns URL without API call" do
+        tag, url = fzf.send(:resolve_version_and_url)
+        expect(tag).to eq("v0.56.0")
+        expect(url).to include("0.56.0")
+        expect(mock_github).not_to have_received(:get_latest_release_tag)
+      end
+    end
+
+    context "when latest version and API fails with fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("fzf")
+          .and_return({ "version" => "latest", "fallback_version" => "0.57.0" })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/junegunn/fzf/releases/download/0.57.0/fzf-fallback.tar.gz")
+      end
+
+      it "uses fallback version" do
+        tag, _url = fzf.send(:resolve_version_and_url)
+        expect(tag).to eq("v0.57.0")
+      end
+    end
+
+    context "when API fails without fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("fzf")
+          .and_return({ "version" => "latest", "fallback_version" => nil })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+      end
+
+      it "raises error" do
+        expect { fzf.send(:resolve_version_and_url) }
+          .to raise_error(/no fallback_version configured/)
       end
     end
   end

@@ -26,6 +26,9 @@ RSpec.describe Component::BatComponent do
     allow(mock_config).to receive(:man1).and_return(man1_path)
     allow(mock_config).to receive(:zsh_completions).and_return(zsh_completions_path)
     allow(mock_config).to receive(:bash_completions).and_return(bash_completions_path)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
+    allow(mock_config).to receive(:os).and_return("linux-gnu")
+    allow(mock_config).to receive(:component_config).with("bat").and_return({ "version" => "latest", "fallback_version" => "0.24.0" })
   end
 
   describe "#available?" do
@@ -236,6 +239,83 @@ RSpec.describe Component::BatComponent do
                                                  "#{zsh_completions_path}/_bat")
       expect(bat).to have_received(:runCmd).with("cp", "#{tmp_path}/bat-assets/autocomplete/bat.bash",
                                                  "#{bash_completions_path}/bat")
+    end
+  end
+
+  describe "#resolve_version_and_url" do
+    context "when specific version is configured" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("bat")
+          .and_return({ "version" => "0.24.0" })
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/sharkdp/bat/releases/download/v0.24.0/bat-v0.24.0-x86_64-unknown-linux-musl.tar.gz")
+      end
+
+      it "returns URL without API call" do
+        # When
+        tag, url = bat.send(:resolve_version_and_url)
+
+        # Then
+        expect(tag).to eq("v0.24.0")
+        expect(url).to include("v0.24.0")
+        expect(mock_github).not_to have_received(:get_latest_release_tag)
+      end
+    end
+
+    context "when latest version and API succeeds" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("bat")
+          .and_return({ "version" => "latest", "fallback_version" => "0.24.0" })
+        allow(mock_github).to receive(:get_latest_release_tag).and_return("v0.25.0")
+        allow(mock_github).to receive(:get_latest_release_asset_download_url)
+          .and_return("https://github.com/sharkdp/bat/releases/download/v0.25.0/bat-asset.tar.gz")
+      end
+
+      it "returns latest version from API" do
+        # When
+        tag, url = bat.send(:resolve_version_and_url)
+
+        # Then
+        expect(tag).to eq("v0.25.0")
+        expect(mock_github).to have_received(:get_latest_release_tag)
+      end
+    end
+
+    context "when latest version and API fails with fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("bat")
+          .and_return({ "version" => "latest", "fallback_version" => "0.24.0" })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/sharkdp/bat/releases/download/v0.24.0/bat-fallback.tar.gz")
+      end
+
+      it "uses fallback version" do
+        # When
+        tag, url = bat.send(:resolve_version_and_url)
+
+        # Then
+        expect(tag).to eq("v0.24.0")
+        expect(url).to include("fallback")
+      end
+    end
+
+    context "when API fails without fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("bat")
+          .and_return({ "version" => "latest", "fallback_version" => nil })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+      end
+
+      it "raises error" do
+        # Then
+        expect { bat.send(:resolve_version_and_url) }
+          .to raise_error(/no fallback_version configured/)
+      end
     end
   end
 end
