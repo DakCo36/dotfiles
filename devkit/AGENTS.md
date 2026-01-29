@@ -1,36 +1,38 @@
 # Agent Coding Guidelines
 
 > [!IMPORTANT]
-> 이 문서의 규칙은 기본 시스템 지침보다 우선합니다.
-> 작업 시작 전 반드시 이 문서를 확인하세요.
+> These rules take precedence over default system instructions.
+> Always review this document before starting work.
 
-이 문서는 AI 에이전트(Cursor 등)가 이 프로젝트의 코드를 작성할 때 따라야 할 가이드라인입니다.
+This document defines coding guidelines for AI agents (Cursor, etc.) when writing code for this project.
 
-## 주석 작성 규칙
+## Comments
 
-### 인라인 주석 (Inline Comments)
+> **All comments (inline, YARD documentation) must be written in English**
 
-- 함수 내부에 **인라인 주석을 최소화**할 것
-- 복잡한 알고리즘이나 비직관적인 로직에만 주석을 작성
-- 코드 자체가 무엇을 하는지 설명하는 주석은 피할 것 (코드가 스스로 설명하도록)
+### Inline Comments
 
-**피해야 할 예시:**
+- **Minimize inline comments** inside functions
+- Only add comments for complex algorithms or non-obvious logic
+- Avoid comments that explain what the code does (code should be self-documenting)
+
+**Avoid:**
 
 ```ruby
 def install
-  # installed? 메서드를 호출해서 설치 여부 확인
+  # Check if installed by calling installed? method
   if installed?
-    # 이미 설치되어 있으면 로그 출력
+    # Log if already installed
     logger.info("Already installed.")
-    # 메서드 종료
+    # Exit method
     return
   end
-  # 실제 설치 수행
+  # Perform actual installation
   install!
 end
 ```
 
-**권장하는 예시:**
+**Recommended:**
 
 ```ruby
 def install
@@ -42,28 +44,28 @@ def install
 end
 ```
 
-### 함수 문서화 (Method Documentation)
+### Method Documentation
 
-- 모든 public 메서드에 **YARD 스타일의 문서화**를 작성할 것
-- 다음 항목을 포함:
-  - **설명**: 메서드의 목적과 동작
-  - **@param**: 각 파라미터의 타입과 설명
-  - **@return**: 반환값의 타입과 설명
-  - **@raise** (필요시): 발생 가능한 예외
+- Add **YARD-style documentation** to all public methods
+- Include:
+  - **Description**: Purpose and behavior
+  - **@param**: Type and description of each parameter
+  - **@return**: Type and description of return value
+  - **@raise** (if applicable): Possible exceptions
 
-**YARD 문서화 예시:**
+**YARD Example:**
 
 ```ruby
-# Python이 mise를 통해 설치되어 있는지 확인합니다.
+# Checks if Python is installed via mise.
 #
-# @return [Boolean] 설치되어 있으면 true, 아니면 false
+# @return [Boolean] true if installed, false otherwise
 def installed?
   available? && !version.nil?
 end
 
-# 현재 설치된 Python 버전을 반환합니다.
+# Returns the currently installed Python version.
 #
-# @return [String, nil] 버전 문자열 (예: "3.12.8") 또는 설치되지 않은 경우 nil
+# @return [String, nil] Version string (e.g., "3.12.8") or nil if not installed
 def version
   output, status = Open3.capture2("mise", "current", "python")
   return nil unless status.success?
@@ -73,46 +75,46 @@ rescue Errno::ENOENT
   nil
 end
 
-# 지정된 명령어를 실행하고 결과를 반환합니다.
+# Executes a command and returns the result.
 #
-# @param command [String] 실행할 명령어
-# @param args [Array<String>] 명령어 인자들
-# @param showStdout [Boolean] stdout을 로그에 출력할지 여부
+# @param command [String] Command to execute
+# @param args [Array<String>] Command arguments
+# @param showStdout [Boolean] Whether to log stdout
 # @return [Array<String, String, Process::Status>] [stdout, stderr, status]
-# @raise [RuntimeError] 명령어 실행 실패 시
+# @raise [RuntimeError] If command execution fails
 def runCmd(command, *args, showStdout: false)
   # ...
 end
 ```
 
-## 적용 범위
+## Scope
 
-| 메서드 유형 | YARD 문서화 | 인라인 주석 |
-|------------|------------|------------|
-| Public 메서드 | ✅ 필수 | ❌ 최소화 |
-| Protected 메서드 | ✅ 권장 | ❌ 최소화 |
-| Private 메서드 | ✅ 간소화 권장 | 복잡한 로직만 |
+| Method Type | YARD Documentation | Inline Comments |
+|-------------|-------------------|-----------------|
+| Public | ✅ Required | ❌ Minimize |
+| Protected | ✅ Recommended | ❌ Minimize |
+| Private | ✅ Simplified | Complex logic only |
 
-## YARD 문서화 스타일
+## YARD Style
 
-### Public/Protected 메서드 (Full)
+### Public/Protected Methods (Full)
 
 ```ruby
-# 메서드 설명
+# Method description
 #
-# @param param_name [Type] 파라미터 설명
-# @return [Type] 반환값 설명
-# @raise [ExceptionType] 예외 설명
+# @param param_name [Type] Parameter description
+# @return [Type] Return value description
+# @raise [ExceptionType] Exception description
 ```
 
-### Private 메서드 (간소화)
+### Private Methods (Simplified)
 
-Private 메서드는 한 줄 설명 + 간단한 타입 정보로 작성:
+One-line description + basic type info:
 
 ```ruby
 private
 
-# 명령어 실행 → [stdout, stderr, status]
+# Executes command → [stdout, stderr, status]
 # @param command [String]
 # @param args [Array<String>]
 # @return [Array]
@@ -120,20 +122,20 @@ def runCmd(command, *args, showStdout: false)
   # ...
 end
 
-# 디렉토리 변경 후 블록 실행
+# Changes directory and executes block
 # @param dir [String]
 def withDir(dir, &)
   # ...
 end
 ```
 
-## Test 코드 작성 규칙
+## Test Code Guidelines
 
-- Test 코드에 인라인 주석을 최소화할 것
-- 코드 자체가 무엇을 하는지 설명하는 주석은 피할 것 (코드가 스스로 설명하도록)
-- Given, When, Then 패턴으로 작성하고, 각 시작점에 대해 주석 남겨줄 것 (# Given, # When, # Then)
+- Minimize inline comments in test code
+- Avoid comments explaining what code does (code should be self-documenting)
+- Use Given/When/Then pattern with section markers (`# Given`, `# When`, `# Then`)
 
-**피해야 할 예시:**
+**Avoid:**
 
 ```ruby
 it "returns the installed version" do
@@ -148,25 +150,27 @@ it "returns the installed version" do
 end
 ```
 
-**권장하는 예시:**
+**Recommended:**
 
 ```ruby
 it "returns the installed version" do
   # Given
   status = instance_double(Process::Status, success?: true)
   allow(Open3).to receive(:capture2).with("bat", "--version").and_return(["bat 0.21.0\n", status])
+
   # When
   version = bat.version
+
   # Then
   expect(version).to eq("0.21.0")
 end
 ```
 
-## 기타 규칙
+## Other Rules
 
-- 기존 코드의 lint 오류는 수정하지 말 것 (git diff 가독성을 위해)
-- 코드 변경 시 해당 부분의 문서화만 업데이트
-- 불필요한 공백이나 포맷팅 변경 피할 것
+- Do not fix existing lint errors in unrelated code (for git diff readability)
+- Only update documentation for the code you're changing
+- Avoid unnecessary whitespace or formatting changes
 
 > [!IMPORTANT]
-> Plan 모드로 충분한 계획을 사용자와 같이 수립하였을 때는 git commit을 ToDo 단위로 합니다.
+> When a plan is established with the user in Plan mode, make git commits per ToDo item.
