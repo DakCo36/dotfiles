@@ -25,16 +25,16 @@ module Component
     depends_on Component::PythonComponent
     depends_on Component::NodeComponent
 
-    # nvim 명령어가 PATH에서 사용 가능한지 확인합니다.
+    # Checks if nvim command is available in PATH.
     #
-    # @return [Boolean] 사용 가능하면 true, 아니면 false
+    # @return [Boolean] true if available, false otherwise
     def available?
       system("nvim", "--version", out: File::NULL, err: File::NULL)
     end
 
-    # 현재 설치된 neovim 버전을 반환합니다.
+    # Returns the current neovim version.
     #
-    # @return [String, nil] 버전 문자열 (예: "0.10.0") 또는 nil
+    # @return [String, nil] Version string (e.g., "0.10.0") or nil
     def version
       output, status = Open3.capture2("nvim", "--version")
       return nil unless status.success?
@@ -45,16 +45,16 @@ module Component
       nil
     end
 
-    # neovim이 설치되어 있는지 확인합니다.
+    # Checks if neovim is installed.
     #
-    # @return [Boolean] 설치되어 있으면 true, 아니면 false
+    # @return [Boolean] true if installed, false otherwise
     def installed?
       available? && !version.nil?
     end
 
-    # GitHub 릴리스에서 최신 버전을 반환합니다.
+    # Returns the latest version from GitHub releases.
     #
-    # @return [String, nil] 버전 문자열 또는 실패 시 nil
+    # @return [String, nil] Version string or nil on failure
     def latest_version
       tag = github.get_latest_release_tag(OWNER, REPO)
       tag&.gsub(/^v/, "")
@@ -63,7 +63,7 @@ module Component
       nil
     end
 
-    # neovim을 설치합니다 (이미 설치되어 있으면 스킵).
+    # Installs neovim (skips if already installed).
     #
     # @return [void]
     def install
@@ -74,7 +74,7 @@ module Component
       install!
     end
 
-    # neovim을 강제로 설치합니다.
+    # Force installs neovim.
     #
     # @return [void]
     def install!
@@ -168,7 +168,7 @@ module Component
       logger.info("Copied .vimrc to #{dest}")
     end
 
-    # @param file_path [String] 백업할 파일 경로
+    # @param file_path [String] File path to backup
     def backup_if_exists(file_path)
       return unless File.exist?(file_path)
 

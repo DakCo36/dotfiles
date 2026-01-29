@@ -13,9 +13,9 @@ module Component
 
     depends_on Component::CurlComponent
 
-    # zsh 실행 가능 여부를 확인합니다.
+    # Checks if zsh is available.
     #
-    # @return [Boolean] 실행 가능하면 true, 아니면 false
+    # @return [Boolean] true if available, false otherwise
     def available?
       runCmd("which", "zsh")
       logger.debug("Zsh is available")
@@ -25,9 +25,9 @@ module Component
       false
     end
 
-    # zsh가 로컬에 설치되어 있는지 확인합니다.
+    # Checks if zsh is installed locally.
     #
-    # @return [Boolean] 설치되어 있으면 true, 아니면 false
+    # @return [Boolean] true if installed, false otherwise
     def installed?
       local_zsh_path = File.join(config.bin, "zsh")
       is_in_path = ENV["PATH"]
@@ -44,22 +44,22 @@ module Component
       false
     end
 
-    # 현재 설치된 zsh 버전을 반환합니다.
+    # Returns the current zsh version.
     #
-    # @return [String, nil] 버전 문자열 (예: "5.9")
+    # @return [String, nil] Version string (e.g., "5.9")
     def version
       out = runCmdWithOutput("zsh", "--version")
       out.split(" ")[1] # example zsh 5.8 (x86_64-pc-linux-musl)
     end
 
-    # 최신 버전을 반환합니다.
+    # Returns the latest version.
     #
     # @return [String] TARGET_VERSION
     def latest_version
       TARGET_VERSION
     end
 
-    # zsh를 설치합니다 (이미 설치되어 있으면 스킵).
+    # Installs zsh (skips if already installed).
     #
     # @return [void]
     def install

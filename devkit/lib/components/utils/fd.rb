@@ -19,16 +19,16 @@ module Component
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
 
-    # fd 실행 가능 여부를 확인합니다.
+    # Checks if fd is available.
     #
-    # @return [Boolean] 실행 가능하면 true, 아니면 false
+    # @return [Boolean] true if available, false otherwise
     def available?
       system("fd", "--version", out: File::NULL, err: File::NULL)
     end
 
-    # 현재 설치된 fd 버전을 반환합니다.
+    # Returns the current fd version.
     #
-    # @return [String, nil] 버전 문자열 (예: "10.3.0") 또는 설치되지 않은 경우 nil
+    # @return [String, nil] Version string (e.g., "10.3.0") or nil if not installed
     def version
       output, status = Open3.capture2("fd", "--version")
       output.split[1] if status.success?
@@ -36,16 +36,16 @@ module Component
       nil
     end
 
-    # fd가 설치되어 있는지 확인합니다.
+    # Checks if fd is installed.
     #
-    # @return [Boolean] 설치되어 있으면 true, 아니면 false
+    # @return [Boolean] true if installed, false otherwise
     def installed?
       available? && !version.nil?
     end
 
-    # 최신 버전을 반환합니다.
+    # Returns the latest version.
     #
-    # @return [String, nil] 버전 문자열 또는 실패 시 nil
+    # @return [String, nil] Version string or nil on failure
     def latest_version
       tag = github.get_latest_release_tag(OWNER, REPO)
       tag&.gsub(/^v/, "")
@@ -54,7 +54,7 @@ module Component
       nil
     end
 
-    # fd를 설치합니다 (이미 설치되어 있으면 스킵).
+    # Installs fd (skips if already installed).
     #
     # @return [void]
     def install
@@ -65,7 +65,7 @@ module Component
       install!
     end
 
-    # fd를 강제로 설치합니다.
+    # Force installs fd.
     #
     # @return [void]
     def install!

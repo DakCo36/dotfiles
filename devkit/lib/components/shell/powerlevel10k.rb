@@ -25,24 +25,24 @@ module Component
     depends_on Component::GitComponent
     depends_on Component::OhMyZshComponent
 
-    # powerlevel10k가 설치되어 있는지 확인합니다.
+    # Checks if powerlevel10k is installed.
     #
-    # @return [Boolean] 디렉토리가 존재하면 true, 아니면 false
+    # @return [Boolean] true if directory exists, false otherwise
     def available?
       Dir.exist?(target_dir_path)
     end
 
-    # powerlevel10k 설치 여부를 확인합니다.
+    # Checks if powerlevel10k is installed.
     #
-    # @return [Boolean] 설치되어 있으면 true, 아니면 false
+    # @return [Boolean] true if installed, false otherwise
     def installed?
       available?
       # TODO: Check if the theme is properly configured in .zshrc
     end
 
-    # 현재 설치된 powerlevel10k 버전 (git commit hash)을 반환합니다.
+    # Returns the current powerlevel10k version (git commit hash).
     #
-    # @return [String, nil] 7자리 commit hash 또는 nil
+    # @return [String, nil] 7-digit commit hash or nil
     def version
       return nil unless available?
 
@@ -55,9 +55,9 @@ module Component
       nil
     end
 
-    # 최신 버전 (remote origin/master)의 commit hash를 반환합니다.
+    # Returns the latest version (remote origin/master) commit hash.
     #
-    # @return [String, nil] 7자리 commit hash 또는 nil
+    # @return [String, nil] 7-digit commit hash or nil
     def latest_version
       return nil unless available?
 
@@ -71,7 +71,7 @@ module Component
       nil
     end
 
-    # powerlevel10k를 설치합니다 (이미 설치되어 있으면 스킵).
+    # Installs powerlevel10k (skips if already installed).
     #
     # @return [void]
     def install
@@ -83,7 +83,7 @@ module Component
       install!
     end
 
-    # powerlevel10k를 강제로 설치합니다.
+    # Force installs powerlevel10k.
     #
     # @return [void]
     def install!

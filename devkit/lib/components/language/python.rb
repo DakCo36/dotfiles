@@ -13,16 +13,16 @@ module Component
     # Fixed Python version to use
     PYTHON_VERSION = "3.12.8"
 
-    # Python이 mise를 통해 사용 가능한지 확인합니다.
+    # Checks if Python is available via mise.
     #
-    # @return [Boolean] 사용 가능하면 true, 아니면 false
+    # @return [Boolean] true if available, false otherwise
     def available?
       system("mise", "which", "python", out: File::NULL, err: File::NULL)
     end
 
-    # 현재 설치된 Python 버전을 반환합니다.
+    # Returns the current Python version.
     #
-    # @return [String, nil] 버전 문자열 (예: "3.12.8") 또는 nil
+    # @return [String, nil] Version string (e.g., "3.12.8") or nil
     def version
       output, status = Open3.capture2("mise", "current", "python")
       return nil unless status.success?
@@ -32,21 +32,21 @@ module Component
       nil
     end
 
-    # Python이 설치되어 있는지 확인합니다.
+    # Checks if Python is installed.
     #
-    # @return [Boolean] 설치되어 있으면 true, 아니면 false
+    # @return [Boolean] true if installed, false otherwise
     def installed?
       available? && !version.nil?
     end
 
-    # 최신 버전을 반환합니다 (고정 버전 사용).
+    # Returns the latest version (uses fixed version).
     #
     # @return [String] PYTHON_VERSION
     def latest_version
       PYTHON_VERSION
     end
 
-    # Python을 설치합니다 (이미 설치되어 있으면 스킵).
+    # Installs Python (skips if already installed).
     #
     # @return [void]
     def install
@@ -57,7 +57,7 @@ module Component
       install!
     end
 
-    # Python을 mise를 통해 강제로 설치합니다.
+    # Force installs Python via mise.
     #
     # @return [void]
     def install!

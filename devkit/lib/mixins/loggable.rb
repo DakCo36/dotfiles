@@ -3,13 +3,13 @@ require "logger"
 module Loggable
   # ANSI color codes for log levels
   COLORS = {
-    "DEBUG" => "\e[34m",  # 파랑 (Blue)
-    "INFO"  => "\e[32m",  # 녹색 (Green)
-    "WARN"  => "\e[33m",  # 노랑 (Yellow)
-    "ERROR" => "\e[31m",  # 빨강 (Red)
+    "DEBUG" => "\e[34m",  # Blue
+    "INFO"  => "\e[32m",  # Green
+    "WARN"  => "\e[33m",  # Yellow
+    "ERROR" => "\e[31m",  # Red
   }.freeze
-  CYAN = "\e[36m"     # 청록색 - 파일명용
-  MAGENTA = "\e[35m"  # 자주색 - 메서드명용
+  CYAN = "\e[36m"     # Cyan - for filename
+  MAGENTA = "\e[35m"  # Magenta - for method name
   RESET = "\e[0m"
 
   LOG_FILE_PATH = "/tmp/dotfiles.ruby.log"
