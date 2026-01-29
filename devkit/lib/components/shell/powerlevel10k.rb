@@ -1,6 +1,5 @@
 require "fileutils"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "components/tools/git"
 require "components/shell/oh_my_zsh"
@@ -10,10 +9,7 @@ module Component
 
     prepend Installable
 
-    CONFIG = Components::Configuration.instance
     REPO_URL = "https://github.com/romkatv/powerlevel10k.git"
-    TARGET_DIR_PATH = File.join(CONFIG.home, ".oh-my-zsh/custom/themes/powerlevel10k")
-    ZSHRC = File.join(CONFIG.home, ".zshrc")
     CONFIG_DIR = File.join(RESOURCES_ROOT, "p10k")
 
     # Instant prompt block to be added at the top of .zshrc
@@ -29,19 +25,28 @@ module Component
     depends_on Component::GitComponent
     depends_on Component::OhMyZshComponent
 
+    # powerlevel10k가 설치되어 있는지 확인합니다.
+    #
+    # @return [Boolean] 디렉토리가 존재하면 true, 아니면 false
     def available?
-      Dir.exist?(TARGET_DIR_PATH)
+      Dir.exist?(target_dir_path)
     end
 
+    # powerlevel10k 설치 여부를 확인합니다.
+    #
+    # @return [Boolean] 설치되어 있으면 true, 아니면 false
     def installed?
       available?
       # TODO: Check if the theme is properly configured in .zshrc
     end
 
+    # 현재 설치된 powerlevel10k 버전 (git commit hash)을 반환합니다.
+    #
+    # @return [String, nil] 7자리 commit hash 또는 nil
     def version
       return nil unless available?
 
-      Dir.chdir(TARGET_DIR_PATH) do
+      Dir.chdir(target_dir_path) do
         output, status = Open3.capture2("git", "rev-parse", "--short=7", "HEAD")
         output.strip if status.success?
       end
@@ -50,10 +55,13 @@ module Component
       nil
     end
 
+    # 최신 버전 (remote origin/master)의 commit hash를 반환합니다.
+    #
+    # @return [String, nil] 7자리 commit hash 또는 nil
     def latest_version
       return nil unless available?
 
-      Dir.chdir(TARGET_DIR_PATH) do
+      Dir.chdir(target_dir_path) do
         Open3.capture2("git", "fetch", "--quiet", "origin")
         output, status = Open3.capture2("git", "rev-parse", "--short=7", "origin/master")
         output.strip if status.success?
@@ -63,6 +71,9 @@ module Component
       nil
     end
 
+    # powerlevel10k를 설치합니다 (이미 설치되어 있으면 스킵).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("Powerlevel10k already installed.")
@@ -72,11 +83,14 @@ module Component
       install!
     end
 
+    # powerlevel10k를 강제로 설치합니다.
+    #
+    # @return [void]
     def install!
-      FileUtils.rm_rf(TARGET_DIR_PATH) if Dir.exist?(TARGET_DIR_PATH)
-      FileUtils.mkdir_p(TARGET_DIR_PATH) unless Dir.exist?(TARGET_DIR_PATH)
+      FileUtils.rm_rf(target_dir_path) if Dir.exist?(target_dir_path)
+      FileUtils.mkdir_p(target_dir_path) unless Dir.exist?(target_dir_path)
       logger.info("Installing Powerlevel10k theme")
-      git.clone(REPO_URL, TARGET_DIR_PATH)
+      git.clone(REPO_URL, target_dir_path)
       configure
     rescue StandardError => e
       logger.error("Failed to install Powerlevel10k: #{e}")
@@ -85,6 +99,16 @@ module Component
 
     private
 
+    # @return [String]
+    def target_dir_path
+      File.join(config.home, ".oh-my-zsh/custom/themes/powerlevel10k")
+    end
+
+    # @return [String]
+    def zshrc_path
+      File.join(config.home, ".zshrc")
+    end
+
     def configure
       setInstantPrompt
       setTheme
@@ -92,35 +116,31 @@ module Component
     end
 
     def setInstantPrompt
-      # Add instant prompt block at the top of .zshrc for faster shell startup
-      unless File.exist?(ZSHRC)
+      unless File.exist?(zshrc_path)
         logger.error(".zshrc file not found")
         raise ".zshrc file not found"
       end
 
-      zshrc_content = File.read(ZSHRC)
+      zshrc_content = File.read(zshrc_path)
 
-      # Check if instant prompt already exists
       if zshrc_content.match?(/# Enable Powerlevel10k instant prompt/)
         logger.info("Instant prompt already exists in .zshrc, skipping")
         return
       end
 
       logger.info("Adding instant prompt to the top of .zshrc")
-      # Prepend instant prompt block to the beginning of .zshrc
       new_content = INSTANT_PROMPT_BLOCK + "\n" + zshrc_content
 
-      File.write(ZSHRC, new_content)
+      File.write(zshrc_path, new_content)
     end
 
     def setTheme
-      # Set zsh theme to powerlevel10k
-      unless File.exist?(ZSHRC)
+      unless File.exist?(zshrc_path)
         logger.error(".zshrc file not found")
         raise ".zshrc file not found"
       end
 
-      zshrc_content = File.read(ZSHRC)
+      zshrc_content = File.read(zshrc_path)
       if zshrc_content.gsub!(/^ZSH_THEME=.*$/, 'ZSH_THEME="powerlevel10k/powerlevel10k"')
         logger.info("Updated ZSH_THEME to powerlevel10k")
       else
@@ -135,13 +155,13 @@ module Component
         zshrc_content << "\n[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh\n"
       end
 
-      File.write(ZSHRC, zshrc_content)
+      File.write(zshrc_path, zshrc_content)
     end
 
     def setConfig
       # TODO: Make it configurable if want to support multiple configurations
       sourceFile = File.join(CONFIG_DIR, "simple.zsh")
-      destFile = File.join(CONFIG.home, ".p10k.zsh")
+      destFile = File.join(config.home, ".p10k.zsh")
 
       unless File.exist?(sourceFile)
         logger.error("Config file #{sourceFile} not found")
