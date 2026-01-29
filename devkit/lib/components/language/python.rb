@@ -2,7 +2,6 @@
 
 require "singleton"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "mixins/loggable"
 
@@ -14,36 +13,42 @@ module Component
     # Fixed Python version to use
     PYTHON_VERSION = "3.12.8"
 
-    CONFIG = Components::Configuration.instance
-
-    # Check if Python is available via mise
+    # Python이 mise를 통해 사용 가능한지 확인합니다.
+    #
+    # @return [Boolean] 사용 가능하면 true, 아니면 false
     def available?
       system("mise", "which", "python", out: File::NULL, err: File::NULL)
     end
 
-    # Return the currently installed Python version
+    # 현재 설치된 Python 버전을 반환합니다.
+    #
+    # @return [String, nil] 버전 문자열 (예: "3.12.8") 또는 nil
     def version
-      # mise current python output format: "python 3.12.8"
       output, status = Open3.capture2("mise", "current", "python")
       return nil unless status.success?
 
-      # Extract only the version number (e.g. "3.12.8")
       output.strip.split.last
     rescue Errno::ENOENT
       nil
     end
 
-    # Check if Python is installed via mise
+    # Python이 설치되어 있는지 확인합니다.
+    #
+    # @return [Boolean] 설치되어 있으면 true, 아니면 false
     def installed?
       available? && !version.nil?
     end
 
-    # Return the target version (this component uses a fixed version, so latest_version = PYTHON_VERSION)
+    # 최신 버전을 반환합니다 (고정 버전 사용).
+    #
+    # @return [String] PYTHON_VERSION
     def latest_version
       PYTHON_VERSION
     end
 
-    # Install Python if it is not installed
+    # Python을 설치합니다 (이미 설치되어 있으면 스킵).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("Python #{version} is already installed via mise.")
@@ -52,7 +57,9 @@ module Component
       install!
     end
 
-    # Install Python via mise
+    # Python을 mise를 통해 강제로 설치합니다.
+    #
+    # @return [void]
     def install!
       logger.info("Installing Python #{PYTHON_VERSION} via mise...")
 

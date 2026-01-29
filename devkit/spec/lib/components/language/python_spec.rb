@@ -8,10 +8,6 @@ RSpec.describe Component::PythonComponent do
 
   before do
     allow(python).to receive(:logger).and_return(null_logger)
-
-    mock_config = instance_double(Components::Configuration)
-    allow(mock_config).to receive(:tmp).and_return("/tmp/test")
-    stub_const("#{described_class}::CONFIG", mock_config)
   end
 
   describe "#available?" do
@@ -23,10 +19,10 @@ RSpec.describe Component::PythonComponent do
         .and_return(true)
 
       # When
-      available = python.available?
+      result = python.available?
 
       # Then
-      expect(available).to be true
+      expect(result).to be true
     end
 
     it "returns false when python is not available via mise" do
@@ -37,10 +33,10 @@ RSpec.describe Component::PythonComponent do
         .and_return(false)
 
       # When
-      available = python.available?
+      result = python.available?
 
       # Then
-      expect(available).to be false
+      expect(result).to be false
     end
   end
 
@@ -53,10 +49,10 @@ RSpec.describe Component::PythonComponent do
         .and_return(["python 3.12.8\n", status])
 
       # When
-      version = python.version
+      result = python.version
 
       # Then
-      expect(version).to eq("3.12.8")
+      expect(result).to eq("3.12.8")
     end
 
     it "returns nil when command fails" do
@@ -67,10 +63,10 @@ RSpec.describe Component::PythonComponent do
         .and_return(["", status])
 
       # When
-      version = python.version
+      result = python.version
 
       # Then
-      expect(version).to be_nil
+      expect(result).to be_nil
     end
 
     it "returns nil when mise is not installed" do
@@ -80,10 +76,10 @@ RSpec.describe Component::PythonComponent do
         .and_raise(Errno::ENOENT)
 
       # When
-      version = python.version
+      result = python.version
 
       # Then
-      expect(version).to be_nil
+      expect(result).to be_nil
     end
   end
 
@@ -93,8 +89,11 @@ RSpec.describe Component::PythonComponent do
       allow(python).to receive(:available?).and_return(true)
       allow(python).to receive(:version).and_return("3.12.8")
 
-      # When & Then
-      expect(python.installed?).to be true
+      # When
+      result = python.installed?
+
+      # Then
+      expect(result).to be true
     end
 
     it "returns false when python is not available" do
@@ -102,8 +101,11 @@ RSpec.describe Component::PythonComponent do
       allow(python).to receive(:available?).and_return(false)
       allow(python).to receive(:version).and_return(nil)
 
-      # When & Then
-      expect(python.installed?).to be false
+      # When
+      result = python.installed?
+
+      # Then
+      expect(result).to be false
     end
 
     it "returns false when python is available but version is nil" do
@@ -111,19 +113,22 @@ RSpec.describe Component::PythonComponent do
       allow(python).to receive(:available?).and_return(true)
       allow(python).to receive(:version).and_return(nil)
 
-      # When & Then
-      expect(python.installed?).to be false
+      # When
+      result = python.installed?
+
+      # Then
+      expect(result).to be false
     end
   end
 
   describe "#latest_version" do
     it "returns the fixed PYTHON_VERSION constant" do
       # When
-      latest = python.latest_version
+      result = python.latest_version
 
       # Then
-      expect(latest).to eq(Component::PythonComponent::PYTHON_VERSION)
-      expect(latest).to eq("3.12.8")
+      expect(result).to eq(Component::PythonComponent::PYTHON_VERSION)
+      expect(result).to eq("3.12.8")
     end
   end
 
