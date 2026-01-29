@@ -39,4 +39,10 @@ module Configurable
     component_config["source"]
   end
 
+  # Returns the Configuration singleton instance
+  # @return [Components::Configuration] configuration instance
+  def config
+    Components::Configuration.instance
+  end
+
 end

@@ -2,7 +2,6 @@
 
 require "singleton"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "mixins/loggable"
 
@@ -14,18 +13,16 @@ module Component
     # Fixed Node.js version to use (LTS Krypton)
     NODE_VERSION = "24.13.0"
 
-    CONFIG = Components::Configuration.instance
-
-    # Check if Node.js is available via mise
+    # Checks if Node.js is available via mise.
     #
-    # @return [Boolean] true if node is available
+    # @return [Boolean] true if available, false otherwise
     def available?
       system("mise", "which", "node", out: File::NULL, err: File::NULL)
     end
 
-    # Return the currently installed Node.js version
+    # Returns the current Node.js version.
     #
-    # @return [String, nil] version string (e.g. "24.13.0") or nil if not installed
+    # @return [String, nil] Version string (e.g., "24.13.0") or nil
     def version
       output, status = Open3.capture2("mise", "current", "node")
       return nil unless status.success?
@@ -35,21 +32,23 @@ module Component
       nil
     end
 
-    # Check if Node.js is installed via mise
+    # Checks if Node.js is installed.
     #
-    # @return [Boolean] true if installed
+    # @return [Boolean] true if installed, false otherwise
     def installed?
       available? && !version.nil?
     end
 
-    # Return the target version (this component uses a fixed version)
+    # Returns the latest version (uses fixed version).
     #
-    # @return [String] the target Node.js version
+    # @return [String] NODE_VERSION
     def latest_version
       NODE_VERSION
     end
 
-    # Install Node.js if it is not installed
+    # Installs Node.js (skips if already installed).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("Node.js #{version} is already installed via mise.")
@@ -58,7 +57,9 @@ module Component
       install!
     end
 
-    # Install Node.js via mise
+    # Force installs Node.js via mise.
+    #
+    # @return [void]
     def install!
       logger.info("Installing Node.js #{NODE_VERSION} via mise...")
 

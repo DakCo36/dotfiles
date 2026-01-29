@@ -1,6 +1,5 @@
 require "fileutils"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "components/tools/curl"
 require "components/shell/zsh_binary"
@@ -11,30 +10,33 @@ module Component
 
     prepend Installable
 
-    CONFIG = Components::Configuration.instance
     DOWNLOAD_URL = "https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
-
-    TARGET_DIR_PATH = File.join(CONFIG.home, ".oh-my-zsh")
-    TMP_SCRIPT_PATH = File.join(CONFIG.tmp, "install-oh-my-zsh.sh")
-
-    ZSHRC = File.join(CONFIG.home, ".zshrc")
     PLUGINS = ["git", "ruby", "python", "systemd", "docker", "pip", "command-not-found", "docker-compose"]
 
     depends_on Component::CurlComponent
     depends_on Component::ZshBinaryComponent
 
+    # Checks if oh-my-zsh is installed.
+    #
+    # @return [Boolean] true if directory exists, false otherwise
     def available?
-      Dir.exist?(TARGET_DIR_PATH)
+      Dir.exist?(target_dir_path)
     end
 
+    # Checks if oh-my-zsh is installed.
+    #
+    # @return [Boolean] true if installed, false otherwise
     def installed?
       available?
     end
 
+    # Returns the current oh-my-zsh version (git commit hash).
+    #
+    # @return [String, nil] 7-digit commit hash or nil
     def version
       return nil unless available?
 
-      Dir.chdir(TARGET_DIR_PATH) do
+      Dir.chdir(target_dir_path) do
         output, status = Open3.capture2("git", "rev-parse", "--short=7", "HEAD")
         output.strip if status.success?
       end
@@ -43,10 +45,13 @@ module Component
       nil
     end
 
+    # Returns the latest version (remote origin/master) commit hash.
+    #
+    # @return [String, nil] 7-digit commit hash or nil
     def latest_version
       return nil unless available?
 
-      Dir.chdir(TARGET_DIR_PATH) do
+      Dir.chdir(target_dir_path) do
         Open3.capture2("git", "fetch", "--quiet", "origin")
         output, status = Open3.capture2("git", "rev-parse", "--short=7", "origin/master")
         output.strip if status.success?
@@ -56,6 +61,9 @@ module Component
       nil
     end
 
+    # Installs oh-my-zsh (skips if already installed).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("oh-my-zsh already installed.")
@@ -64,35 +72,53 @@ module Component
       install!
     end
 
+    # Force installs oh-my-zsh.
+    #
+    # @return [void]
     def install!
-      logger.debug("Remove existing oh-my-zsh directory(#{TARGET_DIR_PATH}) if it exists")
-      FileUtils.rm_rf(TARGET_DIR_PATH) if Dir.exist?(TARGET_DIR_PATH)
+      logger.debug("Remove existing oh-my-zsh directory(#{target_dir_path}) if it exists")
+      FileUtils.rm_rf(target_dir_path) if Dir.exist?(target_dir_path)
       logger.info("Installing oh-my-zsh")
-      curl.download(DOWNLOAD_URL, TMP_SCRIPT_PATH)
-      File.chmod(0o755, TMP_SCRIPT_PATH) if File.exist?(TMP_SCRIPT_PATH)
-      runCmd("sh", "-c", TMP_SCRIPT_PATH, showStdout: true)
+      curl.download(DOWNLOAD_URL, tmp_script_path)
+      File.chmod(0o755, tmp_script_path) if File.exist?(tmp_script_path)
+      runCmd("sh", "-c", tmp_script_path, showStdout: true)
       configure
     rescue StandardError => e
       logger.error("Failed to install oh-my-zsh: #{e}")
       raise e
     ensure
       logger.debug("Cleaning up temporary files")
-      FileUtils.rm_f(TMP_SCRIPT_PATH) if File.exist?(TMP_SCRIPT_PATH)
+      FileUtils.rm_f(tmp_script_path) if File.exist?(tmp_script_path)
     end
 
     private
+
+    # @return [String]
+    def target_dir_path
+      File.join(config.home, ".oh-my-zsh")
+    end
+
+    # @return [String]
+    def tmp_script_path
+      File.join(config.tmp, "install-oh-my-zsh.sh")
+    end
+
+    # @return [String]
+    def zshrc_path
+      File.join(config.home, ".zshrc")
+    end
 
     def configure
       setPlugins
     end
 
     def setPlugins
-      unless File.exist?(ZSHRC)
+      unless File.exist?(zshrc_path)
         logger.error(".zshrc file not found")
         raise ".zshrc file not found"
       end
 
-      zshrc_content = File.read(ZSHRC)
+      zshrc_content = File.read(zshrc_path)
 
       plugins_string = "plugins=("
       PLUGINS.each do |plugin|
@@ -108,7 +134,7 @@ module Component
         zshrc_content << "\n# oh-my-zsh plugins configuration\n#{plugins_string}\n"
       end
 
-      File.write(ZSHRC, zshrc_content)
+      File.write(zshrc_path, zshrc_content)
     end
 
   end

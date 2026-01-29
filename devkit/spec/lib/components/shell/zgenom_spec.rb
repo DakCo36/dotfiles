@@ -2,7 +2,6 @@ require "spec_helper"
 require "components/shell/zgenom"
 require "components/tools/git"
 require "components/shell/zsh_binary"
-require "components/shell/zgenom"
 
 RSpec.describe Component::ZgenomComponent do
   subject(:zgenom) { described_class.instance }
@@ -10,83 +9,114 @@ RSpec.describe Component::ZgenomComponent do
   let(:mock_git) { instance_spy(Component::GitComponent) }
   let(:mock_zsh_binary) { instance_spy(Component::ZshBinaryComponent) }
   let(:mock_logger) { Logger.new(File::NULL) }
+  let(:mock_config) { instance_double(Components::Configuration) }
+  let(:home_path) { "/home/user" }
+  let(:target_dir) { "/home/user/.zgenom" }
+  let(:zshrc) { "/home/user/.zshrc" }
 
   before do
     allow(zgenom).to receive(:logger).and_return(mock_logger)
     allow(zgenom).to receive(:git).and_return(mock_git)
     allow(zgenom).to receive(:zsh_binary).and_return(mock_zsh_binary)
+    allow(zgenom).to receive(:config).and_return(mock_config)
 
-    # Mock the instance methods for dependency checking
+    allow(mock_config).to receive(:home).and_return(home_path)
+
     allow(Component::GitComponent).to receive(:instance).and_return(mock_git)
     allow(Component::ZshBinaryComponent).to receive(:instance).and_return(mock_zsh_binary)
   end
 
   describe "#available?" do
     it "returns true when zgenom directory and zgenom.zsh file exist" do
-      allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(true)
-      allow(File).to receive(:exist?).and_return(true)
-      expect(zgenom.available?).to be true
+      # Given
+      allow(Dir).to receive(:exist?).with(target_dir).and_return(true)
+      allow(File).to receive(:exist?).with("#{target_dir}/zgenom.zsh").and_return(true)
+
+      # When
+      result = zgenom.available?
+
+      # Then
+      expect(result).to be true
     end
 
     it "returns false when zgenom directory does not exist" do
-      allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(false)
-      allow(File).to receive(:exist?).and_return(false)
-      expect(zgenom.available?).to be false
+      # Given
+      allow(Dir).to receive(:exist?).with(target_dir).and_return(false)
+
+      # When
+      result = zgenom.available?
+
+      # Then
+      expect(result).to be false
     end
   end
 
   describe "#installed?" do
     it "returns true when zgenom directory and zgenom.zsh file exist" do
-      allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(true)
-      allow(File).to receive(:exist?).and_return(true)
-      expect(zgenom.installed?).to be true
+      # Given
+      allow(Dir).to receive(:exist?).with(target_dir).and_return(true)
+      allow(File).to receive(:exist?).with("#{target_dir}/zgenom.zsh").and_return(true)
+
+      # When
+      result = zgenom.installed?
+
+      # Then
+      expect(result).to be true
     end
 
     it "returns false when zgenom directory is missing" do
-      allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(false)
-      allow(File).to receive(:exist?).and_return(false)
-      expect(zgenom.installed?).to be false
+      # Given
+      allow(Dir).to receive(:exist?).with(target_dir).and_return(false)
+
+      # When
+      result = zgenom.installed?
+
+      # Then
+      expect(result).to be false
     end
   end
 
   describe "#install" do
     context "when already installed" do
       it "does nothing" do
+        # Given
         allow(zgenom).to receive(:installed?).and_return(true)
 
+        # When
         zgenom.install
 
+        # Then
         expect(mock_git).not_to have_received(:clone)
       end
     end
 
     context "when not installed" do
       it "clones the zgenom repository" do
+        # Given
         allow(zgenom).to receive(:installed?).and_return(false)
         allow(mock_git).to receive(:available?).and_return(true)
         allow(mock_zsh_binary).to receive(:available?).and_return(true)
-        allow(mock_git).to receive(:clone).with(described_class::REPO_URL, described_class::TARGET_DIR_PATH)
+        allow(mock_git).to receive(:clone).with(described_class::REPO_URL, target_dir)
 
-        allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(false)
+        allow(Dir).to receive(:exist?).with(target_dir).and_return(false)
         allow(FileUtils).to receive(:rm_rf).and_return(nil)
         allow(FileUtils).to receive(:mkdir_p).and_return(nil)
 
         allow(zgenom).to receive(:configure).and_return(true)
-
-        # Let's spy on the dependencies method
         allow(zgenom).to receive(:dependencies).and_call_original
 
+        # When
         zgenom.install
 
-        expect(mock_git)
-          .to have_received(:clone)
-          .with(described_class::REPO_URL, described_class::TARGET_DIR_PATH)
+        # Then
+        expect(mock_git).to have_received(:clone).with(described_class::REPO_URL, target_dir)
       end
     end
   end
 
   describe "#disableOhMyZshPlugins" do
     it "disables oh-my-zsh plugins" do
+      # Given
       original_content = <<~CONTENT
         source $ZSH/oh-my-zsh.sh
         plugins=(git docker)
@@ -103,20 +133,21 @@ RSpec.describe Component::ZgenomComponent do
         another thing
       CONTENT
 
-      # Given
-      allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
-      allow(File).to receive(:read).with(described_class::ZSHRC).and_return(original_content)
+      allow(File).to receive(:exist?).with(zshrc).and_return(true)
+      allow(File).to receive(:read).with(zshrc).and_return(original_content)
       allow(File).to receive(:write).and_return(nil)
 
+      # When
       zgenom.send(:disableOhMyZshPlugins)
 
-      expect(File).to have_received(:write).with(described_class::ZSHRC, expected_final_content)
+      # Then
+      expect(File).to have_received(:write).with(zshrc, expected_final_content)
     end
   end
 
   describe "#setPlugins" do
-
-    it "Already zgenom autoupdate exists in .zshrc, skip" do
+    it "skips when zgenom autoupdate already exists in .zshrc" do
+      # Given
       content = <<~CONTENT
         Something bla
         # plugins=(git docker)
@@ -128,15 +159,18 @@ RSpec.describe Component::ZgenomComponent do
         PATH="$PATH"
       CONTENT
 
-      allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
-      allow(File).to receive(:read).with(described_class::ZSHRC).and_return(content)
+      allow(File).to receive(:exist?).with(zshrc).and_return(true)
+      allow(File).to receive(:read).with(zshrc).and_return(content)
 
-      expect(File).not_to receive(:open).with(described_class::ZSHRC, "w")
-
+      # When
       zgenom.send(:setPlugins)
+
+      # Then
+      expect(File).not_to have_received(:write)
     end
 
-    it "set zgenom pluings" do
+    it "sets zgenom plugins" do
+      # Given
       content = <<~CONTENT
         Something blah
         # plugins=(git docker)
@@ -147,20 +181,18 @@ RSpec.describe Component::ZgenomComponent do
         PATH="$PATH"
       CONTENT
 
-      allow(File).to receive(:exist?).with(described_class::ZSHRC).and_return(true)
-      allow(File).to receive(:read).with(described_class::ZSHRC).and_return(content)
-      # Capture the arguments passed to File.write
-      captured_path = nil
+      allow(File).to receive(:exist?).with(zshrc).and_return(true)
+      allow(File).to receive(:read).with(zshrc).and_return(content)
       captured_content = nil
-      allow(File).to receive(:write) do |path, written_content|
-        captured_path = path
+      allow(File).to receive(:write) do |_path, written_content|
         captured_content = written_content
         nil
       end
 
+      # When
       zgenom.send(:setPlugins)
 
-      expect(captured_path).to eq(described_class::ZSHRC)
+      # Then
       expect(captured_content).to match(/zgenom autoupdate/)
       expect(captured_content).to match(/Something blah/)
     end

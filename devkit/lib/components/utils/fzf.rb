@@ -1,6 +1,5 @@
 require "singleton"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "components/tools/github"
 require "components/tools/curl"
@@ -12,23 +11,25 @@ module Component
 
     prepend Installable
 
-    # Asset 패턴: fzf-{version}-linux_amd64.tar.gz
+    # Asset pattern: fzf-{version}-linux_amd64.tar.gz
     TARGET_ASSET_PATTERN = "fzf-.*-linux_amd64\\.tar\\.gz"
     OWNER = "junegunn"
     REPO = "fzf"
-
-    CONFIG = Components::Configuration.instance
-    TMP_ASSET_PATH = File.join(CONFIG.tmp, "fzf-assets.tar.gz")
-    TMP_DIR_PATH = File.join(CONFIG.tmp, "fzf-assets")
 
     depends_on Component::CurlComponent
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
 
+    # Checks if fzf is available.
+    #
+    # @return [Boolean] true if available, false otherwise
     def available?
       system("fzf", "--version", out: File::NULL, err: File::NULL)
     end
 
+    # Returns the current fzf version.
+    #
+    # @return [String, nil] Version string (e.g., "0.57.0") or nil if not installed
     def version
       output, status = Open3.capture2("fzf", "--version")
       # fzf outputs "0.57.0 (fc7630a)" format
@@ -37,10 +38,16 @@ module Component
       nil
     end
 
+    # Checks if fzf is installed.
+    #
+    # @return [Boolean] true if installed, false otherwise
     def installed?
       available? && !version.nil?
     end
 
+    # Returns the latest version.
+    #
+    # @return [String, nil] Version string or nil on failure
     def latest_version
       tag = github.get_latest_release_tag(OWNER, REPO)
       tag&.gsub(/^v/, "")
@@ -49,6 +56,9 @@ module Component
       nil
     end
 
+    # Installs fzf (skips if already installed).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("fzf already installed.")
@@ -57,16 +67,19 @@ module Component
       install!
     end
 
+    # Force installs fzf.
+    #
+    # @return [void]
     def install!
       tag = github.get_latest_release_tag(OWNER, REPO)
       logger.info("Latest release tag: #{tag}")
       url = github.get_latest_release_asset_download_url(OWNER, REPO, TARGET_ASSET_PATTERN)
       logger.info("Downloading asset from: #{url}")
-      curl.download(url, TMP_ASSET_PATH)
+      curl.download(url, tmp_asset_path)
 
       # fzf tarball contains only the fzf binary at root level (no subdirectory)
-      tar.extract(TMP_ASSET_PATH, TMP_DIR_PATH, 0)
-      runCmd("cp", File.join(TMP_DIR_PATH, "fzf"), File.join(CONFIG.bin, "fzf"))
+      tar.extract(tmp_asset_path, tmp_dir_path, 0)
+      runCmd("cp", File.join(tmp_dir_path, "fzf"), File.join(config.bin, "fzf"))
 
       setup_shell_integration
 
@@ -75,10 +88,20 @@ module Component
 
     private
 
+    # @return [String]
+    def tmp_asset_path
+      File.join(config.tmp, "fzf-assets.tar.gz")
+    end
+
+    # @return [String]
+    def tmp_dir_path
+      File.join(config.tmp, "fzf-assets")
+    end
+
     def setup_shell_integration
       # fzf 0.48.0+ supports --zsh, --bash flags for shell integration
       # Add shell integration source to .zshrc if not present
-      zshrc_path = File.join(CONFIG.home, ".zshrc")
+      zshrc_path = File.join(config.home, ".zshrc")
 
       return unless File.exist?(zshrc_path)
 

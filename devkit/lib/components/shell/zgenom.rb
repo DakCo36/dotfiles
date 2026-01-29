@@ -1,6 +1,5 @@
 require "fileutils"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "components/tools/git"
 require "components/shell/zsh_binary"
@@ -10,28 +9,33 @@ module Component
 
     prepend Installable
 
-    CONFIG = Components::Configuration.instance
     REPO_URL = "https://github.com/jandamm/zgenom.git"
-    TARGET_DIR_PATH = File.join(CONFIG.home, ".zgenom")
-
-    ZSHRC = File.join(CONFIG.home, ".zshrc") # FIXME: Get from ZshBinaryComponent
 
     depends_on Component::GitComponent
     depends_on Component::ZshBinaryComponent
 
+    # Checks if zgenom is installed.
+    #
+    # @return [Boolean] true if directory and zgenom.zsh file exist
     def available?
-      Dir.exist?(TARGET_DIR_PATH) && File.exist?(File.join(TARGET_DIR_PATH, "zgenom.zsh"))
+      Dir.exist?(target_dir_path) && File.exist?(File.join(target_dir_path, "zgenom.zsh"))
     end
 
+    # Checks if zgenom is installed.
+    #
+    # @return [Boolean] true if installed, false otherwise
     def installed?
       available?
       # TODO : Check if zgenom is properly configured in .zshrc
     end
 
+    # Returns the current zgenom version (git commit hash).
+    #
+    # @return [String, nil] 7-digit commit hash or nil
     def version
       return nil unless available?
 
-      Dir.chdir(TARGET_DIR_PATH) do
+      Dir.chdir(target_dir_path) do
         output, status = Open3.capture2("git", "rev-parse", "--short=7", "HEAD")
         output.strip if status.success?
       end
@@ -40,10 +44,13 @@ module Component
       nil
     end
 
+    # Returns the latest version (remote origin/main) commit hash.
+    #
+    # @return [String, nil] 7-digit commit hash or nil
     def latest_version
       return nil unless available?
 
-      Dir.chdir(TARGET_DIR_PATH) do
+      Dir.chdir(target_dir_path) do
         Open3.capture2("git", "fetch", "--quiet", "origin")
         output, status = Open3.capture2("git", "rev-parse", "--short=7", "origin/main")
         output.strip if status.success?
@@ -53,6 +60,9 @@ module Component
       nil
     end
 
+    # Installs zgenom (skips if already installed).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("Zgenom already installed.")
@@ -62,12 +72,15 @@ module Component
       configure
     end
 
+    # Force installs zgenom.
+    #
+    # @return [void]
     def install!
-      FileUtils.rm_rf(TARGET_DIR_PATH) if Dir.exist?(TARGET_DIR_PATH)
+      FileUtils.rm_rf(target_dir_path) if Dir.exist?(target_dir_path)
       logger.info("Installing Zgenom...")
-      FileUtils.mkdir_p(TARGET_DIR_PATH) unless Dir.exist?(TARGET_DIR_PATH)
+      FileUtils.mkdir_p(target_dir_path) unless Dir.exist?(target_dir_path)
 
-      git.clone(REPO_URL, TARGET_DIR_PATH)
+      git.clone(REPO_URL, target_dir_path)
     rescue StandardError => e
       logger.error("Failed to install Zgenom: #{e}")
       raise e
@@ -79,45 +92,50 @@ module Component
 
     private
 
+    # @return [String]
+    def target_dir_path
+      File.join(config.home, ".zgenom")
+    end
+
+    # @return [String]
+    def zshrc_path
+      File.join(config.home, ".zshrc")
+    end
+
     def configure
       disableOhMyZshPlugins
       setPlugins
     end
 
     def disableOhMyZshPlugins
-      unless File.exist?(ZSHRC)
+      unless File.exist?(zshrc_path)
         logger.error(".zshrc file not found")
         raise ".zshrc file not found"
       end
 
-      zshrc_content = File.read(ZSHRC)
+      zshrc_content = File.read(zshrc_path)
 
-      # FIXME: possibly distroy .zshrc
-      # if zshrc_content.gsub!(/^(\s*plugins=\([^)]*\)\s*)$/, '# \1')
       logger.info("Disabling oh-my-zsh plugins") if zshrc_content.gsub!(/^(\s*plugins=\([^)]*\))/m, '# \1')
 
-      # FIXME: possibly distroy .zshrc
-      #   if zshrc_content.gsub!(/^(\s*source \$ZSH\/oh-my-zsh.sh)$/, '# \1')
       if zshrc_content.gsub!(%r{^(\s*source \$ZSH/oh-my-zsh.sh)}m, '# \1')
         logger.info("Disabling source oh-my-zsh script")
       end
 
-      File.write(ZSHRC, zshrc_content)
+      File.write(zshrc_path, zshrc_content)
     end
 
     def setPlugins
-      unless File.exist?(ZSHRC)
+      unless File.exist?(zshrc_path)
         logger.error(".zshrc file not found")
         raise ".zshrc file not found"
       end
 
-      zshrc_content = File.read(ZSHRC)
+      zshrc_content = File.read(zshrc_path)
 
       # zgenom autoupdate
       zgenom_config = ""
       if zshrc_content.match?(/zgenom autoupdate/)
         logger.debug("zgenom update already exists in .zshrc, skipping")
-        # Assume already zgenom plugins are set-up
         return
       else
         logger.info("Adding zgenom autoupdate to .zshrc")
@@ -164,7 +182,7 @@ module Component
       end
 
       zshrc_content << zgenom_config
-      File.write(ZSHRC, zshrc_content)
+      File.write(zshrc_path, zshrc_content)
     end
 
   end

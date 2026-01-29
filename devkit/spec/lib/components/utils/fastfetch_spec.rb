@@ -7,7 +7,9 @@ RSpec.describe Component::FastfetchComponent do
   let(:mock_curl) { instance_spy(Component::CurlComponent) }
   let(:mock_tar) { instance_spy(Component::TarComponent) }
   let(:mock_github) { instance_spy(Component::GithubComponent) }
+  let(:mock_config) { instance_double(Components::Configuration) }
   let(:bin_path) { "/home/user/.local/bin" }
+  let(:tmp_path) { "/tmp/test" }
   let(:man1_path) { "/home/user/.local/share/man/man1" }
   let(:zsh_completions_path) { "/home/user/.local/share/zsh/site-functions" }
   let(:bash_completions_path) { "/home/user/.local/share/bash-completion/completions" }
@@ -17,15 +19,13 @@ RSpec.describe Component::FastfetchComponent do
     allow(fastfetch).to receive(:curl).and_return(mock_curl)
     allow(fastfetch).to receive(:tar).and_return(mock_tar)
     allow(fastfetch).to receive(:github).and_return(mock_github)
+    allow(fastfetch).to receive(:config).and_return(mock_config)
 
-    mock_config = instance_double(Components::Configuration)
-    allow(mock_config).to receive(:tmp).and_return("/tmp/test")
+    allow(mock_config).to receive(:tmp).and_return(tmp_path)
     allow(mock_config).to receive(:bin).and_return(bin_path)
     allow(mock_config).to receive(:man1).and_return(man1_path)
     allow(mock_config).to receive(:zsh_completions).and_return(zsh_completions_path)
     allow(mock_config).to receive(:bash_completions).and_return(bash_completions_path)
-
-    stub_const("#{described_class}::CONFIG", mock_config)
   end
 
   describe "#available?" do
@@ -37,10 +37,10 @@ RSpec.describe Component::FastfetchComponent do
         .and_return(true)
 
       # When
-      available = fastfetch.available?
+      result = fastfetch.available?
 
       # Then
-      expect(available).to be true
+      expect(result).to be true
     end
 
     it "returns false when fastfetch command is missing" do
@@ -51,26 +51,26 @@ RSpec.describe Component::FastfetchComponent do
         .and_return(false)
 
       # When
-      available = fastfetch.available?
+      result = fastfetch.available?
 
       # Then
-      expect(available).to be false
+      expect(result).to be false
     end
   end
 
   describe "#version" do
     it "returns the installed fastfetch version" do
-      # Given: fastfetch 버전 출력 형식 "fastfetch 2.57.1 (Linux)"
+      # Given
       status = instance_double(Process::Status, success?: true)
       allow(Open3).to receive(:capture2)
         .with("fastfetch", "--version")
         .and_return(["fastfetch 2.57.1 (Linux)\n", status])
 
       # When
-      version = fastfetch.version
+      result = fastfetch.version
 
       # Then
-      expect(version).to eq("2.57.1")
+      expect(result).to eq("2.57.1")
     end
 
     it "returns nil when command fails" do
@@ -81,10 +81,10 @@ RSpec.describe Component::FastfetchComponent do
         .and_return(["Unknown result", status])
 
       # When
-      version = fastfetch.version
+      result = fastfetch.version
 
       # Then
-      expect(version).to be_nil
+      expect(result).to be_nil
     end
 
     it "returns nil when fastfetch is not installed" do
@@ -94,10 +94,10 @@ RSpec.describe Component::FastfetchComponent do
         .and_raise(Errno::ENOENT)
 
       # When
-      version = fastfetch.version
+      result = fastfetch.version
 
       # Then
-      expect(version).to be_nil
+      expect(result).to be_nil
     end
   end
 
@@ -107,8 +107,11 @@ RSpec.describe Component::FastfetchComponent do
       allow(fastfetch).to receive(:available?).and_return(true)
       allow(fastfetch).to receive(:version).and_return("2.57.1")
 
-      # When & Then
-      expect(fastfetch.installed?).to be true
+      # When
+      result = fastfetch.installed?
+
+      # Then
+      expect(result).to be true
     end
 
     it "returns false if fastfetch is not installed" do
@@ -116,46 +119,95 @@ RSpec.describe Component::FastfetchComponent do
       allow(fastfetch).to receive(:available?).and_return(false)
       allow(fastfetch).to receive(:version).and_return(nil)
 
-      # When & Then
-      expect(fastfetch.installed?).to be false
+      # When
+      result = fastfetch.installed?
+
+      # Then
+      expect(result).to be false
+    end
+  end
+
+  describe "#latest_version" do
+    it "returns the latest version from GitHub" do
+      # Given
+      allow(mock_github).to receive(:get_latest_release_tag).with("fastfetch-cli", "fastfetch").and_return("2.57.1")
+
+      # When
+      result = fastfetch.latest_version
+
+      # Then
+      expect(result).to eq("2.57.1")
+    end
+
+    it "returns nil when API call fails" do
+      # Given
+      allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError.new("API error"))
+
+      # When
+      result = fastfetch.latest_version
+
+      # Then
+      expect(result).to be_nil
+    end
+  end
+
+  describe "#install" do
+    it "skips installation when already installed" do
+      # Given
+      allow(fastfetch).to receive(:installed?).and_return(true)
+      allow(fastfetch).to receive(:install!)
+
+      # When
+      fastfetch.install
+
+      # Then
+      expect(fastfetch).not_to have_received(:install!)
+      expect(null_logger).to have_received(:info).with("fastfetch already installed.")
+    end
+
+    it "calls install! when not installed" do
+      # Given
+      allow(fastfetch).to receive(:installed?).and_return(false)
+      allow(fastfetch).to receive(:install!)
+
+      # When
+      fastfetch.install
+
+      # Then
+      expect(fastfetch).to have_received(:install!)
     end
   end
 
   describe "#install!" do
-    it "installs fastfetch from GitHub releases" do
-      # Given
+    before do
       allow(mock_github).to receive(:get_latest_release_tag).and_return("2.57.1")
       allow(mock_github)
         .to receive(:get_latest_release_asset_download_url)
         .and_return("https://github.com/fastfetch-cli/fastfetch/releases/download/2.57.1/fastfetch-linux-amd64.tar.gz")
-      allow(mock_curl).to receive(:download).and_return(["", "", instance_double(Process::Status, success?: true)])
-      allow(mock_tar).to receive(:extract).and_return(["", "", instance_double(Process::Status, success?: true)])
-      allow(fastfetch).to receive(:setup_man_page).and_return(["", "",
-                                                               instance_double(Process::Status, success?: true),])
-      allow(fastfetch).to receive(:setup_completions).and_return(["", "",
-                                                                  instance_double(Process::Status, success?: true),])
+      allow(mock_curl).to receive(:download)
+      allow(mock_tar).to receive(:extract)
       allow(fastfetch).to receive(:runCmd)
-        .with("cp", anything, anything)
-        .and_return(["", "", instance_double(Process::Status, success?: true)])
+      allow(FileUtils).to receive(:mkdir_p)
+    end
 
+    it "downloads and installs fastfetch" do
       # When
       fastfetch.install!
 
       # Then
       expect(mock_github).to have_received(:get_latest_release_tag)
       expect(mock_github).to have_received(:get_latest_release_asset_download_url)
-      expect(mock_curl).to have_received(:download)
-      expect(mock_tar).to have_received(:extract)
-      expect(fastfetch).to have_received(:setup_man_page)
-      expect(fastfetch).to have_received(:setup_completions)
+      expect(mock_curl).to have_received(:download).with(anything, "#{tmp_path}/fastfetch-assets.tar.gz")
+      expect(mock_tar).to have_received(:extract).with("#{tmp_path}/fastfetch-assets.tar.gz", "#{tmp_path}/fastfetch-assets", 1)
+      expect(fastfetch).to have_received(:runCmd).with("cp", "#{tmp_path}/fastfetch-assets/usr/bin/fastfetch", "#{bin_path}/fastfetch")
+      expect(fastfetch).to have_received(:runCmd).with("cp", "#{tmp_path}/fastfetch-assets/usr/bin/flashfetch", "#{bin_path}/flashfetch")
     end
   end
 
   describe "#setup_man_page" do
     before do
-      stub_const("#{described_class}::EXTRACTED_MAN_PATH", "/tmp/test/fastfetch-assets/usr/share/man/man1")
       allow(FileUtils).to receive(:mkdir_p)
-      allow(fastfetch).to receive(:runCmd).and_return(["", "", instance_double(Process::Status, success?: true)])
+      allow(fastfetch).to receive(:runCmd)
     end
 
     it "creates directory and copies fastfetch.1" do
@@ -166,7 +218,7 @@ RSpec.describe Component::FastfetchComponent do
       expect(FileUtils).to have_received(:mkdir_p).with(man1_path)
       expect(fastfetch).to have_received(:runCmd).with(
         "cp",
-        "/tmp/test/fastfetch-assets/usr/share/man/man1/fastfetch.1",
+        "#{tmp_path}/fastfetch-assets/usr/share/man/man1/fastfetch.1",
         "#{man1_path}/fastfetch.1"
       )
     end
@@ -174,12 +226,8 @@ RSpec.describe Component::FastfetchComponent do
 
   describe "#setup_completions" do
     before do
-      stub_const("#{described_class}::EXTRACTED_ZSH_COMPLETION_PATH",
-                 "/tmp/test/fastfetch-assets/usr/share/zsh/site-functions")
-      stub_const("#{described_class}::EXTRACTED_BASH_COMPLETION_PATH",
-                 "/tmp/test/fastfetch-assets/usr/share/bash-completion/completions")
       allow(FileUtils).to receive(:mkdir_p)
-      allow(fastfetch).to receive(:runCmd).and_return(["", "", instance_double(Process::Status, success?: true)])
+      allow(fastfetch).to receive(:runCmd)
     end
 
     it "creates directories and copies completion files" do
@@ -191,12 +239,12 @@ RSpec.describe Component::FastfetchComponent do
       expect(FileUtils).to have_received(:mkdir_p).with(bash_completions_path)
       expect(fastfetch).to have_received(:runCmd).with(
         "cp",
-        "/tmp/test/fastfetch-assets/usr/share/zsh/site-functions/_fastfetch",
+        "#{tmp_path}/fastfetch-assets/usr/share/zsh/site-functions/_fastfetch",
         "#{zsh_completions_path}/_fastfetch"
       )
       expect(fastfetch).to have_received(:runCmd).with(
         "cp",
-        "/tmp/test/fastfetch-assets/usr/share/bash-completion/completions/fastfetch",
+        "#{tmp_path}/fastfetch-assets/usr/share/bash-completion/completions/fastfetch",
         "#{bash_completions_path}/fastfetch"
       )
     end
