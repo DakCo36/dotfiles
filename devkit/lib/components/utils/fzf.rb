@@ -1,6 +1,5 @@
 require "singleton"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "components/tools/github"
 require "components/tools/curl"
@@ -17,18 +16,20 @@ module Component
     OWNER = "junegunn"
     REPO = "fzf"
 
-    CONFIG = Components::Configuration.instance
-    TMP_ASSET_PATH = File.join(CONFIG.tmp, "fzf-assets.tar.gz")
-    TMP_DIR_PATH = File.join(CONFIG.tmp, "fzf-assets")
-
     depends_on Component::CurlComponent
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
 
+    # fzf 실행 가능 여부를 확인합니다.
+    #
+    # @return [Boolean] 실행 가능하면 true, 아니면 false
     def available?
       system("fzf", "--version", out: File::NULL, err: File::NULL)
     end
 
+    # 현재 설치된 fzf 버전을 반환합니다.
+    #
+    # @return [String, nil] 버전 문자열 (예: "0.57.0") 또는 설치되지 않은 경우 nil
     def version
       output, status = Open3.capture2("fzf", "--version")
       # fzf outputs "0.57.0 (fc7630a)" format
@@ -37,10 +38,16 @@ module Component
       nil
     end
 
+    # fzf가 설치되어 있는지 확인합니다.
+    #
+    # @return [Boolean] 설치되어 있으면 true, 아니면 false
     def installed?
       available? && !version.nil?
     end
 
+    # 최신 버전을 반환합니다.
+    #
+    # @return [String, nil] 버전 문자열 또는 실패 시 nil
     def latest_version
       tag = github.get_latest_release_tag(OWNER, REPO)
       tag&.gsub(/^v/, "")
@@ -49,6 +56,9 @@ module Component
       nil
     end
 
+    # fzf를 설치합니다 (이미 설치되어 있으면 스킵).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("fzf already installed.")
@@ -57,16 +67,19 @@ module Component
       install!
     end
 
+    # fzf를 강제로 설치합니다.
+    #
+    # @return [void]
     def install!
       tag = github.get_latest_release_tag(OWNER, REPO)
       logger.info("Latest release tag: #{tag}")
       url = github.get_latest_release_asset_download_url(OWNER, REPO, TARGET_ASSET_PATTERN)
       logger.info("Downloading asset from: #{url}")
-      curl.download(url, TMP_ASSET_PATH)
+      curl.download(url, tmp_asset_path)
 
       # fzf tarball contains only the fzf binary at root level (no subdirectory)
-      tar.extract(TMP_ASSET_PATH, TMP_DIR_PATH, 0)
-      runCmd("cp", File.join(TMP_DIR_PATH, "fzf"), File.join(CONFIG.bin, "fzf"))
+      tar.extract(tmp_asset_path, tmp_dir_path, 0)
+      runCmd("cp", File.join(tmp_dir_path, "fzf"), File.join(config.bin, "fzf"))
 
       setup_shell_integration
 
@@ -75,10 +88,20 @@ module Component
 
     private
 
+    # @return [String]
+    def tmp_asset_path
+      File.join(config.tmp, "fzf-assets.tar.gz")
+    end
+
+    # @return [String]
+    def tmp_dir_path
+      File.join(config.tmp, "fzf-assets")
+    end
+
     def setup_shell_integration
       # fzf 0.48.0+ supports --zsh, --bash flags for shell integration
       # Add shell integration source to .zshrc if not present
-      zshrc_path = File.join(CONFIG.home, ".zshrc")
+      zshrc_path = File.join(config.home, ".zshrc")
 
       return unless File.exist?(zshrc_path)
 
