@@ -69,9 +69,8 @@ module Component
     #
     # @return [void]
     def install!
-      tag = github.get_latest_release_tag(OWNER, REPO)
-      logger.info("Latest release tag: #{tag}")
-      url = github.get_latest_release_asset_download_url(OWNER, REPO, target_asset_pattern)
+      tag, url = resolve_version_and_url
+      logger.info("Installing version: #{tag}")
       logger.info("Downloading asset from: #{url}")
       curl.download(url, tmp_asset_path)
 
@@ -85,6 +84,51 @@ module Component
     end
 
     private
+
+    def resolve_version_and_url
+      component_config = config.component_config("ripgrep")
+      version = component_config["version"]
+
+      if version && version != "latest"
+        tag = version  # ripgrep uses plain version without 'v' prefix
+        asset_name = build_asset_name(tag)
+        url = github.build_release_asset_url(OWNER, REPO, tag, asset_name)
+        return [tag, url]
+      end
+
+      tag = github.get_latest_release_tag(OWNER, REPO)
+      url = github.get_latest_release_asset_download_url(OWNER, REPO, target_asset_pattern)
+      [tag, url]
+    rescue StandardError => e
+      fallback = component_config["fallback_version"]
+      raise "API failed and no fallback_version configured: #{e.message}" unless fallback
+
+      tag = fallback
+      asset_name = build_asset_name(tag)
+      url = github.build_release_asset_url(OWNER, REPO, tag, asset_name)
+      logger.warn("API failed, using fallback version: #{tag}")
+      [tag, url]
+    end
+
+    def build_asset_name(tag)
+      arch = config.arch
+      os = config.os
+
+      if os.include?("darwin")
+        arch_str = arch == "arm64" ? "aarch64-apple-darwin" : "x86_64-apple-darwin"
+      else
+        # Linux: x86_64 uses musl, arm64 uses gnu
+        if arch.include?("x86_64") || arch.include?("amd64")
+          arch_str = "x86_64-unknown-linux-musl"
+        elsif arch == "arm64" || arch.include?("aarch64")
+          arch_str = "aarch64-unknown-linux-gnu"
+        else
+          raise "Unsupported architecture: #{arch} on #{os}"
+        end
+      end
+
+      "ripgrep-#{tag}-#{arch_str}.tar.gz"
+    end
 
     # Returns the asset pattern for the current architecture.
     #

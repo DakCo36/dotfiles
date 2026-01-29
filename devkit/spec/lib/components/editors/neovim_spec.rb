@@ -25,6 +25,9 @@ RSpec.describe Component::NeovimComponent do
     allow(mock_config).to receive(:tmp).and_return(tmp_path)
     allow(mock_config).to receive(:local).and_return(local_path)
     allow(mock_config).to receive(:home).and_return(home_path)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
+    allow(mock_config).to receive(:os).and_return("linux-gnu")
+    allow(mock_config).to receive(:component_config).with("neovim").and_return({ "version" => "latest", "fallback_version" => "0.10.0" })
   end
 
   describe "#available?" do
@@ -334,6 +337,55 @@ RSpec.describe Component::NeovimComponent do
 
       # Then
       expect(FileUtils).not_to have_received(:cp)
+    end
+  end
+
+  describe "#resolve_version_and_url" do
+    context "when specific version is configured" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("neovim")
+          .and_return({ "version" => "0.9.0" })
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/neovim/neovim/releases/download/v0.9.0/nvim-linux-x86_64.tar.gz")
+      end
+
+      it "returns URL without API call" do
+        tag, url = neovim.send(:resolve_version_and_url)
+        expect(tag).to eq("v0.9.0")
+        expect(url).to include("v0.9.0")
+        expect(mock_github).not_to have_received(:get_latest_release_tag)
+      end
+    end
+
+    context "when latest version and API fails with fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("neovim")
+          .and_return({ "version" => "latest", "fallback_version" => "0.10.0" })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+        allow(mock_github).to receive(:build_release_asset_url)
+          .and_return("https://github.com/neovim/neovim/releases/download/v0.10.0/nvim-fallback.tar.gz")
+      end
+
+      it "uses fallback version" do
+        tag, _url = neovim.send(:resolve_version_and_url)
+        expect(tag).to eq("v0.10.0")
+      end
+    end
+
+    context "when API fails without fallback" do
+      before do
+        allow(mock_config).to receive(:component_config)
+          .with("neovim")
+          .and_return({ "version" => "latest", "fallback_version" => nil })
+        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
+      end
+
+      it "raises error" do
+        expect { neovim.send(:resolve_version_and_url) }
+          .to raise_error(/no fallback_version configured/)
+      end
     end
   end
 end

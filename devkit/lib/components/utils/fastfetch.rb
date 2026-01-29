@@ -68,9 +68,8 @@ module Component
     #
     # @return [void]
     def install!
-      tag = github.get_latest_release_tag(OWNER, REPO)
-      logger.info("Latest release tag: #{tag}")
-      url = github.get_latest_release_asset_download_url(OWNER, REPO, target_asset_pattern)
+      tag, url = resolve_version_and_url
+      logger.info("Installing version: #{tag}")
       logger.info("Downloading asset from: #{url}")
       curl.download(url, tmp_asset_path)
 
@@ -86,6 +85,44 @@ module Component
     end
 
     private
+
+    def resolve_version_and_url
+      component_config = config.component_config("fastfetch")
+      version = component_config["version"]
+
+      if version && version != "latest"
+        tag = version
+        asset_name = build_asset_name
+        url = github.build_release_asset_url(OWNER, REPO, tag, asset_name)
+        return [tag, url]
+      end
+
+      tag = github.get_latest_release_tag(OWNER, REPO)
+      url = github.get_latest_release_asset_download_url(OWNER, REPO, target_asset_pattern)
+      [tag, url]
+    rescue StandardError => e
+      fallback = component_config["fallback_version"]
+      raise "API failed and no fallback_version configured: #{e.message}" unless fallback
+
+      tag = fallback
+      asset_name = build_asset_name
+      url = github.build_release_asset_url(OWNER, REPO, tag, asset_name)
+      logger.warn("API failed, using fallback version: #{tag}")
+      [tag, url]
+    end
+
+    def build_asset_name
+      arch = config.arch
+      os = config.os
+
+      if os.include?("darwin")
+        arch_str = arch == "arm64" ? "macos-aarch64" : "macos-amd64"
+      else
+        arch_str = (arch == "arm64" || arch.include?("aarch64")) ? "linux-aarch64" : "linux-amd64"
+      end
+
+      "fastfetch-#{arch_str}.tar.gz"
+    end
 
     # Returns the asset pattern for the current architecture.
     #

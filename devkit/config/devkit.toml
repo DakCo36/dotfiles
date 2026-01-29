@@ -9,7 +9,8 @@ log_level = "debug"
 ### Editors
 [neovim]
 enabled = true
-version = "0.10.0"
+version = "latest"
+fallback_version = "0.10.0"
 source = "github"
 owner = "neovim"
 repo = "neovim"
@@ -58,13 +59,15 @@ action = "copy"
 [fzf]
 enabled = true
 version = "latest"
+fallback_version = "0.57.0"
 source = "github"
 owner = "junegunn"
 repo = "fzf"
 
 [bat]
 enabled = true
-version = "0.24.0"
+version = "latest"
+fallback_version = "0.24.0"
 source = "github"
 owner = "sharkdp"
 repo = "bat"
@@ -72,13 +75,15 @@ repo = "bat"
 [fd]
 enabled = true
 version = "latest"
+fallback_version = "10.2.0"
 source = "github"
 owner = "sharkdp"
 repo = "fd"
 
 [ripgrep]
 enabled = true
-version = "14.1.0"
+version = "latest"
+fallback_version = "14.1.0"
 source = "github"
 owner = "BurntSushi"
 repo = "ripgrep"
@@ -86,6 +91,7 @@ repo = "ripgrep"
 [fastfetch]
 enabled = true
 version = "latest"
+fallback_version = "2.30.1"
 source = "github"
 owner = "fastfetch-cli"
 repo = "fastfetch"
