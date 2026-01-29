@@ -90,8 +90,9 @@ module Component
       version = component_config["version"]
 
       if version && version != "latest"
-        tag = version  # fzf uses plain version without 'v' prefix
-        asset_name = build_asset_name(tag)
+        # GitHub tag uses v prefix, asset filename doesn't
+        tag = "v#{version}"
+        asset_name = build_asset_name(version)
         url = github.build_release_asset_url(OWNER, REPO, tag, asset_name)
         return [tag, url]
       end
@@ -103,8 +104,8 @@ module Component
       fallback = component_config["fallback_version"]
       raise "API failed and no fallback_version configured: #{e.message}" unless fallback
 
-      tag = fallback
-      asset_name = build_asset_name(tag)
+      tag = "v#{fallback}"
+      asset_name = build_asset_name(fallback)
       url = github.build_release_asset_url(OWNER, REPO, tag, asset_name)
       logger.warn("API failed, using fallback version: #{tag}")
       [tag, url]

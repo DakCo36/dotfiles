@@ -129,7 +129,7 @@ module Component
         if arch.include?("x86_64") || arch.include?("amd64")
           arch_str = "x86_64-unknown-linux-musl"
         elsif arch == "arm64" || arch.include?("aarch64")
-          arch_str = "aarch64-unknown-linux-musl"
+          arch_str = "aarch64-unknown-linux-gnu"
         else
           raise "Unsupported architecture: #{arch} on #{os}"
         end

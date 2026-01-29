@@ -281,7 +281,7 @@ RSpec.describe Component::FzfComponent do
 
       it "returns URL without API call" do
         tag, url = fzf.send(:resolve_version_and_url)
-        expect(tag).to eq("0.56.0")
+        expect(tag).to eq("v0.56.0")
         expect(url).to include("0.56.0")
         expect(mock_github).not_to have_received(:get_latest_release_tag)
       end
@@ -299,7 +299,7 @@ RSpec.describe Component::FzfComponent do
 
       it "uses fallback version" do
         tag, _url = fzf.send(:resolve_version_and_url)
-        expect(tag).to eq("0.57.0")
+        expect(tag).to eq("v0.57.0")
       end
     end
 

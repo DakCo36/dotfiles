@@ -2,6 +2,7 @@ FROM dotfiles:setup
 
 ENV TERM=xterm-256color
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LOG_LEVEL=debug
 
 ENV PATH="/home/testuser/.local/share/mise/installs/ruby/3.4.3/bin:/home/testuser/.local/bin:$PATH"
 
