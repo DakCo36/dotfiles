@@ -22,6 +22,8 @@ RSpec.describe Component::FzfComponent do
     allow(mock_config).to receive(:tmp).and_return(tmp_path)
     allow(mock_config).to receive(:bin).and_return(bin_path)
     allow(mock_config).to receive(:home).and_return(home_path)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
+    allow(mock_config).to receive(:os).and_return("linux-gnu")
   end
 
   describe "#available?" do

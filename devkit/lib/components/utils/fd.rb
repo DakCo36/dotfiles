@@ -11,7 +11,6 @@ module Component
 
     prepend Installable
 
-    TARGET_ASSET_PATTERN = "fd-v.*-x86_64-unknown-linux-musl\\.tar\\.gz"
     OWNER = "sharkdp"
     REPO = "fd"
 
@@ -71,7 +70,7 @@ module Component
     def install!
       tag = github.get_latest_release_tag(OWNER, REPO)
       logger.info("Latest release tag: #{tag}")
-      url = github.get_latest_release_asset_download_url(OWNER, REPO, TARGET_ASSET_PATTERN)
+      url = github.get_latest_release_asset_download_url(OWNER, REPO, target_asset_pattern)
       logger.info("Downloading asset from: #{url}")
       curl.download(url, tmp_asset_path)
 
@@ -85,6 +84,30 @@ module Component
     end
 
     private
+
+    # Returns the asset pattern for the current architecture.
+    #
+    # @return [String] Regex pattern for the target asset
+    def target_asset_pattern
+      arch = config.arch
+      os = config.os
+
+      if os.include?("darwin")
+        if arch == "arm64"
+          "fd-v.*-aarch64-apple-darwin\\.tar\\.gz"
+        else
+          "fd-v.*-x86_64-apple-darwin\\.tar\\.gz"
+        end
+      else
+        if arch.include?("x86_64") || arch.include?("amd64")
+          "fd-v.*-x86_64-unknown-linux-musl\\.tar\\.gz"
+        elsif arch == "arm64" || arch.include?("aarch64")
+          "fd-v.*-aarch64-unknown-linux-musl\\.tar\\.gz"
+        else
+          raise "Unsupported architecture: #{arch} on #{os}"
+        end
+      end
+    end
 
     # @return [String]
     def tmp_asset_path

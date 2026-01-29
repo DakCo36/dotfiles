@@ -26,6 +26,8 @@ RSpec.describe Component::BatComponent do
     allow(mock_config).to receive(:man1).and_return(man1_path)
     allow(mock_config).to receive(:zsh_completions).and_return(zsh_completions_path)
     allow(mock_config).to receive(:bash_completions).and_return(bash_completions_path)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
+    allow(mock_config).to receive(:os).and_return("linux-gnu")
   end
 
   describe "#available?" do

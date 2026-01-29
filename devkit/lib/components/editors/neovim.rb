@@ -15,7 +15,6 @@ module Component
 
     OWNER = "neovim"
     REPO = "neovim"
-    TARGET_ASSET_PATTERN = "nvim-linux-x86_64\\.tar\\.gz"
     CONFIG_DIR = File.join(RESOURCES_ROOT, "neovim")
     VIM_PLUG_URL = "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
 
@@ -89,16 +88,43 @@ module Component
 
     private
 
+    # Returns the asset pattern for the current architecture.
+    #
+    # @return [String] Regex pattern for the target asset
+    def target_asset_pattern
+      arch = config.arch
+      os = config.os
+
+      if os.include?("darwin")
+        # macOS
+        if arch == "arm64"
+          "nvim-macos-arm64\\.tar\\.gz"
+        else
+          "nvim-macos-x86_64\\.tar\\.gz"
+        end
+      else
+        # Linux
+        if arch.include?("x86_64") || arch.include?("amd64")
+          "nvim-linux-x86_64\\.tar\\.gz"
+        elsif arch == "arm64" || arch.include?("aarch64")
+          "nvim-linux-arm64\\.tar\\.gz"
+        else
+          raise "Unsupported architecture: #{arch} on #{os}"
+        end
+      end
+    end
+
     # @return [String]
     def tmp_asset_path
-      File.join(config.tmp, "nvim-linux64.tar.gz")
+      filename = target_asset_pattern.gsub("\\", "")
+      File.join(config.tmp, filename)
     end
 
     def install_neovim_binary
       tag = github.get_latest_release_tag(OWNER, REPO)
       logger.info("Latest release tag: #{tag}")
 
-      url = github.get_latest_release_asset_download_url(OWNER, REPO, TARGET_ASSET_PATTERN)
+      url = github.get_latest_release_asset_download_url(OWNER, REPO, target_asset_pattern)
       logger.info("Downloading neovim from: #{url}")
 
       curl.download(url, tmp_asset_path)

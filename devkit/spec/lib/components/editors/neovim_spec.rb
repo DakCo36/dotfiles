@@ -57,6 +57,75 @@ RSpec.describe Component::NeovimComponent do
     end
   end
 
+  describe "#target_asset_pattern" do
+    context "when on macOS arm64 (Apple Silicon)" do
+      it "returns the arm64 macOS asset pattern" do
+        # Given
+        allow(mock_config).to receive(:arch).and_return("arm64")
+        allow(mock_config).to receive(:os).and_return("darwin23")
+
+        # When
+        result = neovim.send(:target_asset_pattern)
+
+        # Then
+        expect(result).to eq("nvim-macos-arm64\\.tar\\.gz")
+      end
+    end
+
+    context "when on macOS x86_64 (Intel)" do
+      it "returns the x86_64 macOS asset pattern" do
+        # Given
+        allow(mock_config).to receive(:arch).and_return("x86_64")
+        allow(mock_config).to receive(:os).and_return("darwin21")
+
+        # When
+        result = neovim.send(:target_asset_pattern)
+
+        # Then
+        expect(result).to eq("nvim-macos-x86_64\\.tar\\.gz")
+      end
+    end
+
+    context "when on Linux x86_64" do
+      it "returns the x86_64 Linux asset pattern" do
+        # Given
+        allow(mock_config).to receive(:arch).and_return("x86_64")
+        allow(mock_config).to receive(:os).and_return("linux-gnu")
+
+        # When
+        result = neovim.send(:target_asset_pattern)
+
+        # Then
+        expect(result).to eq("nvim-linux-x86_64\\.tar\\.gz")
+      end
+    end
+
+    context "when on Linux arm64" do
+      it "returns the arm64 Linux asset pattern" do
+        # Given
+        allow(mock_config).to receive(:arch).and_return("aarch64")
+        allow(mock_config).to receive(:os).and_return("linux-gnu")
+
+        # When
+        result = neovim.send(:target_asset_pattern)
+
+        # Then
+        expect(result).to eq("nvim-linux-arm64\\.tar\\.gz")
+      end
+    end
+
+    context "when on unsupported architecture" do
+      it "raises an error" do
+        # Given
+        allow(mock_config).to receive(:arch).and_return("arm32")
+        allow(mock_config).to receive(:os).and_return("linux-gnu")
+
+        # When/Then
+        expect { neovim.send(:target_asset_pattern) }.to raise_error("Unsupported architecture: arm32 on linux-gnu")
+      end
+    end
+  end
+
   describe "#version" do
     it "returns the installed neovim version" do
       # Given

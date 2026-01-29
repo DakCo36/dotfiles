@@ -11,8 +11,6 @@ module Component
 
     prepend Installable
 
-    # Asset pattern: fastfetch-linux-amd64.tar.gz
-    TARGET_ASSET_PATTERN = "fastfetch-linux-amd64\\.tar\\.gz$"
     OWNER = "fastfetch-cli"
     REPO = "fastfetch"
 
@@ -72,7 +70,7 @@ module Component
     def install!
       tag = github.get_latest_release_tag(OWNER, REPO)
       logger.info("Latest release tag: #{tag}")
-      url = github.get_latest_release_asset_download_url(OWNER, REPO, TARGET_ASSET_PATTERN)
+      url = github.get_latest_release_asset_download_url(OWNER, REPO, target_asset_pattern)
       logger.info("Downloading asset from: #{url}")
       curl.download(url, tmp_asset_path)
 
@@ -88,6 +86,30 @@ module Component
     end
 
     private
+
+    # Returns the asset pattern for the current architecture.
+    #
+    # @return [String] Regex pattern for the target asset
+    def target_asset_pattern
+      arch = config.arch
+      os = config.os
+
+      if os.include?("darwin")
+        if arch == "arm64"
+          "fastfetch-macos-aarch64\\.tar\\.gz"
+        else
+          "fastfetch-macos-amd64\\.tar\\.gz"
+        end
+      else
+        if arch.include?("x86_64") || arch.include?("amd64")
+          "fastfetch-linux-amd64\\.tar\\.gz$"
+        elsif arch == "arm64" || arch.include?("aarch64")
+          "fastfetch-linux-aarch64\\.tar\\.gz$"
+        else
+          raise "Unsupported architecture: #{arch} on #{os}"
+        end
+      end
+    end
 
     # @return [String]
     def tmp_asset_path
