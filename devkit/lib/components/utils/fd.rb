@@ -1,6 +1,5 @@
 require "singleton"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "components/tools/github"
 require "components/tools/curl"
@@ -16,18 +15,20 @@ module Component
     OWNER = "sharkdp"
     REPO = "fd"
 
-    CONFIG = Components::Configuration.instance
-    TMP_ASSET_PATH = File.join(CONFIG.tmp, "fd-assets.tar.gz")
-    TMP_DIR_PATH = File.join(CONFIG.tmp, "fd-assets")
-
     depends_on Component::CurlComponent
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
 
+    # fd 실행 가능 여부를 확인합니다.
+    #
+    # @return [Boolean] 실행 가능하면 true, 아니면 false
     def available?
       system("fd", "--version", out: File::NULL, err: File::NULL)
     end
 
+    # 현재 설치된 fd 버전을 반환합니다.
+    #
+    # @return [String, nil] 버전 문자열 (예: "10.3.0") 또는 설치되지 않은 경우 nil
     def version
       output, status = Open3.capture2("fd", "--version")
       output.split[1] if status.success?
@@ -35,10 +36,16 @@ module Component
       nil
     end
 
+    # fd가 설치되어 있는지 확인합니다.
+    #
+    # @return [Boolean] 설치되어 있으면 true, 아니면 false
     def installed?
       available? && !version.nil?
     end
 
+    # 최신 버전을 반환합니다.
+    #
+    # @return [String, nil] 버전 문자열 또는 실패 시 nil
     def latest_version
       tag = github.get_latest_release_tag(OWNER, REPO)
       tag&.gsub(/^v/, "")
@@ -47,6 +54,9 @@ module Component
       nil
     end
 
+    # fd를 설치합니다 (이미 설치되어 있으면 스킵).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("fd already installed.")
@@ -55,15 +65,18 @@ module Component
       install!
     end
 
+    # fd를 강제로 설치합니다.
+    #
+    # @return [void]
     def install!
       tag = github.get_latest_release_tag(OWNER, REPO)
       logger.info("Latest release tag: #{tag}")
       url = github.get_latest_release_asset_download_url(OWNER, REPO, TARGET_ASSET_PATTERN)
       logger.info("Downloading asset from: #{url}")
-      curl.download(url, TMP_ASSET_PATH)
+      curl.download(url, tmp_asset_path)
 
-      tar.extract(TMP_ASSET_PATH, TMP_DIR_PATH, 1)
-      runCmd("cp", File.join(TMP_DIR_PATH, "fd"), File.join(CONFIG.bin, "fd"))
+      tar.extract(tmp_asset_path, tmp_dir_path, 1)
+      runCmd("cp", File.join(tmp_dir_path, "fd"), File.join(config.bin, "fd"))
 
       setup_man_page
       setup_completions
@@ -73,17 +86,27 @@ module Component
 
     private
 
+    # @return [String]
+    def tmp_asset_path
+      File.join(config.tmp, "fd-assets.tar.gz")
+    end
+
+    # @return [String]
+    def tmp_dir_path
+      File.join(config.tmp, "fd-assets")
+    end
+
     def setup_man_page
-      FileUtils.mkdir_p(CONFIG.man1)
-      runCmd("cp", File.join(TMP_DIR_PATH, "fd.1"), File.join(CONFIG.man1, "fd.1"))
+      FileUtils.mkdir_p(config.man1)
+      runCmd("cp", File.join(tmp_dir_path, "fd.1"), File.join(config.man1, "fd.1"))
     end
 
     def setup_completions
-      FileUtils.mkdir_p(CONFIG.zsh_completions)
-      runCmd("cp", File.join(TMP_DIR_PATH, "autocomplete", "_fd"), File.join(CONFIG.zsh_completions, "_fd"))
+      FileUtils.mkdir_p(config.zsh_completions)
+      runCmd("cp", File.join(tmp_dir_path, "autocomplete", "_fd"), File.join(config.zsh_completions, "_fd"))
 
-      FileUtils.mkdir_p(CONFIG.bash_completions)
-      runCmd("cp", File.join(TMP_DIR_PATH, "autocomplete", "fd.bash"), File.join(CONFIG.bash_completions, "fd"))
+      FileUtils.mkdir_p(config.bash_completions)
+      runCmd("cp", File.join(tmp_dir_path, "autocomplete", "fd.bash"), File.join(config.bash_completions, "fd"))
     end
 
   end
