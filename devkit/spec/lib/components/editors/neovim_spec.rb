@@ -112,6 +112,24 @@ RSpec.describe Component::NeovimComponent do
   end
 
   describe "#install" do
+    let(:mock_node) { instance_spy(Component::NodeComponent) }
+
+    before do
+      # Mock dependency component instances for Installable mixin
+      allow(Component::CurlComponent).to receive(:instance).and_return(mock_curl)
+      allow(Component::GithubComponent).to receive(:instance).and_return(mock_github)
+      allow(Component::TarComponent).to receive(:instance).and_return(mock_tar)
+      allow(Component::PythonComponent).to receive(:instance).and_return(mock_python)
+      allow(Component::NodeComponent).to receive(:instance).and_return(mock_node)
+
+      # Mock available? for all dependencies
+      allow(mock_curl).to receive(:available?).and_return(true)
+      allow(mock_github).to receive(:available?).and_return(true)
+      allow(mock_tar).to receive(:available?).and_return(true)
+      allow(mock_python).to receive(:available?).and_return(true)
+      allow(mock_node).to receive(:available?).and_return(true)
+    end
+
     context "when already installed" do
       it "does nothing" do
         allow(neovim).to receive(:installed?).and_return(true)
