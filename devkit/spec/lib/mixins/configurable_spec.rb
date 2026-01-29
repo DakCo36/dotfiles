@@ -107,4 +107,15 @@ RSpec.describe Configurable do
       expect(instance.config_key).to eq("fzf")
     end
   end
+
+  describe "#config" do
+    it "returns the Configuration singleton instance" do
+      # Given / When
+      result = instance.config
+
+      # Then
+      expect(result).to be_a(Components::Configuration)
+      expect(result).to eq(Components::Configuration.instance)
+    end
+  end
 end

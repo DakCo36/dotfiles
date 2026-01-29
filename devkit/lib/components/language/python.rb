@@ -2,7 +2,6 @@
 
 require "singleton"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "mixins/loggable"
 
@@ -14,36 +13,42 @@ module Component
     # Fixed Python version to use
     PYTHON_VERSION = "3.12.8"
 
-    CONFIG = Components::Configuration.instance
-
-    # Check if Python is available via mise
+    # Checks if Python is available via mise.
+    #
+    # @return [Boolean] true if available, false otherwise
     def available?
       system("mise", "which", "python", out: File::NULL, err: File::NULL)
     end
 
-    # Return the currently installed Python version
+    # Returns the current Python version.
+    #
+    # @return [String, nil] Version string (e.g., "3.12.8") or nil
     def version
-      # mise current python output format: "python 3.12.8"
       output, status = Open3.capture2("mise", "current", "python")
       return nil unless status.success?
 
-      # Extract only the version number (e.g. "3.12.8")
       output.strip.split.last
     rescue Errno::ENOENT
       nil
     end
 
-    # Check if Python is installed via mise
+    # Checks if Python is installed.
+    #
+    # @return [Boolean] true if installed, false otherwise
     def installed?
       available? && !version.nil?
     end
 
-    # Return the target version (this component uses a fixed version, so latest_version = PYTHON_VERSION)
+    # Returns the latest version (uses fixed version).
+    #
+    # @return [String] PYTHON_VERSION
     def latest_version
       PYTHON_VERSION
     end
 
-    # Install Python if it is not installed
+    # Installs Python (skips if already installed).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("Python #{version} is already installed via mise.")
@@ -52,7 +57,9 @@ module Component
       install!
     end
 
-    # Install Python via mise
+    # Force installs Python via mise.
+    #
+    # @return [void]
     def install!
       logger.info("Installing Python #{PYTHON_VERSION} via mise...")
 
