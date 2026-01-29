@@ -67,7 +67,6 @@ RSpec.describe Component::ZgenomComponent do
         allow(mock_zsh_binary).to receive(:available?).and_return(true)
         allow(mock_git).to receive(:clone).with(described_class::REPO_URL, described_class::TARGET_DIR_PATH)
 
-        # Mock FileUtils to prevent actual file system operations
         allow(Dir).to receive(:exist?).with(described_class::TARGET_DIR_PATH).and_return(false)
         allow(FileUtils).to receive(:rm_rf).and_return(nil)
         allow(FileUtils).to receive(:mkdir_p).and_return(nil)
