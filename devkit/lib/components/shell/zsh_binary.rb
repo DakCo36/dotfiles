@@ -1,6 +1,5 @@
 require "fileutils"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "components/tools/curl"
 
@@ -9,20 +8,14 @@ module Component
 
     prepend Installable
 
-    CONFIG = Components::Configuration.instance
     TARGET_VERSION = "5.9"
-    TARGET_FILE_NAME = "zsh-#{TARGET_VERSION}.tar.xz"
-    TARGET_DIR_NAME = "zsh-#{TARGET_VERSION}"
-
-    TMP_FILE_PATH = File.join(CONFIG.tmp, TARGET_FILE_NAME)
-    TMP_DIR_PATH = File.join(CONFIG.tmp, TARGET_DIR_NAME)
-
-    DOWNLOAD_URL = "https://sourceforge.net/projects/zsh/files/zsh/#{TARGET_VERSION}/#{TARGET_FILE_NAME}/download"
-
-    private_constant :TARGET_VERSION, :TARGET_FILE_NAME, :TARGET_DIR_NAME, :TMP_FILE_PATH, :TMP_DIR_PATH, :DOWNLOAD_URL
+    DOWNLOAD_URL = "https://sourceforge.net/projects/zsh/files/zsh/#{TARGET_VERSION}/zsh-#{TARGET_VERSION}.tar.xz/download"
 
     depends_on Component::CurlComponent
 
+    # zsh 실행 가능 여부를 확인합니다.
+    #
+    # @return [Boolean] 실행 가능하면 true, 아니면 false
     def available?
       runCmd("which", "zsh")
       logger.debug("Zsh is available")
@@ -32,13 +25,15 @@ module Component
       false
     end
 
+    # zsh가 로컬에 설치되어 있는지 확인합니다.
+    #
+    # @return [Boolean] 설치되어 있으면 true, 아니면 false
     def installed?
-      # Check if zsh is installed locally first
-      local_zsh_path = File.join(CONFIG.bin, "zsh")
+      local_zsh_path = File.join(config.bin, "zsh")
       is_in_path = ENV["PATH"]
                    &.to_s
                    &.split(":")
-                   &.any? { |path| path == CONFIG.bin }
+                   &.any? { |path| path == config.bin }
 
       if is_in_path && File.exist?(local_zsh_path) && File.executable?(local_zsh_path)
         logger.info("Zsh is installed locally at #{local_zsh_path}")
@@ -49,16 +44,24 @@ module Component
       false
     end
 
+    # 현재 설치된 zsh 버전을 반환합니다.
+    #
+    # @return [String, nil] 버전 문자열 (예: "5.9")
     def version
       out = runCmdWithOutput("zsh", "--version")
       out.split(" ")[1] # example zsh 5.8 (x86_64-pc-linux-musl)
     end
 
+    # 최신 버전을 반환합니다.
+    #
+    # @return [String] TARGET_VERSION
     def latest_version
       TARGET_VERSION
     end
 
-    # Assume current default shell is bash
+    # zsh를 설치합니다 (이미 설치되어 있으면 스킵).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("Zsh is already installed.")
@@ -66,9 +69,9 @@ module Component
       end
 
       logger.info("Installing zsh version #{TARGET_VERSION}")
-      curl.download(DOWNLOAD_URL, TMP_FILE_PATH)
-      logger.info("Unzip #{TMP_FILE_PATH} to #{TMP_DIR_PATH}")
-      runCmd("tar", "-xf", TMP_FILE_PATH, "-C", File.dirname(TMP_FILE_PATH))
+      curl.download(DOWNLOAD_URL, tmp_file_path)
+      logger.info("Unzip #{tmp_file_path} to #{tmp_dir_path}")
+      runCmd("tar", "-xf", tmp_file_path, "-C", File.dirname(tmp_file_path))
       configureAndMake
       setPath
     rescue StandardError
@@ -82,10 +85,20 @@ module Component
 
     private
 
+    # @return [String]
+    def tmp_file_path
+      File.join(config.tmp, "zsh-#{TARGET_VERSION}.tar.xz")
+    end
+
+    # @return [String]
+    def tmp_dir_path
+      File.join(config.tmp, "zsh-#{TARGET_VERSION}")
+    end
+
     def configureAndMake
       logger.info("Configuring zsh")
-      withDir(TMP_DIR_PATH) do
-        runCmd("./configure", "--prefix", CONFIG.local, "--with-tcsetpgrp", showStdout: true)
+      withDir(tmp_dir_path) do
+        runCmd("./configure", "--prefix", config.local, "--with-tcsetpgrp", showStdout: true)
         runCmd("make", "-j", "4")
         runCmd("make", "install")
       end
@@ -93,61 +106,55 @@ module Component
     end
 
     def setPath
-      # Called explicitly in install method
-      logger.info("Setting PATH to include #{CONFIG.bin}")
-      # Set current environment's PATH
+      logger.info("Setting PATH to include #{config.bin}")
       paths = ENV["PATH"].to_s.split(":").reject do |path|
-        path.empty? || path == CONFIG.bin
+        path.empty? || path == config.bin
       end
-      paths.unshift(CONFIG.bin)
+      paths.unshift(config.bin)
       ENV["PATH"] = paths.join(":")
       logger.debug("Current PATH: #{ENV.fetch("PATH", nil)}")
 
-      # Sourcing bashrc in bash_profile
       addSourceBashrcInBashProfile
-
-      # Set PATH on bashrc
       addLocalBinPathInBashrc
     end
 
     def addLocalBinPathInBashrc
       time = Time.now.strftime("%Y%m%d%H%M%S")
       logger.debug("Backup existing .bashrc file to .bashrc.bak_#{time}")
-      FileUtils.cp(CONFIG.bashrc, "#{CONFIG.bashrc}.bak_#{time}") if File.exist?(CONFIG.bashrc)
+      FileUtils.cp(config.bashrc, "#{config.bashrc}.bak_#{time}") if File.exist?(config.bashrc)
 
-      contracted_bin_path = CONFIG.contract_path(CONFIG.bin)
+      contracted_bin_path = config.contract_path(config.bin)
       zsh_path_line = "export PATH=\"#{contracted_bin_path}:$PATH\""
-      FileUtils.touch(CONFIG.bashrc) unless File.exist?(CONFIG.bashrc)
-      bashrc_content = File.read(CONFIG.bashrc)
+      FileUtils.touch(config.bashrc) unless File.exist?(config.bashrc)
+      bashrc_content = File.read(config.bashrc)
 
-      escaped_config_bin = Regexp.escape(CONFIG.bin)
+      escaped_config_bin = Regexp.escape(config.bin)
       if bashrc_content =~ %r{export\s+PATH=.*?(#{escaped_config_bin}|(\$HOME|~)/\.local/bin)}
         logger.info("PATH already set in .bashrc, skipping")
       else
         logger.info("Adding PATH to .bashrc")
-        File.open(CONFIG.bashrc, "a") do |file|
+        File.open(config.bashrc, "a") do |file|
           file.puts(zsh_path_line)
         end
       end
     end
 
     def addSourceBashrcInBashProfile
-      # Set bash_profile sourcing bashrc
       logger.debug("Setting up .bash_profile to source .bashrc on last")
       time = Time.now.strftime("%Y%m%d%H%M%S")
-      FileUtils.touch(CONFIG.bash_profile) unless File.exist?(CONFIG.bash_profile)
-      FileUtils.cp(CONFIG.bash_profile, "#{CONFIG.bash_profile}.bak_#{time}") if File.exist?(CONFIG.bash_profile)
-      bash_profile_content = File.read(CONFIG.bash_profile)
+      FileUtils.touch(config.bash_profile) unless File.exist?(config.bash_profile)
+      FileUtils.cp(config.bash_profile, "#{config.bash_profile}.bak_#{time}") if File.exist?(config.bash_profile)
+      bash_profile_content = File.read(config.bash_profile)
 
       bash_profile_content.gsub!(
         %r{if\s+\[\s*-f\s+~?/\.bashrc\s*\];\s*then\s*\n?\s*(\.|source)\s+~?/\.bashrc\s*\n?fi\n?}, ""
       )
       bash_profile_content.gsub!(%r{^\s*(\.|source)\s+~?/?\.bashrc\s*\n?}, "")
 
-      File.open(CONFIG.bash_profile, "w") do |file|
+      File.open(config.bash_profile, "w") do |file|
         file.puts(bash_profile_content)
       end
-      File.open(CONFIG.bash_profile, "a") do |file|
+      File.open(config.bash_profile, "a") do |file|
         file.puts("if [ -f ~/.bashrc ]; then")
         file.puts("  . ~/.bashrc")
         file.puts("fi")
