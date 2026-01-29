@@ -2,7 +2,6 @@
 
 require "singleton"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "mixins/loggable"
 
@@ -14,18 +13,16 @@ module Component
     # Fixed Node.js version to use (LTS Krypton)
     NODE_VERSION = "24.13.0"
 
-    CONFIG = Components::Configuration.instance
-
-    # Check if Node.js is available via mise
+    # Node.js가 mise를 통해 사용 가능한지 확인합니다.
     #
-    # @return [Boolean] true if node is available
+    # @return [Boolean] 사용 가능하면 true, 아니면 false
     def available?
       system("mise", "which", "node", out: File::NULL, err: File::NULL)
     end
 
-    # Return the currently installed Node.js version
+    # 현재 설치된 Node.js 버전을 반환합니다.
     #
-    # @return [String, nil] version string (e.g. "24.13.0") or nil if not installed
+    # @return [String, nil] 버전 문자열 (예: "24.13.0") 또는 nil
     def version
       output, status = Open3.capture2("mise", "current", "node")
       return nil unless status.success?
@@ -35,21 +32,23 @@ module Component
       nil
     end
 
-    # Check if Node.js is installed via mise
+    # Node.js가 설치되어 있는지 확인합니다.
     #
-    # @return [Boolean] true if installed
+    # @return [Boolean] 설치되어 있으면 true, 아니면 false
     def installed?
       available? && !version.nil?
     end
 
-    # Return the target version (this component uses a fixed version)
+    # 최신 버전을 반환합니다 (고정 버전 사용).
     #
-    # @return [String] the target Node.js version
+    # @return [String] NODE_VERSION
     def latest_version
       NODE_VERSION
     end
 
-    # Install Node.js if it is not installed
+    # Node.js를 설치합니다 (이미 설치되어 있으면 스킵).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("Node.js #{version} is already installed via mise.")
@@ -58,7 +57,9 @@ module Component
       install!
     end
 
-    # Install Node.js via mise
+    # Node.js를 mise를 통해 강제로 설치합니다.
+    #
+    # @return [void]
     def install!
       logger.info("Installing Node.js #{NODE_VERSION} via mise...")
 
