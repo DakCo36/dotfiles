@@ -85,7 +85,7 @@ module Component
     private
 
     def resolve_version_and_url
-      component_config = config.component_config("fd")
+      component_config = config.component_config("fd") || {}
       version = component_config["version"]
 
       if version && version != "latest"

@@ -88,7 +88,7 @@ module Component
     #
     # @return [Array<String, String>] [tag, url]
     def resolve_version_and_url
-      component_config = config.component_config("bat")
+      component_config = config.component_config("bat") || {}
       version = component_config["version"]
 
       # If specific version configured, use it directly (no API call)

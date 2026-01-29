@@ -87,7 +87,7 @@ module Component
     private
 
     def resolve_version_and_url
-      component_config = config.component_config("fastfetch")
+      component_config = config.component_config("fastfetch") || {}
       version = component_config["version"]
 
       if version && version != "latest"
