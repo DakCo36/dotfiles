@@ -1,6 +1,5 @@
 require "singleton"
 require "components/base"
-require "components/configuration"
 require "mixins/installable"
 require "components/tools/github"
 require "components/tools/curl"
@@ -17,23 +16,20 @@ module Component
     OWNER = "fastfetch-cli"
     REPO = "fastfetch"
 
-    CONFIG = Components::Configuration.instance
-    TMP_ASSET_PATH = File.join(CONFIG.tmp, "fastfetch-assets.tar.gz")
-    TMP_DIR_PATH = File.join(CONFIG.tmp, "fastfetch-assets")
-
-    EXTRACTED_BIN_PATH = File.join(TMP_DIR_PATH, "usr", "bin")
-    EXTRACTED_MAN_PATH = File.join(TMP_DIR_PATH, "usr", "share", "man", "man1")
-    EXTRACTED_BASH_COMPLETION_PATH = File.join(TMP_DIR_PATH, "usr", "share", "bash-completion", "completions")
-    EXTRACTED_ZSH_COMPLETION_PATH = File.join(TMP_DIR_PATH, "usr", "share", "zsh", "site-functions")
-
     depends_on Component::CurlComponent
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
 
+    # fastfetch 실행 가능 여부를 확인합니다.
+    #
+    # @return [Boolean] 실행 가능하면 true, 아니면 false
     def available?
       system("fastfetch", "--version", out: File::NULL, err: File::NULL)
     end
 
+    # 현재 설치된 fastfetch 버전을 반환합니다.
+    #
+    # @return [String, nil] 버전 문자열 (예: "2.57.1") 또는 설치되지 않은 경우 nil
     def version
       output, status = Open3.capture2("fastfetch", "--version")
       output.split[1] if status.success?
@@ -41,20 +37,27 @@ module Component
       nil
     end
 
+    # fastfetch가 설치되어 있는지 확인합니다.
+    #
+    # @return [Boolean] 설치되어 있으면 true, 아니면 false
     def installed?
       available? && !version.nil?
     end
 
-    # GitHub에서 최신 릴리즈 태그를 가져와 최신 버전 반환
+    # 최신 버전을 반환합니다.
+    #
+    # @return [String, nil] 버전 문자열 또는 실패 시 nil
     def latest_version
       tag = github.get_latest_release_tag(OWNER, REPO)
-      # 태그에서 'v' 접두사 제거 (예: 2.31.0)
       tag&.gsub(/^v/, "")
     rescue StandardError => e
       logger.warn("Failed to get latest version for fastfetch: #{e.message}")
       nil
     end
 
+    # fastfetch를 설치합니다 (이미 설치되어 있으면 스킵).
+    #
+    # @return [void]
     def install
       if installed?
         logger.info("fastfetch already installed.")
@@ -63,17 +66,20 @@ module Component
       install!
     end
 
+    # fastfetch를 강제로 설치합니다.
+    #
+    # @return [void]
     def install!
       tag = github.get_latest_release_tag(OWNER, REPO)
       logger.info("Latest release tag: #{tag}")
       url = github.get_latest_release_asset_download_url(OWNER, REPO, TARGET_ASSET_PATTERN)
       logger.info("Downloading asset from: #{url}")
-      curl.download(url, TMP_ASSET_PATH)
+      curl.download(url, tmp_asset_path)
 
-      tar.extract(TMP_ASSET_PATH, TMP_DIR_PATH, 1)
+      tar.extract(tmp_asset_path, tmp_dir_path, 1)
 
-      runCmd("cp", File.join(EXTRACTED_BIN_PATH, "fastfetch"), File.join(CONFIG.bin, "fastfetch"))
-      runCmd("cp", File.join(EXTRACTED_BIN_PATH, "flashfetch"), File.join(CONFIG.bin, "flashfetch"))
+      runCmd("cp", File.join(extracted_bin_path, "fastfetch"), File.join(config.bin, "fastfetch"))
+      runCmd("cp", File.join(extracted_bin_path, "flashfetch"), File.join(config.bin, "flashfetch"))
 
       setup_man_page
       setup_completions
@@ -83,21 +89,51 @@ module Component
 
     private
 
+    # @return [String]
+    def tmp_asset_path
+      File.join(config.tmp, "fastfetch-assets.tar.gz")
+    end
+
+    # @return [String]
+    def tmp_dir_path
+      File.join(config.tmp, "fastfetch-assets")
+    end
+
+    # @return [String]
+    def extracted_bin_path
+      File.join(tmp_dir_path, "usr", "bin")
+    end
+
+    # @return [String]
+    def extracted_man_path
+      File.join(tmp_dir_path, "usr", "share", "man", "man1")
+    end
+
+    # @return [String]
+    def extracted_bash_completion_path
+      File.join(tmp_dir_path, "usr", "share", "bash-completion", "completions")
+    end
+
+    # @return [String]
+    def extracted_zsh_completion_path
+      File.join(tmp_dir_path, "usr", "share", "zsh", "site-functions")
+    end
+
     def setup_man_page
-      FileUtils.mkdir_p(CONFIG.man1)
-      runCmd("cp", File.join(EXTRACTED_MAN_PATH, "fastfetch.1"), File.join(CONFIG.man1, "fastfetch.1"))
+      FileUtils.mkdir_p(config.man1)
+      runCmd("cp", File.join(extracted_man_path, "fastfetch.1"), File.join(config.man1, "fastfetch.1"))
     end
 
     def setup_completions
       # zsh completions
-      FileUtils.mkdir_p(CONFIG.zsh_completions)
-      runCmd("cp", File.join(EXTRACTED_ZSH_COMPLETION_PATH, "_fastfetch"),
-             File.join(CONFIG.zsh_completions, "_fastfetch"))
+      FileUtils.mkdir_p(config.zsh_completions)
+      runCmd("cp", File.join(extracted_zsh_completion_path, "_fastfetch"),
+             File.join(config.zsh_completions, "_fastfetch"))
 
       # bash completions
-      FileUtils.mkdir_p(CONFIG.bash_completions)
-      runCmd("cp", File.join(EXTRACTED_BASH_COMPLETION_PATH, "fastfetch"),
-             File.join(CONFIG.bash_completions, "fastfetch"))
+      FileUtils.mkdir_p(config.bash_completions)
+      runCmd("cp", File.join(extracted_bash_completion_path, "fastfetch"),
+             File.join(config.bash_completions, "fastfetch"))
     end
 
   end
