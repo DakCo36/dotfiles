@@ -53,7 +53,7 @@ module Component
     #
     # @return [String, nil] Version string or nil on failure
     def latest_version
-      tag = github.get_latest_release_tag(OWNER, REPO)
+      tag = github.get_latest_release_tag(config.owner, config.repo)
       tag&.gsub(/^v/, "")
     rescue StandardError => e
       logger.warn("Failed to get latest version for neovim: #{e.message}")
@@ -86,6 +86,7 @@ module Component
 
     private
 
+<<<<<<< HEAD
     # Returns the asset pattern for the current architecture.
     #
     # @return [String] Regex pattern for the target asset
@@ -165,6 +166,20 @@ module Component
       end
 
       "nvim-#{arch_str}.tar.gz"
+=======
+    # Downloads and extracts neovim binary from GitHub releases
+    def install_neovim_binary
+      tag = github.get_latest_release_tag(config.owner, config.repo)
+      logger.info("Latest release tag: #{tag}")
+
+      url = github.get_latest_release_asset_download_url(config.owner, config.repo, TARGET_ASSET_PATTERN)
+      logger.info("Downloading neovim from: #{url}")
+
+      curl.download(url, TMP_ASSET_PATH)
+      tar.extract(TMP_ASSET_PATH, CONFIG.local, 1)
+
+      logger.info("Neovim binary installed to #{CONFIG.local}")
+>>>>>>> 0c48187 (refactor: use config.owner/repo instead of hardcoded constants)
     end
 
     def install_vim_plug

@@ -40,8 +40,7 @@ RSpec.describe Component::RequiredTool do
 
   describe "Configurable mixin" do
     it "does not include Configurable" do
-      expect(tool).not_to respond_to(:config_enabled?)
-      expect(tool).not_to respond_to(:config_version)
+      expect(tool).not_to respond_to(:config)
     end
   end
 

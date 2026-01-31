@@ -45,7 +45,12 @@ module Component
     #
     # @return [String, nil] Version string or nil on failure
     def latest_version
+<<<<<<< HEAD
       tag = github.get_latest_release_tag(OWNER, REPO)
+=======
+      tag = github.get_latest_release_tag(config.owner, config.repo)
+      # 태그에서 숫자 버전만 추출 (예: 14.1.0)
+>>>>>>> 0c48187 (refactor: use config.owner/repo instead of hardcoded constants)
       tag&.gsub(/^v/, "")
     rescue StandardError => e
       logger.warn("Failed to get latest version for ripgrep: #{e.message}")
@@ -67,8 +72,14 @@ module Component
     #
     # @return [void]
     def install!
+<<<<<<< HEAD
       tag, url = resolve_version_and_url
       logger.info("Installing version: #{tag}")
+=======
+      tag = github.get_latest_release_tag(config.owner, config.repo)
+      logger.info("Latest release tag: #{tag}")
+      url = github.get_latest_release_asset_download_url(config.owner, config.repo, TARGET_ASSET_PATTERN)
+>>>>>>> 0c48187 (refactor: use config.owner/repo instead of hardcoded constants)
       logger.info("Downloading asset from: #{url}")
       curl.download(url, tmp_asset_path)
 
