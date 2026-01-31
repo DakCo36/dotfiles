@@ -94,25 +94,25 @@ RSpec.describe Component::OhMyZshComponent do
         allow(mock_curl).to receive(:available?).and_return(true)
         allow(mock_zsh_binary).to receive(:available?).and_return(true)
         allow(mock_curl).to receive(:download).and_return(true)
-        allow(oh_my_zsh).to receive(:runCmd).with("sh", "-c", described_class::TMP_SCRIPT_PATH,
+        allow(oh_my_zsh).to receive(:runCmd).with("sh", "-c", tmp_script,
                                                   showStdout: true).and_return(true)
-        allow(FileUtils).to receive(:rm_rf).with(described_class::TARGET_DIR_PATH)
+        allow(FileUtils).to receive(:rm_rf).with(target_dir)
         allow(FileUtils).to receive(:rm_f)
         allow(File).to receive(:chmod)
 
         allow(File).to receive(:exist?).and_call_original
-        allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
-        allow(File).to receive(:exist?).with(described_class::TMP_SCRIPT_PATH).and_return(true)
-        allow(File).to receive(:read).with(zshrc_path).and_return("plugins=(git)")
-        allow(File).to receive(:open).with(zshrc_path, "w").and_yield(double("file", write: true))
+        allow(File).to receive(:exist?).with(zshrc).and_return(true)
+        allow(File).to receive(:exist?).with(tmp_script).and_return(true)
+        allow(File).to receive(:read).with(zshrc).and_return("plugins=(git)")
+        allow(File).to receive(:open).with(zshrc, "w").and_yield(double("file", write: true))
         allow(File).to receive(:write).and_return(nil)
 
         # When
         oh_my_zsh.install
 
         expect(mock_curl).to have_received(:download).with(described_class::DOWNLOAD_URL,
-                                                           described_class::TMP_SCRIPT_PATH)
-        expect(oh_my_zsh).to have_received(:runCmd).with("sh", "-c", described_class::TMP_SCRIPT_PATH, showStdout: true)
+                                                           tmp_script)
+        expect(oh_my_zsh).to have_received(:runCmd).with("sh", "-c", tmp_script, showStdout: true)
       end
     end
   end

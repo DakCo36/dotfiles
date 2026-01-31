@@ -7,9 +7,7 @@ RSpec.describe Component::FzfComponent do
   let(:mock_curl) { instance_spy(Component::CurlComponent) }
   let(:mock_tar) { instance_spy(Component::TarComponent) }
   let(:mock_github) { instance_spy(Component::GithubComponent) }
-  let(:mock_config) { instance_double(Components::Configuration) }
   let(:bin_path) { "/home/user/.local/bin" }
-  let(:tmp_path) { "/tmp/test" }
   let(:home_path) { "/home/user" }
 
   before do
@@ -17,14 +15,13 @@ RSpec.describe Component::FzfComponent do
     allow(fzf).to receive(:curl).and_return(mock_curl)
     allow(fzf).to receive(:tar).and_return(mock_tar)
     allow(fzf).to receive(:github).and_return(mock_github)
-    allow(fzf).to receive(:config).and_return(mock_config)
 
-    allow(mock_config).to receive(:tmp).and_return(tmp_path)
+    mock_config = instance_double(Components::Configuration)
+    allow(mock_config).to receive(:tmp).and_return("/tmp/test")
     allow(mock_config).to receive(:bin).and_return(bin_path)
     allow(mock_config).to receive(:home).and_return(home_path)
-    allow(mock_config).to receive(:arch).and_return("x86_64")
-    allow(mock_config).to receive(:os).and_return("linux-gnu")
-    allow(mock_config).to receive(:component_config).with("fzf").and_return({ "version" => "latest", "fallback_version" => "0.57.0" })
+
+    stub_const("#{described_class}::CONFIG", mock_config)
   end
 
   describe "#available?" do
@@ -36,10 +33,10 @@ RSpec.describe Component::FzfComponent do
         .and_return(true)
 
       # When
-      result = fzf.available?
+      available = fzf.available?
 
       # Then
-      expect(result).to be true
+      expect(available).to be true
     end
 
     it "returns false when fzf command is missing" do
@@ -50,10 +47,10 @@ RSpec.describe Component::FzfComponent do
         .and_return(false)
 
       # When
-      result = fzf.available?
+      available = fzf.available?
 
       # Then
-      expect(result).to be false
+      expect(available).to be false
     end
   end
 
@@ -66,10 +63,10 @@ RSpec.describe Component::FzfComponent do
         .and_return(["0.57.0 (fc7630a)\n", status])
 
       # When
-      result = fzf.version
+      version = fzf.version
 
       # Then
-      expect(result).to eq("0.57.0")
+      expect(version).to eq("0.57.0")
     end
 
     it "returns nil when command fails" do
@@ -80,10 +77,10 @@ RSpec.describe Component::FzfComponent do
         .and_return(["Unknown result", status])
 
       # When
-      result = fzf.version
+      version = fzf.version
 
       # Then
-      expect(result).to be_nil
+      expect(version).to be_nil
     end
 
     it "returns nil when fzf is not installed" do
@@ -93,10 +90,10 @@ RSpec.describe Component::FzfComponent do
         .and_raise(Errno::ENOENT)
 
       # When
-      result = fzf.version
+      version = fzf.version
 
       # Then
-      expect(result).to be_nil
+      expect(version).to be_nil
     end
   end
 
@@ -106,11 +103,8 @@ RSpec.describe Component::FzfComponent do
       allow(fzf).to receive(:available?).and_return(true)
       allow(fzf).to receive(:version).and_return("0.57.0")
 
-      # When
-      result = fzf.installed?
-
-      # Then
-      expect(result).to be true
+      # When & Then
+      expect(fzf.installed?).to be true
     end
 
     it "returns false if fzf is not installed" do
@@ -118,87 +112,39 @@ RSpec.describe Component::FzfComponent do
       allow(fzf).to receive(:available?).and_return(false)
       allow(fzf).to receive(:version).and_return(nil)
 
-      # When
-      result = fzf.installed?
-
-      # Then
-      expect(result).to be false
-    end
-  end
-
-  describe "#latest_version" do
-    it "returns the latest version from GitHub" do
-      # Given
-      allow(mock_github).to receive(:get_latest_release_tag).with("junegunn", "fzf").and_return("v0.57.0")
-
-      # When
-      result = fzf.latest_version
-
-      # Then
-      expect(result).to eq("0.57.0")
-    end
-
-    it "returns nil when API call fails" do
-      # Given
-      allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError.new("API error"))
-
-      # When
-      result = fzf.latest_version
-
-      # Then
-      expect(result).to be_nil
-    end
-  end
-
-  describe "#install" do
-    it "skips installation when already installed" do
-      # Given
-      allow(fzf).to receive(:installed?).and_return(true)
-      allow(fzf).to receive(:install!)
-
-      # When
-      fzf.install
-
-      # Then
-      expect(fzf).not_to have_received(:install!)
-      expect(null_logger).to have_received(:info).with("fzf already installed.")
-    end
-
-    it "calls install! when not installed" do
-      # Given
-      allow(fzf).to receive(:installed?).and_return(false)
-      allow(fzf).to receive(:install!)
-
-      # When
-      fzf.install
-
-      # Then
-      expect(fzf).to have_received(:install!)
+      # When & Then
+      expect(fzf.installed?).to be false
     end
   end
 
   describe "#install!" do
-    before do
-      allow(mock_github).to receive(:get_latest_release_tag).and_return("v0.57.0")
-      allow(mock_github)
-        .to receive(:get_latest_release_asset_download_url)
-        .and_return("https://github.com/junegunn/fzf/releases/download/v0.57.0/fzf-0.57.0-linux_amd64.tar.gz")
-      allow(mock_curl).to receive(:download)
-      allow(mock_tar).to receive(:extract)
+    it "installs fzf from GitHub releases" do
+      component_config = Components::Configuration::ComponentConfig.new(
+        version: "latest",
+        fallback_version: "0.57.0",
+        owner: "junegunn",
+        repo: "fzf"
+      )
+      allow(fzf).to receive(:config).and_return(component_config)
+
+      allow(mock_github).to receive(:download_asset)
+      allow(mock_tar).to receive(:extract).and_return(["", "", instance_double(Process::Status, success?: true)])
       allow(fzf).to receive(:setup_shell_integration)
       allow(fzf).to receive(:runCmd)
-    end
+        .with("cp", anything, anything)
+        .and_return(["", "", instance_double(Process::Status, success?: true)])
 
-    it "downloads and installs fzf" do
-      # When
       fzf.install!
 
-      # Then
-      expect(mock_github).to have_received(:get_latest_release_tag)
-      expect(mock_github).to have_received(:get_latest_release_asset_download_url)
-      expect(mock_curl).to have_received(:download).with(anything, "#{tmp_path}/fzf-assets.tar.gz")
-      expect(mock_tar).to have_received(:extract).with("#{tmp_path}/fzf-assets.tar.gz", "#{tmp_path}/fzf-assets", 0)
-      expect(fzf).to have_received(:runCmd).with("cp", "#{tmp_path}/fzf-assets/fzf", "#{bin_path}/fzf")
+      expect(mock_github).to have_received(:download_asset).with(
+        owner: "junegunn",
+        repo: "fzf",
+        version: "latest",
+        fallback_version: "v0.57.0",
+        asset_pattern: Component::FzfComponent::TARGET_ASSET_PATTERN,
+        destination: Component::FzfComponent::TMP_ASSET_PATH
+      )
+      expect(mock_tar).to have_received(:extract)
       expect(fzf).to have_received(:setup_shell_integration)
     end
   end
@@ -210,8 +156,8 @@ RSpec.describe Component::FzfComponent do
       it "does nothing" do
         # Given
         allow(File).to receive(:exist?).with(zshrc_path).and_return(false)
-        allow(File).to receive(:read)
-        allow(File).to receive(:open)
+        allow(File).to receive(:read).and_return(nil)
+        allow(File).to receive(:open).and_return(nil)
 
         # When
         fzf.send(:setup_shell_integration)
@@ -233,7 +179,7 @@ RSpec.describe Component::FzfComponent do
 
         allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
         allow(File).to receive(:read).with(zshrc_path).and_return(zshrc_content)
-        allow(File).to receive(:open)
+        allow(File).to receive(:open).and_return(nil)
 
         # When
         fzf.send(:setup_shell_integration)
@@ -265,55 +211,6 @@ RSpec.describe Component::FzfComponent do
         expect(file_double)
           .to have_received(:write)
           .with(match(/eval.*fzf --zsh/))
-      end
-    end
-  end
-
-  describe "#resolve_version_and_url" do
-    context "when specific version is configured" do
-      before do
-        allow(mock_config).to receive(:component_config)
-          .with("fzf")
-          .and_return({ "version" => "0.56.0" })
-        allow(mock_github).to receive(:build_release_asset_url)
-          .and_return("https://github.com/junegunn/fzf/releases/download/0.56.0/fzf-0.56.0-linux_amd64.tar.gz")
-      end
-
-      it "returns URL without API call" do
-        tag, url = fzf.send(:resolve_version_and_url)
-        expect(tag).to eq("v0.56.0")
-        expect(url).to include("0.56.0")
-        expect(mock_github).not_to have_received(:get_latest_release_tag)
-      end
-    end
-
-    context "when latest version and API fails with fallback" do
-      before do
-        allow(mock_config).to receive(:component_config)
-          .with("fzf")
-          .and_return({ "version" => "latest", "fallback_version" => "0.57.0" })
-        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
-        allow(mock_github).to receive(:build_release_asset_url)
-          .and_return("https://github.com/junegunn/fzf/releases/download/0.57.0/fzf-fallback.tar.gz")
-      end
-
-      it "uses fallback version" do
-        tag, _url = fzf.send(:resolve_version_and_url)
-        expect(tag).to eq("v0.57.0")
-      end
-    end
-
-    context "when API fails without fallback" do
-      before do
-        allow(mock_config).to receive(:component_config)
-          .with("fzf")
-          .and_return({ "version" => "latest", "fallback_version" => nil })
-        allow(mock_github).to receive(:get_latest_release_tag).and_raise(StandardError, "API rate limit")
-      end
-
-      it "raises error" do
-        expect { fzf.send(:resolve_version_and_url) }
-          .to raise_error(/no fallback_version configured/)
       end
     end
   end
