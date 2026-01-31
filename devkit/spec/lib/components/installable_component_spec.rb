@@ -50,10 +50,9 @@ RSpec.describe Component::InstallableComponent do
   end
 
   describe "Configurable mixin" do
-    it "includes Configurable and responds to config methods" do
-      expect(component).to respond_to(:config_enabled?)
-      expect(component).to respond_to(:config_version)
-      expect(component).to respond_to(:config_source)
+    it "includes Configurable and responds to config method" do
+      expect(component).to respond_to(:config)
+      expect(component.config).to be_a(Components::Configuration::ComponentConfig)
     end
   end
 

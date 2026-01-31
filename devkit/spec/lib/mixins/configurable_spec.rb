@@ -68,15 +68,29 @@ RSpec.describe Configurable do
     end
   end
 
-  describe "#config_version" do
-    it "returns the configured version" do
-      expect(instance.config_version).to eq("latest")
+  describe "#config" do
+    it "returns a ComponentConfig Data object" do
+      expect(instance.config).to be_a(Components::Configuration::ComponentConfig)
     end
-  end
 
-  describe "#config_enabled?" do
-    it "returns true when enabled is true" do
-      expect(instance.config_enabled?).to be true
+    it "provides version via dot notation" do
+      expect(instance.config.version).to eq("latest")
+    end
+
+    it "provides owner via dot notation" do
+      expect(instance.config.owner).to eq("junegunn")
+    end
+
+    it "provides repo via dot notation" do
+      expect(instance.config.repo).to eq("fzf")
+    end
+
+    it "provides source via dot notation" do
+      expect(instance.config.source).to eq("github")
+    end
+
+    it "provides enabled status" do
+      expect(instance.config.enabled).to be true
     end
 
     context "when component is not in manifest" do
@@ -90,15 +104,9 @@ RSpec.describe Configurable do
         end
       end
 
-      it "returns false" do
-        expect(instance.config_enabled?).to be false
+      it "returns false for enabled" do
+        expect(instance.config.enabled).to be false
       end
-    end
-  end
-
-  describe "#config_source" do
-    it "returns the configured source type" do
-      expect(instance.config_source).to eq("github")
     end
   end
 

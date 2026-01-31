@@ -8,6 +8,30 @@ module Components
 
     include Singleton
 
+    # Immutable configuration data for each component
+    # All fields are optional with sensible defaults
+    ComponentConfig = Data.define(
+      :enabled,
+      :source,
+      :version,
+      :owner,
+      :repo,
+      :branch,
+      :resources
+    ) do
+      def initialize(
+        enabled: true,
+        source: nil,
+        version: nil,
+        owner: nil,
+        repo: nil,
+        branch: nil,
+        resources: nil
+      )
+        super
+      end
+    end
+
     attr_accessor :home, :local, :bin, :tmp, :bashrc, :bash_profile, :bash_completions, :zshrc, :zsh_profile,
                   :zsh_completions, :man1
     attr_reader :arch, :os
@@ -45,9 +69,12 @@ module Components
 
     # Returns the configuration for a specific component by name
     # @param name [String, Symbol] component name (e.g., "fzf", "neovim")
-    # @return [Hash] component configuration or empty hash if not found
+    # @return [ComponentConfig] component configuration data object
     def component_config(name)
-      manifest[name.to_s] || {}
+      data = manifest[name.to_s] || {}
+      return ComponentConfig.new(enabled: false) if data.empty?
+
+      ComponentConfig.new(**data.transform_keys(&:to_sym))
     end
 
     private
