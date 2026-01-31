@@ -29,7 +29,7 @@ action = "copy"
 [zsh]
 enabled = true
 version = "latest"
-source = "system"
+source = "download"
 
 [oh-my-zsh]
 enabled = true
