@@ -40,6 +40,15 @@ module Component
       raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
     end
 
+    # 버전 문자열을 GitHub 태그 형식으로 변환합니다.
+    # 기본적으로 그대로 반환하며, 서브클래스에서 오버라이드 가능합니다.
+    #
+    # @param ver [String] 버전 문자열
+    # @return [String] GitHub 릴리스 태그
+    def version_tag(ver)
+      ver
+    end
+
     # Checks if a newer version is available.
     #
     # @return [Boolean] true if upgradable

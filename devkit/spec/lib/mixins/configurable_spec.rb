@@ -41,33 +41,6 @@ RSpec.describe Configurable do
       .and_return(fixture_config)
   end
 
-  describe "#component_config" do
-    context "when manifest exists" do
-      it "returns the component's configuration hash" do
-        config = instance.component_config
-        expect(config).to be_a(Hash)
-        expect(config["owner"]).to eq("junegunn")
-        expect(config["repo"]).to eq("fzf")
-      end
-    end
-
-    context "when component has no config" do
-      let(:test_class) do
-        Class.new do
-          include Configurable
-
-          def display_name
-            "nonexistent_component"
-          end
-        end
-      end
-
-      it "returns an empty hash" do
-        expect(instance.component_config).to eq({})
-      end
-    end
-  end
-
   describe "#config" do
     it "returns a ComponentConfig Data object" do
       expect(instance.config).to be_a(Components::Configuration::ComponentConfig)

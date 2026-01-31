@@ -17,7 +17,8 @@ module Components
       :owner,
       :repo,
       :branch,
-      :resources
+      :resources,
+      :fallback_version
     ) do
       def initialize(
         enabled: true,
@@ -26,7 +27,8 @@ module Components
         owner: nil,
         repo: nil,
         branch: nil,
-        resources: nil
+        resources: nil,
+        fallback_version: nil
       )
         super
       end

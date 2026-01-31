@@ -58,6 +58,7 @@ action = "copy"
 [fzf]
 enabled = true
 version = "latest"
+fallback_version = "0.57.0"
 source = "github"
 owner = "junegunn"
 repo = "fzf"
@@ -72,6 +73,7 @@ repo = "bat"
 [fd]
 enabled = true
 version = "latest"
+fallback_version = "10.2.0"
 source = "github"
 owner = "sharkdp"
 repo = "fd"
@@ -86,6 +88,7 @@ repo = "ripgrep"
 [fastfetch]
 enabled = true
 version = "latest"
+fallback_version = "2.34.1"
 source = "github"
 owner = "fastfetch-cli"
 repo = "fastfetch"

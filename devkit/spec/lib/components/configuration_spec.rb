@@ -56,6 +56,7 @@ RSpec.describe Components::Configuration do
         expect(config_data.repo).to be_nil
         expect(config_data.branch).to be_nil
         expect(config_data.resources).to be_nil
+        expect(config_data.fallback_version).to be_nil
       end
     end
 
