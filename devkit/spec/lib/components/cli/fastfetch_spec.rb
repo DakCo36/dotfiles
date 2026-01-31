@@ -1,5 +1,5 @@
 require "spec_helper"
-require "components/utils/fastfetch"
+require "components/cli/fastfetch"
 
 RSpec.describe Component::FastfetchComponent do
   subject(:fastfetch) { described_class.instance }

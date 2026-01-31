@@ -1,5 +1,5 @@
 require "spec_helper"
-require "components/utils/bat"
+require "components/cli/bat"
 
 RSpec.describe Component::BatComponent do
   subject(:bat) { described_class.instance }

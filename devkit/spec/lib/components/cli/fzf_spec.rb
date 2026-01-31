@@ -1,5 +1,5 @@
 require "spec_helper"
-require "components/utils/fzf"
+require "components/cli/fzf"
 
 RSpec.describe Component::FzfComponent do
   subject(:fzf) { described_class.instance }
