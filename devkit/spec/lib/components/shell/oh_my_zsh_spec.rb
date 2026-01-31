@@ -91,25 +91,28 @@ RSpec.describe Component::OhMyZshComponent do
       it "downloads and runs the installer script" do
         # Given
         allow(oh_my_zsh).to receive(:installed?).and_return(false)
+        allow(mock_curl).to receive(:available?).and_return(true)
+        allow(mock_zsh_binary).to receive(:available?).and_return(true)
         allow(mock_curl).to receive(:download).and_return(true)
-        allow(oh_my_zsh).to receive(:runCmd).with("sh", "-c", tmp_script, showStdout: true).and_return(true)
-        allow(Dir).to receive(:exist?).with(target_dir).and_return(false)
-        allow(FileUtils).to receive(:rm_rf).with(target_dir)
+        allow(oh_my_zsh).to receive(:runCmd).with("sh", "-c", described_class::TMP_SCRIPT_PATH,
+                                                  showStdout: true).and_return(true)
+        allow(FileUtils).to receive(:rm_rf).with(described_class::TARGET_DIR_PATH)
+        allow(FileUtils).to receive(:rm_f)
+        allow(File).to receive(:chmod)
 
         allow(File).to receive(:exist?).and_call_original
-        allow(File).to receive(:exist?).with(zshrc).and_return(true)
-        allow(File).to receive(:read).with(zshrc).and_return("plugins=(git)")
-        allow(File).to receive(:open).with(zshrc, "w").and_yield(double("file", write: true))
+        allow(File).to receive(:exist?).with(zshrc_path).and_return(true)
+        allow(File).to receive(:exist?).with(described_class::TMP_SCRIPT_PATH).and_return(true)
+        allow(File).to receive(:read).with(zshrc_path).and_return("plugins=(git)")
+        allow(File).to receive(:open).with(zshrc_path, "w").and_yield(double("file", write: true))
         allow(File).to receive(:write).and_return(nil)
 
         # When
         oh_my_zsh.install
 
-        # Then
-        expect(mock_curl).to have_received(:available?)
-        expect(mock_zsh_binary).to have_received(:available?)
-        expect(mock_curl).to have_received(:download).with(described_class::DOWNLOAD_URL, tmp_script)
-        expect(oh_my_zsh).to have_received(:runCmd).with("sh", "-c", tmp_script, showStdout: true)
+        expect(mock_curl).to have_received(:download).with(described_class::DOWNLOAD_URL,
+                                                           described_class::TMP_SCRIPT_PATH)
+        expect(oh_my_zsh).to have_received(:runCmd).with("sh", "-c", described_class::TMP_SCRIPT_PATH, showStdout: true)
       end
     end
   end

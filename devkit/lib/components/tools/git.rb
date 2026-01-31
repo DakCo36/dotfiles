@@ -1,8 +1,8 @@
 require "open3"
-require "components/base"
+require "components/required_tool"
 
 module Component
-  class GitComponent < BaseComponent
+  class GitComponent < RequiredTool
 
     def available?
       system("git", "--version", out: File::NULL, err: File::NULL)

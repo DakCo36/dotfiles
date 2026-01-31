@@ -1,10 +1,10 @@
 require "open3"
-require "components/base"
+require "components/required_tool"
 require "components/tools/curl"
 require "json"
 
 module Component
-  class GithubComponent < BaseComponent
+  class GithubComponent < RequiredTool
 
     RELEASE_BASE_URL = "https://api.github.com/repos/%s/%s/releases/latest"
 
@@ -65,9 +65,3 @@ module Component
 
   end
 end
-
-# RELEASE_BASE_URL = "https://api.github.com/repos/%s/%s/releases/latest"
-
-# def get_release_url(owner, repo)
-#   RELEASE_BASE_URL % [owner, repo]
-# end

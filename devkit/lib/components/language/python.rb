@@ -1,14 +1,12 @@
 # frozen_string_literal: true
 
 require "singleton"
-require "components/base"
-require "mixins/installable"
+require "components/installable_component"
+require "components/configuration"
 require "mixins/loggable"
 
 module Component
-  class PythonComponent < BaseComponent
-
-    prepend Installable
+  class PythonComponent < InstallableComponent
 
     # Fixed Python version to use
     PYTHON_VERSION = "3.12.8"

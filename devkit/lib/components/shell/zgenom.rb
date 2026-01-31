@@ -1,13 +1,11 @@
 require "fileutils"
-require "components/base"
-require "mixins/installable"
+require "components/installable_component"
+require "components/configuration"
 require "components/tools/git"
 require "components/shell/zsh_binary"
 
 module Component
-  class ZgenomComponent < BaseComponent
-
-    prepend Installable
+  class ZgenomComponent < InstallableComponent
 
     REPO_URL = "https://github.com/jandamm/zgenom.git"
 

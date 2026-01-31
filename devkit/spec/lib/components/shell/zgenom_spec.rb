@@ -103,6 +103,13 @@ RSpec.describe Component::ZgenomComponent do
         allow(FileUtils).to receive(:mkdir_p).and_return(nil)
 
         allow(zgenom).to receive(:configure).and_return(true)
+
+        # Mock FileUtils to prevent actual file operations
+        allow(FileUtils).to receive(:rm_rf).and_return(nil)
+        allow(FileUtils).to receive(:mkdir_p).and_return(nil)
+        allow(Dir).to receive(:exist?).and_return(false)
+
+        # Let's spy on the dependencies method
         allow(zgenom).to receive(:dependencies).and_call_original
 
         # When

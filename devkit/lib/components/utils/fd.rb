@@ -1,15 +1,13 @@
 require "singleton"
-require "components/base"
-require "mixins/installable"
+require "components/installable_component"
+require "components/configuration"
 require "components/tools/github"
 require "components/tools/curl"
 require "components/tools/tar"
 require "mixins/loggable"
 
 module Component
-  class FdComponent < BaseComponent
-
-    prepend Installable
+  class FdComponent < InstallableComponent
 
     OWNER = "sharkdp"
     REPO = "fd"

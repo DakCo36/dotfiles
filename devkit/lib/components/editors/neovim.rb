@@ -1,7 +1,7 @@
 require "singleton"
 require "fileutils"
-require "components/base"
-require "mixins/installable"
+require "components/installable_component"
+require "components/configuration"
 require "components/tools/github"
 require "components/tools/curl"
 require "components/tools/tar"
@@ -9,9 +9,7 @@ require "components/language/python"
 require "components/language/node"
 
 module Component
-  class NeovimComponent < BaseComponent
-
-    prepend Installable
+  class NeovimComponent < InstallableComponent
 
     OWNER = "neovim"
     REPO = "neovim"

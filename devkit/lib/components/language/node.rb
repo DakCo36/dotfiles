@@ -1,14 +1,12 @@
 # frozen_string_literal: true
 
 require "singleton"
-require "components/base"
-require "mixins/installable"
+require "components/installable_component"
+require "components/configuration"
 require "mixins/loggable"
 
 module Component
-  class NodeComponent < BaseComponent
-
-    prepend Installable
+  class NodeComponent < InstallableComponent
 
     # Fixed Node.js version to use (LTS Krypton)
     NODE_VERSION = "24.13.0"

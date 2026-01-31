@@ -1,8 +1,8 @@
 require "open3"
-require "components/base"
+require "components/required_tool"
 
 module Component
-  class CurlComponent < BaseComponent
+  class CurlComponent < RequiredTool
 
     def available?
       system("curl", "--version", out: File::NULL, err: File::NULL)

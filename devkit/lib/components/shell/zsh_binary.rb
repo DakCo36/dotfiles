@@ -1,12 +1,10 @@
 require "fileutils"
-require "components/base"
-require "mixins/installable"
+require "components/installable_component"
+require "components/configuration"
 require "components/tools/curl"
 
 module Component
-  class ZshBinaryComponent < BaseComponent
-
-    prepend Installable
+  class ZshBinaryComponent < InstallableComponent
 
     TARGET_VERSION = "5.9"
     DOWNLOAD_URL = "https://sourceforge.net/projects/zsh/files/zsh/#{TARGET_VERSION}/zsh-#{TARGET_VERSION}.tar.xz/download"

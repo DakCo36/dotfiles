@@ -1,14 +1,12 @@
 require "fileutils"
-require "components/base"
-require "mixins/installable"
+require "components/installable_component"
+require "components/configuration"
 require "components/tools/curl"
 require "components/shell/zsh_binary"
 
 module Component
   # Component for installing oh-my-zsh using curl
-  class OhMyZshComponent < BaseComponent
-
-    prepend Installable
+  class OhMyZshComponent < InstallableComponent
 
     DOWNLOAD_URL = "https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
     PLUGINS = ["git", "ruby", "python", "systemd", "docker", "pip", "command-not-found", "docker-compose"]

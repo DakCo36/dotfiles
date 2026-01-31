@@ -1,8 +1,8 @@
 require "open3"
-require "components/base"
+require "components/required_tool"
 
 module Component
-  class TarComponent < BaseComponent
+  class TarComponent < RequiredTool
 
     def available?
       system("tar", "--version", out: File::NULL, err: File::NULL)
@@ -13,10 +13,6 @@ module Component
       output.split[2] if $?.success? # example) tar (GNU tar) 1.34
     rescue Errno::ENOENT
       nil
-    end
-
-    def installed?
-      available? && !version.nil?
     end
 
     def extract(source, destination, stripComponents = 1)

@@ -1,13 +1,11 @@
 require "fileutils"
-require "components/base"
-require "mixins/installable"
+require "components/installable_component"
+require "components/configuration"
 require "components/tools/git"
 require "components/shell/oh_my_zsh"
 
 module Component
-  class Powerlevel10kComponent < BaseComponent
-
-    prepend Installable
+  class Powerlevel10kComponent < InstallableComponent
 
     REPO_URL = "https://github.com/romkatv/powerlevel10k.git"
     CONFIG_DIR = File.join(RESOURCES_ROOT, "p10k")
