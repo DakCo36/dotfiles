@@ -7,21 +7,24 @@ RSpec.describe Component::FzfComponent do
   let(:mock_curl) { instance_spy(Component::CurlComponent) }
   let(:mock_tar) { instance_spy(Component::TarComponent) }
   let(:mock_github) { instance_spy(Component::GithubComponent) }
+  let(:mock_config) { instance_double(Components::Configuration::ComponentConfig) }
+  let(:tmp_path) { "/tmp/test" }
   let(:bin_path) { "/home/user/.local/bin" }
   let(:home_path) { "/home/user" }
+  let(:zshrc_path) { "/home/user/.zshrc" }
 
   before do
     allow(fzf).to receive(:logger).and_return(null_logger)
     allow(fzf).to receive(:curl).and_return(mock_curl)
     allow(fzf).to receive(:tar).and_return(mock_tar)
     allow(fzf).to receive(:github).and_return(mock_github)
+    allow(fzf).to receive(:config).and_return(mock_config)
 
-    mock_config = instance_double(Components::Configuration)
-    allow(mock_config).to receive(:tmp).and_return("/tmp/test")
+    allow(mock_config).to receive(:tmp).and_return(tmp_path)
     allow(mock_config).to receive(:bin).and_return(bin_path)
     allow(mock_config).to receive(:home).and_return(home_path)
-
-    stub_const("#{described_class}::CONFIG", mock_config)
+    allow(mock_config).to receive(:zshrc).and_return(zshrc_path)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
   end
 
   describe "#available?" do
@@ -119,13 +122,10 @@ RSpec.describe Component::FzfComponent do
 
   describe "#install!" do
     it "installs fzf from GitHub releases" do
-      component_config = Components::Configuration::ComponentConfig.new(
-        version: "latest",
-        fallback_version: "0.57.0",
-        owner: "junegunn",
-        repo: "fzf"
-      )
-      allow(fzf).to receive(:config).and_return(component_config)
+      allow(mock_config).to receive(:version).and_return("latest")
+      allow(mock_config).to receive(:fallback_version).and_return("0.57.0")
+      allow(mock_config).to receive(:owner).and_return("junegunn")
+      allow(mock_config).to receive(:repo).and_return("fzf")
 
       allow(mock_github).to receive(:download_asset)
       allow(mock_tar).to receive(:extract).and_return(["", "", instance_double(Process::Status, success?: true)])
@@ -141,8 +141,9 @@ RSpec.describe Component::FzfComponent do
         repo: "fzf",
         version: "latest",
         fallback_version: "v0.57.0",
-        asset_pattern: Component::FzfComponent::TARGET_ASSET_PATTERN,
-        destination: Component::FzfComponent::TMP_ASSET_PATH
+        asset_pattern: "fzf-.*-linux_amd64\\.tar\\.gz",
+        fallback_asset: "fzf-0.57.0-linux_amd64.tar.gz",
+        destination: "/tmp/test/fzf-assets.tar.gz"
       )
       expect(mock_tar).to have_received(:extract)
       expect(fzf).to have_received(:setup_shell_integration)
@@ -150,8 +151,6 @@ RSpec.describe Component::FzfComponent do
   end
 
   describe "#setup_shell_integration" do
-    let(:zshrc_path) { "/home/user/.zshrc" }
-
     context "when .zshrc does not exist" do
       it "does nothing" do
         # Given

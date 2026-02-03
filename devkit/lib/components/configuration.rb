@@ -10,7 +10,9 @@ module Components
 
     # Immutable configuration data for each component
     # All fields are optional with sensible defaults
+    # Includes both component-specific settings and global paths
     ComponentConfig = Data.define(
+      # Component-specific settings (from TOML)
       :enabled,
       :source,
       :version,
@@ -18,7 +20,21 @@ module Components
       :repo,
       :branch,
       :resources,
-      :fallback_version
+      :fallback_version,
+      # Global settings (always available)
+      :arch,
+      :os,
+      :home,
+      :local,
+      :bin,
+      :tmp,
+      :bashrc,
+      :bash_profile,
+      :bash_completions,
+      :zshrc,
+      :zsh_profile,
+      :zsh_completions,
+      :man1
     ) do
       def initialize(
         enabled: true,
@@ -28,9 +44,31 @@ module Components
         repo: nil,
         branch: nil,
         resources: nil,
-        fallback_version: nil
+        fallback_version: nil,
+        arch: nil,
+        os: nil,
+        home: nil,
+        local: nil,
+        bin: nil,
+        tmp: nil,
+        bashrc: nil,
+        bash_profile: nil,
+        bash_completions: nil,
+        zshrc: nil,
+        zsh_profile: nil,
+        zsh_completions: nil,
+        man1: nil
       )
         super
+      end
+
+      # Contracts absolute path to use $HOME
+      def contract_path(path)
+        if path.is_a?(String) && path.start_with?(home)
+          path.sub(home, "$HOME")
+        else
+          path
+        end
       end
     end
 
@@ -56,14 +94,6 @@ module Components
       FileUtils.mkdir_p(@tmp) unless Dir.exist?(@tmp)
     end
 
-    def contract_path(path)
-      if path.is_a?(String) && path.start_with?(@home)
-        path.sub(@home, "$HOME")
-      else
-        path
-      end
-    end
-
     # Returns the entire manifest (TOML configuration), cached after first load
     def manifest
       @manifest ||= load_manifest
@@ -71,15 +101,33 @@ module Components
 
     # Returns the configuration for a specific component by name
     # @param name [String, Symbol] component name (e.g., "fzf", "neovim")
-    # @return [ComponentConfig] component configuration data object
+    # @return [ComponentConfig] component configuration data object with global paths included
     def component_config(name)
       data = manifest[name.to_s] || {}
-      return ComponentConfig.new(enabled: false) if data.empty?
+      return ComponentConfig.new(enabled: false, **global_paths) if data.empty?
 
-      ComponentConfig.new(**data.transform_keys(&:to_sym))
+      ComponentConfig.new(**data.transform_keys(&:to_sym), **global_paths)
     end
 
     private
+
+    def global_paths
+      {
+        arch: @arch,
+        os: @os,
+        home: @home,
+        local: @local,
+        bin: @bin,
+        tmp: @tmp,
+        bashrc: @bashrc,
+        bash_profile: @bash_profile,
+        bash_completions: @bash_completions,
+        zshrc: @zshrc,
+        zsh_profile: @zsh_profile,
+        zsh_completions: @zsh_completions,
+        man1: @man1
+      }
+    end
 
     def generateTimestamp
       Time.now.strftime("%Y%m%d_%H%M%S")

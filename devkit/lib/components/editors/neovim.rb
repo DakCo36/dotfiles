@@ -11,12 +11,6 @@ require "components/language/node"
 module Component
   class NeovimComponent < InstallableComponent
 
-    TARGET_ASSET_PATTERN = "nvim-linux64\\.tar\\.gz"
-
-    CONFIG = Components::Configuration.instance
-    TMP_ASSET_PATH = File.join(CONFIG.tmp, "nvim-linux64.tar.gz")
-    CONFIG_DIR = File.join(RESOURCES_ROOT, "neovim")
-
     VIM_PLUG_URL = "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
 
     depends_on Component::CurlComponent
@@ -85,30 +79,59 @@ module Component
 
     private
 
+    # Returns asset pattern based on architecture (regex for API search).
+    # neovim naming: nvim-linux64.tar.gz (x86_64) or nvim-linux-arm64.tar.gz (aarch64)
+    def asset_pattern
+      if config.arch == "aarch64"
+        "nvim-linux-arm64\\.tar\\.gz"
+      else
+        "nvim-linux64\\.tar\\.gz"
+      end
+    end
+
+    # Returns exact asset filename for direct download.
+    def asset_filename(version)
+      if config.arch == "aarch64"
+        "nvim-linux-arm64.tar.gz"
+      else
+        "nvim-linux64.tar.gz"
+      end
+    end
+
+    def tmp_asset_path
+      File.join(config.tmp, "nvim-linux64.tar.gz")
+    end
+
+    def config_dir
+      File.join(RESOURCES_ROOT, "neovim")
+    end
+
     # Downloads and extracts neovim binary from GitHub releases
     def install_neovim_binary
+      fallback_ver = config.fallback_version ? version_tag(config.fallback_version) : nil
       github.download_asset(
         owner: config.owner,
         repo: config.repo,
         version: version_tag(config.version),
-        fallback_version: config.fallback_version ? version_tag(config.fallback_version) : nil,
-        asset_pattern: TARGET_ASSET_PATTERN,
-        destination: TMP_ASSET_PATH
+        fallback_version: fallback_ver,
+        asset_pattern: asset_pattern,
+        fallback_asset: fallback_ver ? asset_filename(fallback_ver) : nil,
+        destination: tmp_asset_path
       )
 
-      tar.extract(TMP_ASSET_PATH, CONFIG.local, 1)
+      tar.extract(tmp_asset_path, config.local, 1)
 
-      logger.info("Neovim binary installed to #{CONFIG.local}")
+      logger.info("Neovim binary installed to #{config.local}")
     end
 
-    # neovim은 v 접두사 태그 사용 (예: v0.10.0)
+    # neovim uses v prefix for tags (e.g., v0.10.0)
     def version_tag(ver)
       ver == "latest" ? "latest" : "v#{ver}"
     end
 
     # Installs vim-plug plugin manager
     def install_vim_plug
-      plug_path = File.join(CONFIG.home, ".vim", "autoload", "plug.vim")
+      plug_path = File.join(config.home, ".vim", "autoload", "plug.vim")
 
       if File.exist?(plug_path)
         logger.info("vim-plug already installed, skipping")
@@ -143,8 +166,8 @@ module Component
 
     # Copies init.vim to ~/.config/nvim/init.vim
     def copy_init_vim
-      source = File.join(CONFIG_DIR, "init.vim")
-      dest_dir = File.join(CONFIG.home, ".config", "nvim")
+      source = File.join(config_dir, "init.vim")
+      dest_dir = File.join(config.home, ".config", "nvim")
       dest = File.join(dest_dir, "init.vim")
 
       unless File.exist?(source)
@@ -160,8 +183,8 @@ module Component
 
     # Copies .vimrc to ~/.vimrc
     def copy_vimrc
-      source = File.join(CONFIG_DIR, ".vimrc")
-      dest = File.join(CONFIG.home, ".vimrc")
+      source = File.join(config_dir, ".vimrc")
+      dest = File.join(config.home, ".vimrc")
 
       unless File.exist?(source)
         logger.error("Source file #{source} not found")

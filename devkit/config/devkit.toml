@@ -48,7 +48,6 @@ enabled = true
 source = "git"
 repo = "https://github.com/romkatv/powerlevel10k.git"
 branch = "master"
-theme = "simple"
 
 [[powerlevel10k.resources]]
 source = "resources/p10k/simple.zsh"
@@ -67,7 +66,7 @@ repo = "fzf"
 [bat]
 enabled = true
 version = "latest"
-fallback_version = "0.24.0"
+fallback_version = "0.26.1"
 source = "github"
 owner = "sharkdp"
 repo = "bat"

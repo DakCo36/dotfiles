@@ -7,6 +7,8 @@ RSpec.describe Component::FastfetchComponent do
   let(:mock_curl) { instance_spy(Component::CurlComponent) }
   let(:mock_tar) { instance_spy(Component::TarComponent) }
   let(:mock_github) { instance_spy(Component::GithubComponent) }
+  let(:mock_config) { instance_double(Components::Configuration::ComponentConfig) }
+  let(:tmp_path) { "/tmp/test" }
   let(:bin_path) { "/home/user/.local/bin" }
   let(:man1_path) { "/home/user/.local/share/man/man1" }
   let(:zsh_completions_path) { "/home/user/.local/share/zsh/site-functions" }
@@ -17,15 +19,14 @@ RSpec.describe Component::FastfetchComponent do
     allow(fastfetch).to receive(:curl).and_return(mock_curl)
     allow(fastfetch).to receive(:tar).and_return(mock_tar)
     allow(fastfetch).to receive(:github).and_return(mock_github)
+    allow(fastfetch).to receive(:config).and_return(mock_config)
 
-    mock_config = instance_double(Components::Configuration)
-    allow(mock_config).to receive(:tmp).and_return("/tmp/test")
+    allow(mock_config).to receive(:tmp).and_return(tmp_path)
     allow(mock_config).to receive(:bin).and_return(bin_path)
     allow(mock_config).to receive(:man1).and_return(man1_path)
     allow(mock_config).to receive(:zsh_completions).and_return(zsh_completions_path)
     allow(mock_config).to receive(:bash_completions).and_return(bash_completions_path)
-
-    stub_const("#{described_class}::CONFIG", mock_config)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
   end
 
   describe "#available?" do
@@ -60,7 +61,7 @@ RSpec.describe Component::FastfetchComponent do
 
   describe "#version" do
     it "returns the installed fastfetch version" do
-      # Given: fastfetch 버전 출력 형식 "fastfetch 2.57.1 (Linux)"
+      # Given: fastfetch version output format "fastfetch 2.57.1 (Linux)"
       status = instance_double(Process::Status, success?: true)
       allow(Open3).to receive(:capture2)
         .with("fastfetch", "--version")
@@ -123,13 +124,10 @@ RSpec.describe Component::FastfetchComponent do
 
   describe "#install!" do
     it "installs fastfetch from GitHub releases" do
-      component_config = Components::Configuration::ComponentConfig.new(
-        version: "latest",
-        fallback_version: "2.34.1",
-        owner: "fastfetch-cli",
-        repo: "fastfetch"
-      )
-      allow(fastfetch).to receive(:config).and_return(component_config)
+      allow(mock_config).to receive(:version).and_return("latest")
+      allow(mock_config).to receive(:fallback_version).and_return("2.34.1")
+      allow(mock_config).to receive(:owner).and_return("fastfetch-cli")
+      allow(mock_config).to receive(:repo).and_return("fastfetch")
 
       allow(mock_github).to receive(:download_asset)
       allow(mock_tar).to receive(:extract).and_return(["", "", instance_double(Process::Status, success?: true)])
@@ -148,8 +146,9 @@ RSpec.describe Component::FastfetchComponent do
         repo: "fastfetch",
         version: "latest",
         fallback_version: "2.34.1",
-        asset_pattern: Component::FastfetchComponent::TARGET_ASSET_PATTERN,
-        destination: Component::FastfetchComponent::TMP_ASSET_PATH
+        asset_pattern: "fastfetch-linux-amd64\\.tar\\.gz$",
+        fallback_asset: "fastfetch-linux-amd64.tar.gz",
+        destination: "/tmp/test/fastfetch-assets.tar.gz"
       )
       expect(mock_tar).to have_received(:extract)
       expect(fastfetch).to have_received(:setup_man_page)
@@ -159,7 +158,6 @@ RSpec.describe Component::FastfetchComponent do
 
   describe "#setup_man_page" do
     before do
-      stub_const("#{described_class}::EXTRACTED_MAN_PATH", "/tmp/test/fastfetch-assets/usr/share/man/man1")
       allow(FileUtils).to receive(:mkdir_p)
       allow(fastfetch).to receive(:runCmd).and_return(["", "", instance_double(Process::Status, success?: true)])
     end
@@ -180,10 +178,6 @@ RSpec.describe Component::FastfetchComponent do
 
   describe "#setup_completions" do
     before do
-      stub_const("#{described_class}::EXTRACTED_ZSH_COMPLETION_PATH",
-                 "/tmp/test/fastfetch-assets/usr/share/zsh/site-functions")
-      stub_const("#{described_class}::EXTRACTED_BASH_COMPLETION_PATH",
-                 "/tmp/test/fastfetch-assets/usr/share/bash-completion/completions")
       allow(FileUtils).to receive(:mkdir_p)
       allow(fastfetch).to receive(:runCmd).and_return(["", "", instance_double(Process::Status, success?: true)])
     end

@@ -5,7 +5,7 @@ RSpec.describe Component::ZshBinaryComponent do
   subject(:zsh) { described_class.instance }
   let(:null_logger) { instance_spy(Logger) }
   let(:mock_curl) { instance_spy(Component::CurlComponent) }
-  let(:mock_config) { instance_double(Components::Configuration) }
+  let(:mock_config) { instance_double(Components::Configuration::ComponentConfig) }
   let(:home_path) { "/home/user" }
   let(:bash_profile_path) { "/home/user/.bash_profile" }
   let(:bashrc_path) { "/home/user/.bashrc" }
@@ -164,151 +164,48 @@ RSpec.describe Component::ZshBinaryComponent do
     end
   end
 
-  describe "#addLocalBinPathInBashrc" do
-    it "adds local bin path to .bashrc" do
-      # Given
-      original_content = <<~CONTENT
-        export EDITOR=vim
-        export PATH="/usr/local/sometext:$PATH"
-      CONTENT
-
-      allow(File).to receive(:read).with(bashrc_path).and_return(original_content)
-
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bashrc_path, "w").and_yield(file_handle)
-      allow(File).to receive(:open).with(bashrc_path, "a").and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addLocalBinPathInBashrc)
-
-      # Then
-      expect(file_handle).to have_received(:puts).with("export PATH=\"$HOME/.local/bin:$PATH\"")
-    end
-
-    it "skips when local bin path already exists with absolute path" do
-      # Given
-      original_content = <<~CONTENT
-        export PATH="/usr/local/sometext:$PATH"
-        export PATH="/home/user/.local/bin:$PATH"
-        export EDITOR=vim
-      CONTENT
-
-      allow(File).to receive(:read).with(bashrc_path).and_return(original_content)
-
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bashrc_path, "w").and_yield(file_handle)
-      allow(File).to receive(:open).with(bashrc_path, "a").and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addLocalBinPathInBashrc)
-
-      # Then
-      expect(file_handle).not_to have_received(:puts).with(match(%r{export PATH.*/\.local/bin}))
-    end
-
-    it "skips when local bin path already exists with relative path" do
-      # Given
-      original_content = <<~CONTENT
-        export PATH="~/.local/bin:$PATH"
-        export EDITOR=vim
-      CONTENT
-
-      allow(File).to receive(:read).with(bashrc_path).and_return(original_content)
-
-      file_handle = instance_double(File)
-      allow(File).to receive(:open).with(bashrc_path, "w").and_yield(file_handle)
-      allow(File).to receive(:open).with(bashrc_path, "a").and_yield(file_handle)
-      allow(file_handle).to receive(:puts)
-
-      # When
-      zsh.send(:addLocalBinPathInBashrc)
-
-      # Then
-      expect(file_handle).not_to have_received(:puts).with(match(%r{export PATH.*/\.local/bin}))
-    end
-  end
-
-  describe "#removeSourcePattern" do
-    it "removes source pattern #1" do
-      original_content = <<~CONTENT
-        export PATH="/usr/local/bin:$PATH"
-        if [ -f ~/.bashrc ]; then
-          source ~/.bashrc
-        fi
-        export EDITOR=vim
-        . ~/.bashrc
-        source .bashrc
-      CONTENT
-
-      expected_final_content = <<~CONTENT
-        export PATH="/usr/local/bin:$PATH"
-        export EDITOR=vim
-      CONTENT
-
-      source_pattern1 = %r{if\s+\[\s*-f\s+~?/\.bashrc\s*\];\s*then\s*\n?\s*(\.|source)\s+~?/\.bashrc\s*\n?fi\n?}
-      source_pattern2 = %r{^\s*(\.|source)\s+~?/?\.bashrc\s*\n?}
-
-      original_content.gsub!(source_pattern1, "")
-      original_content.gsub!(source_pattern2, "")
-
-      expect(original_content).to eq(expected_final_content)
-    end
-
-    it "removes source pattern #2" do
-      original_content = <<~CONTENT
-        export PATH="/usr/local/bin:$PATH"
-        source ~/.bashrc
-        export EDITOR=vim
-      CONTENT
-      expected_final_content = <<~CONTENT
-        export PATH="/usr/local/bin:$PATH"
-        export EDITOR=vim
-      CONTENT
-
-      source_pattern1 = %r{if\s+\[\s*-f\s+~?/\.bashrc\s*\];\s*then\s*\n?\s*(\.|source)\s+~?/\.bashrc\s*\n?fi\n?}
-      source_pattern2 = %r{^\s*(\.|source)\s+~?/?\.bashrc\s*\n?}
-
-      original_content.gsub!(source_pattern1, "")
-      original_content.gsub!(source_pattern2, "")
-
-      expect(original_content).to eq(expected_final_content)
-    end
-  end
-
-  describe "#addSourceBashrcInBashProfile" do
+  describe "#addExecZshInBashProfile" do
     let(:file_handler) { instance_double(File) }
 
     before do
-      allow(File).to receive(:read).with(bash_profile_path).and_return(original_content)
-      allow(File).to receive(:open).with(bash_profile_path, "w").and_yield(file_handler)
+      allow(File).to receive(:exist?).with(bash_profile_path).and_return(true)
       allow(File).to receive(:open).with(bash_profile_path, "a").and_yield(file_handler)
       allow(file_handler).to receive(:puts)
     end
 
-    context "when source .bashrc with if block pattern" do
-      let(:original_content) do
-        <<~CONTENT
-          export PATH="/usr/local/bin:$PATH"
-          if [ -f ~/.bashrc ]; then
-            source ~/.bashrc
-          fi
-          export EDITOR=vim
-          . ~/.bashrc
-          source .bashrc
-        CONTENT
-      end
+    context "when exec zsh does not exist" do
+      it "adds exec zsh block to bash_profile" do
+        # Given
+        allow(File).to receive(:read).with(bash_profile_path).and_return("export PATH=\"/usr/bin:$PATH\"\n")
 
-      it "removes existing source .bashrc patterns and adds new one at the end" do
         # When
-        zsh.send(:addSourceBashrcInBashProfile)
+        zsh.send(:addExecZshInBashProfile)
 
         # Then
-        expect(file_handler).to have_received(:puts).with(match(/export PATH.*\nexport EDITOR=vim/m))
-        expect(file_handler).to have_received(:puts).with("if [ -f ~/.bashrc ]; then")
-        expect(file_handler).to have_received(:puts).with("  . ~/.bashrc")
+        expect(file_handler).to have_received(:puts).with("")
+        expect(file_handler).to have_received(:puts).with("# Auto-launch zsh")
+        expect(file_handler).to have_received(:puts).with("if [ -x \"$HOME/.local/bin/zsh\" ] && [ -z \"$ZSH_VERSION\" ]; then")
+        expect(file_handler).to have_received(:puts).with("  exec \"$HOME/.local/bin/zsh\"")
         expect(file_handler).to have_received(:puts).with("fi")
+      end
+    end
+
+    context "when exec zsh already exists" do
+      it "skips adding exec zsh" do
+        # Given
+        original_content = <<~CONTENT
+          export PATH="/usr/bin:$PATH"
+          if [ -x "$HOME/.local/bin/zsh" ]; then
+            exec "$HOME/.local/bin/zsh"
+          fi
+        CONTENT
+        allow(File).to receive(:read).with(bash_profile_path).and_return(original_content)
+
+        # When
+        zsh.send(:addExecZshInBashProfile)
+
+        # Then
+        expect(file_handler).not_to have_received(:puts)
       end
     end
   end
