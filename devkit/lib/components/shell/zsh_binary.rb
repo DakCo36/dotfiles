@@ -112,49 +112,26 @@ module Component
       ENV["PATH"] = paths.join(":")
       logger.debug("Current PATH: #{ENV.fetch("PATH", nil)}")
 
-      addSourceBashrcInBashProfile
-      addLocalBinPathInBashrc
+      addExecZshInBashProfile
     end
 
-    def addLocalBinPathInBashrc
-      time = Time.now.strftime("%Y%m%d%H%M%S")
-      logger.debug("Backup existing .bashrc file to .bashrc.bak_#{time}")
-      FileUtils.cp(config.bashrc, "#{config.bashrc}.bak_#{time}") if File.exist?(config.bashrc)
+    # Adds exec zsh to bash_profile for auto-launching zsh.
+    # Uses ZSH_VERSION check to prevent infinite loop.
+    def addExecZshInBashProfile
+      zsh_path = config.contract_path(File.join(config.bin, "zsh"))
 
-      contracted_bin_path = config.contract_path(config.bin)
-      zsh_path_line = "export PATH=\"#{contracted_bin_path}:$PATH\""
-      FileUtils.touch(config.bashrc) unless File.exist?(config.bashrc)
-      bashrc_content = File.read(config.bashrc)
-
-      escaped_config_bin = Regexp.escape(config.bin)
-      if bashrc_content =~ %r{export\s+PATH=.*?(#{escaped_config_bin}|(\$HOME|~)/\.local/bin)}
-        logger.info("PATH already set in .bashrc, skipping")
-      else
-        logger.info("Adding PATH to .bashrc")
-        File.open(config.bashrc, "a") do |file|
-          file.puts(zsh_path_line)
-        end
-      end
-    end
-
-    def addSourceBashrcInBashProfile
-      logger.debug("Setting up .bash_profile to source .bashrc on last")
-      time = Time.now.strftime("%Y%m%d%H%M%S")
-      FileUtils.touch(config.bash_profile) unless File.exist?(config.bash_profile)
-      FileUtils.cp(config.bash_profile, "#{config.bash_profile}.bak_#{time}") if File.exist?(config.bash_profile)
       bash_profile_content = File.read(config.bash_profile)
-
-      bash_profile_content.gsub!(
-        %r{if\s+\[\s*-f\s+~?/\.bashrc\s*\];\s*then\s*\n?\s*(\.|source)\s+~?/\.bashrc\s*\n?fi\n?}, ""
-      )
-      bash_profile_content.gsub!(%r{^\s*(\.|source)\s+~?/?\.bashrc\s*\n?}, "")
-
-      File.open(config.bash_profile, "w") do |file|
-        file.puts(bash_profile_content)
+      if bash_profile_content.include?("exec") && bash_profile_content.include?("zsh")
+        logger.info("exec zsh already in bash_profile, skipping")
+        return
       end
+
+      logger.info("Adding exec zsh to bash_profile")
       File.open(config.bash_profile, "a") do |file|
-        file.puts("if [ -f ~/.bashrc ]; then")
-        file.puts("  . ~/.bashrc")
+        file.puts("")
+        file.puts("# Auto-launch zsh")
+        file.puts("if [ -x \"#{zsh_path}\" ] && [ -z \"$ZSH_VERSION\" ]; then")
+        file.puts("  exec \"#{zsh_path}\"")
         file.puts("fi")
       end
     end

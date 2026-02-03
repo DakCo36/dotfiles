@@ -9,13 +9,6 @@ require "mixins/loggable"
 module Component
   class FzfComponent < InstallableComponent
 
-    # Asset 패턴: fzf-{version}-linux_amd64.tar.gz
-    TARGET_ASSET_PATTERN = "fzf-.*-linux_amd64\\.tar\\.gz"
-
-    CONFIG = Components::Configuration.instance
-    TMP_ASSET_PATH = File.join(CONFIG.tmp, "fzf-assets.tar.gz")
-    TMP_DIR_PATH = File.join(CONFIG.tmp, "fzf-assets")
-
     depends_on Component::CurlComponent
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
@@ -53,35 +46,62 @@ module Component
     end
 
     def install!
+      fallback_ver = config.fallback_version ? version_tag(config.fallback_version) : nil
       github.download_asset(
         owner: config.owner,
         repo: config.repo,
         version: version_tag(config.version),
-        fallback_version: config.fallback_version ? version_tag(config.fallback_version) : nil,
-        asset_pattern: TARGET_ASSET_PATTERN,
-        destination: TMP_ASSET_PATH
+        fallback_version: fallback_ver,
+        asset_pattern: asset_pattern,
+        fallback_asset: fallback_ver ? asset_filename(fallback_ver) : nil,
+        destination: tmp_asset_path
       )
 
       # fzf tarball contains only the fzf binary at root level (no subdirectory)
-      tar.extract(TMP_ASSET_PATH, TMP_DIR_PATH, 0)
-      runCmd("cp", File.join(TMP_DIR_PATH, "fzf"), File.join(CONFIG.bin, "fzf"))
+      tar.extract(tmp_asset_path, tmp_dir_path, 0)
+      runCmd("cp", File.join(tmp_dir_path, "fzf"), File.join(config.bin, "fzf"))
 
       setup_shell_integration
 
       logger.info("fzf installed successfully.")
     end
 
-    # fzf는 v 접두사 태그 사용 (예: v0.57.0)
+    # fzf uses v prefix for tags (e.g., v0.57.0)
     def version_tag(ver)
       ver == "latest" ? "latest" : "v#{ver}"
     end
 
     private
 
+    # Returns asset pattern based on architecture (regex for API search).
+    # fzf naming: fzf-X.Y.Z-linux_{arch}.tar.gz
+    def asset_pattern
+      "fzf-.*-linux_#{arch_name}\\.tar\\.gz"
+    end
+
+    # Returns exact asset filename for direct download.
+    # fzf uses version without v prefix in filename (e.g., fzf-0.57.0-linux_arm64.tar.gz)
+    def asset_filename(version)
+      ver = version.sub(/^v/, "")
+      "fzf-#{ver}-linux_#{arch_name}.tar.gz"
+    end
+
+    def arch_name
+      config.arch == "aarch64" ? "arm64" : "amd64"
+    end
+
+    def tmp_asset_path
+      File.join(config.tmp, "fzf-assets.tar.gz")
+    end
+
+    def tmp_dir_path
+      File.join(config.tmp, "fzf-assets")
+    end
+
     def setup_shell_integration
       # fzf 0.48.0+ supports --zsh, --bash flags for shell integration
       # Add shell integration source to .zshrc if not present
-      zshrc_path = File.join(CONFIG.home, ".zshrc")
+      zshrc_path = config.zshrc
 
       return unless File.exist?(zshrc_path)
 

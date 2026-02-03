@@ -30,17 +30,6 @@ RSpec.describe Components::Configuration do
     end
   end
 
-  context "#contract_path" do
-    it "replaces home directory with $HOME" do
-      contracted = config.contract_path("/home/user/test")
-      expect(contracted).to eq(File.join("$HOME", "test"))
-    end
-
-    it "returns the original path if home directory is not in the path" do
-      expect(config.contract_path("/tmp/test")).to eq("/tmp/test")
-    end
-  end
-
   describe Components::Configuration::ComponentConfig do
     describe "default values" do
       it "has enabled true by default" do
@@ -57,6 +46,18 @@ RSpec.describe Components::Configuration do
         expect(config_data.branch).to be_nil
         expect(config_data.resources).to be_nil
         expect(config_data.fallback_version).to be_nil
+      end
+    end
+
+    describe "#contract_path" do
+      it "replaces home directory with $HOME" do
+        config_data = Components::Configuration::ComponentConfig.new(home: "/home/user")
+        expect(config_data.contract_path("/home/user/test")).to eq("$HOME/test")
+      end
+
+      it "returns the original path if home directory is not in the path" do
+        config_data = Components::Configuration::ComponentConfig.new(home: "/home/user")
+        expect(config_data.contract_path("/tmp/test")).to eq("/tmp/test")
       end
     end
 
@@ -122,4 +123,3 @@ RSpec.describe Components::Configuration do
     end
   end
 end
-

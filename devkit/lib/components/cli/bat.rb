@@ -9,12 +9,6 @@ require "mixins/loggable"
 module Component
   class BatComponent < InstallableComponent
 
-    TARGET_ASSET_PATTERN = ".*x86_64.*linux-musl\\.tar\\.gz"
-
-    CONFIG = Components::Configuration.instance
-    TMP_ASSET_PATH = File.join(CONFIG.tmp, "bat-assets.tar.gz")
-    TMP_DIR_PATH = File.join(CONFIG.tmp, "bat-assets")
-
     depends_on Component::CurlComponent
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
@@ -51,17 +45,19 @@ module Component
     end
 
     def install!
+      fallback_ver = config.fallback_version ? version_tag(config.fallback_version) : nil
       github.download_asset(
         owner: config.owner,
         repo: config.repo,
         version: version_tag(config.version),
-        fallback_version: config.fallback_version ? version_tag(config.fallback_version) : nil,
-        asset_pattern: TARGET_ASSET_PATTERN,
-        destination: TMP_ASSET_PATH
+        fallback_version: fallback_ver,
+        asset_pattern: asset_pattern,
+        fallback_asset: fallback_ver ? asset_filename(fallback_ver) : nil,
+        destination: tmp_asset_path
       )
 
-      tar.extract(TMP_ASSET_PATH, TMP_DIR_PATH, 1)
-      runCmd("cp", File.join(TMP_DIR_PATH, "bat"), File.join(CONFIG.bin, "bat"))
+      tar.extract(tmp_asset_path, tmp_dir_path, 1)
+      runCmd("cp", File.join(tmp_dir_path, "bat"), File.join(config.bin, "bat"))
 
       setup_man_page
       setup_completions
@@ -69,24 +65,47 @@ module Component
       logger.info("Bat installed successfully.")
     end
 
-    # bat은 v 접두사 태그 사용 (예: v0.24.0)
+    # bat uses v prefix for tags (e.g., v0.24.0)
     def version_tag(ver)
       ver == "latest" ? "latest" : "v#{ver}"
     end
 
     private
 
+    # Returns asset pattern based on architecture (regex for API search).
+    # bat naming: bat-vX.Y.Z-{arch}-unknown-linux-musl.tar.gz
+    def asset_pattern
+      "bat-.*-#{arch_name}-unknown-linux-musl\\.tar\\.gz"
+    end
+
+    # Returns exact asset filename for direct download (no API call).
+    def asset_filename(version)
+      "bat-#{version}-#{arch_name}-unknown-linux-musl.tar.gz"
+    end
+
+    def arch_name
+      config.arch == "aarch64" ? "aarch64" : "x86_64"
+    end
+
+    def tmp_asset_path
+      File.join(config.tmp, "bat-assets.tar.gz")
+    end
+
+    def tmp_dir_path
+      File.join(config.tmp, "bat-assets")
+    end
+
     def setup_man_page
-      FileUtils.mkdir_p(CONFIG.man1)
-      runCmd("cp", File.join(TMP_DIR_PATH, "bat.1"), File.join(CONFIG.man1, "bat.1"))
+      FileUtils.mkdir_p(config.man1)
+      runCmd("cp", File.join(tmp_dir_path, "bat.1"), File.join(config.man1, "bat.1"))
     end
 
     def setup_completions
-      FileUtils.mkdir_p(CONFIG.zsh_completions)
-      runCmd("cp", File.join(TMP_DIR_PATH, "autocomplete", "bat.zsh"), File.join(CONFIG.zsh_completions, "_bat"))
+      FileUtils.mkdir_p(config.zsh_completions)
+      runCmd("cp", File.join(tmp_dir_path, "autocomplete", "bat.zsh"), File.join(config.zsh_completions, "_bat"))
 
-      FileUtils.mkdir_p(CONFIG.bash_completions)
-      runCmd("cp", File.join(TMP_DIR_PATH, "autocomplete", "bat.bash"), File.join(CONFIG.bash_completions, "bat"))
+      FileUtils.mkdir_p(config.bash_completions)
+      runCmd("cp", File.join(tmp_dir_path, "autocomplete", "bat.bash"), File.join(config.bash_completions, "bat"))
     end
 
   end

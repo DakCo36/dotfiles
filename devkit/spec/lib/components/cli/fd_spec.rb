@@ -7,6 +7,8 @@ RSpec.describe Component::FdComponent do
   let(:mock_curl) { instance_spy(Component::CurlComponent) }
   let(:mock_tar) { instance_spy(Component::TarComponent) }
   let(:mock_github) { instance_spy(Component::GithubComponent) }
+  let(:mock_config) { instance_double(Components::Configuration::ComponentConfig) }
+  let(:tmp_path) { "/tmp/test" }
   let(:bin_path) { "/home/user/.local/bin" }
   let(:man1_path) { "/home/user/.local/share/man/man1" }
   let(:zsh_completions_path) { "/home/user/.local/share/zsh/site-functions" }
@@ -17,15 +19,14 @@ RSpec.describe Component::FdComponent do
     allow(fd).to receive(:curl).and_return(mock_curl)
     allow(fd).to receive(:tar).and_return(mock_tar)
     allow(fd).to receive(:github).and_return(mock_github)
+    allow(fd).to receive(:config).and_return(mock_config)
 
-    mock_config = instance_double(Components::Configuration)
-    allow(mock_config).to receive(:tmp).and_return("/tmp/test")
+    allow(mock_config).to receive(:tmp).and_return(tmp_path)
     allow(mock_config).to receive(:bin).and_return(bin_path)
     allow(mock_config).to receive(:man1).and_return(man1_path)
     allow(mock_config).to receive(:zsh_completions).and_return(zsh_completions_path)
     allow(mock_config).to receive(:bash_completions).and_return(bash_completions_path)
-
-    stub_const("#{described_class}::CONFIG", mock_config)
+    allow(mock_config).to receive(:arch).and_return("x86_64")
   end
 
   describe "#available?" do
@@ -123,13 +124,10 @@ RSpec.describe Component::FdComponent do
 
   describe "#install!" do
     it "installs fd from GitHub releases" do
-      component_config = Components::Configuration::ComponentConfig.new(
-        version: "latest",
-        fallback_version: "10.2.0",
-        owner: "sharkdp",
-        repo: "fd"
-      )
-      allow(fd).to receive(:config).and_return(component_config)
+      allow(mock_config).to receive(:version).and_return("latest")
+      allow(mock_config).to receive(:fallback_version).and_return("10.2.0")
+      allow(mock_config).to receive(:owner).and_return("sharkdp")
+      allow(mock_config).to receive(:repo).and_return("fd")
 
       allow(mock_github).to receive(:download_asset)
       allow(mock_tar).to receive(:extract).and_return(["", "", instance_double(Process::Status, success?: true)])
@@ -146,8 +144,9 @@ RSpec.describe Component::FdComponent do
         repo: "fd",
         version: "latest",
         fallback_version: "v10.2.0",
-        asset_pattern: Component::FdComponent::TARGET_ASSET_PATTERN,
-        destination: Component::FdComponent::TMP_ASSET_PATH
+        asset_pattern: "fd-v.*-x86_64-unknown-linux-musl\\.tar\\.gz",
+        fallback_asset: "fd-v10.2.0-x86_64-unknown-linux-musl.tar.gz",
+        destination: "/tmp/test/fd-assets.tar.gz"
       )
       expect(mock_tar).to have_received(:extract)
       expect(fd).to have_received(:setup_man_page)
@@ -157,7 +156,6 @@ RSpec.describe Component::FdComponent do
 
   describe "#setup_man_page" do
     before do
-      stub_const("#{described_class}::TMP_DIR_PATH", "/tmp/test/fd-assets")
       allow(FileUtils).to receive(:mkdir_p)
       allow(fd).to receive(:runCmd).and_return(["", "", instance_double(Process::Status, success?: true)])
     end
@@ -174,7 +172,6 @@ RSpec.describe Component::FdComponent do
 
   describe "#setup_completions" do
     before do
-      stub_const("#{described_class}::TMP_DIR_PATH", "/tmp/test/fd-assets")
       allow(FileUtils).to receive(:mkdir_p)
       allow(fd).to receive(:runCmd).and_return(["", "", instance_double(Process::Status, success?: true)])
     end
