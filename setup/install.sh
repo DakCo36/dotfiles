@@ -24,13 +24,13 @@ source "$SCRIPT_DIR/internal/_install_prerequisite.sh" || {
   echo "Failed to load Prerequisite Installer ($SCRIPT_DIR/internal/_install_prerequisite.sh)" >&2
   exit 1
 }
-source "$SCRIPT_DIR/internal/_install_mise.sh" || {
-  echo "Failed to load mise Installer ($SCRIPT_DIR/internal/_install_mise.sh)" >&2
+source "$SCRIPT_DIR/internal/_install_ruby.sh" || {
+  echo "Failed to load Ruby Installer ($SCRIPT_DIR/internal/_install_ruby.sh)" >&2
   exit 1
 }
 
 # Run the installers
 install_prerequisite
-install_mise
+install_ruby
 
 exit 0

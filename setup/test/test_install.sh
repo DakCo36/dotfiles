@@ -18,14 +18,17 @@ cd "$SETUP_DIR"
 echo "Running prerequisite installer..."
 sudo bash -c "source $SETUP_DIR/internal/_install_prerequisite.sh && install_prerequisite"
 
-echo "Running mise installer..."
-bash -c "source $SETUP_DIR/internal/_install_mise.sh && install_mise"
+echo "Running ruby installer..."
+bash -c "source $SETUP_DIR/internal/_install_ruby.sh && install_ruby"
 
 echo ""
 echo "========================================="
-echo "Debugging .bashrc contents"
+echo "Debugging shell config contents"
 echo "========================================="
-echo "Full contents of ~/.bashrc:"
+echo "~/.bash_profile:"
+cat ~/.bash_profile
+echo ""
+echo "~/.bashrc:"
 cat ~/.bashrc
 echo "========================================="
 echo ""
