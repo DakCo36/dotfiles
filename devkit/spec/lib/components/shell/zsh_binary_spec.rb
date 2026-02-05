@@ -185,7 +185,7 @@ RSpec.describe Component::ZshBinaryComponent do
         expect(file_handler).to have_received(:puts).with("")
         expect(file_handler).to have_received(:puts).with("# Auto-launch zsh")
         expect(file_handler).to have_received(:puts).with("if [ -x \"$HOME/.local/bin/zsh\" ] && [ -z \"$ZSH_VERSION\" ]; then")
-        expect(file_handler).to have_received(:puts).with("  exec \"$HOME/.local/bin/zsh\"")
+        expect(file_handler).to have_received(:puts).with("  exec \"$HOME/.local/bin/zsh\" -l")
         expect(file_handler).to have_received(:puts).with("fi")
       end
     end

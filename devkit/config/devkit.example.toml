@@ -1,15 +1,15 @@
 # Dotfiles Configuration
 #
-# version: "latest" = 항상 최신, "x.y.z" = 특정 버전 고정
-# Git 기반은 branch 또는 commit으로 지정
+# version: "latest" = always use latest, "x.y.z" = pin to specific version
+# Git-based components use branch or commit
 
 [settings]
 log_level = "debug"
 
 ### Editors
 [neovim]
-enabled = true
-version = "0.10.0"
+version = "latest"
+fallback_version = "0.10.4"
 source = "github"
 owner = "neovim"
 repo = "neovim"
@@ -26,28 +26,26 @@ action = "copy"
 
 ### Shell
 [zsh]
-enabled = true
 version = "latest"
 source = "download"
 
 [oh-my-zsh]
-enabled = true
+version = "latest"
 source = "git"
 repo = "https://github.com/ohmyzsh/ohmyzsh.git"
 branch = "master"
 
 [zgenom]
-enabled = true
+version = "latest"
 source = "git"
 repo = "https://github.com/jandamm/zgenom.git"
 branch = "main"
 
 [powerlevel10k]
-enabled = true
+version = "latest"
 source = "git"
 repo = "https://github.com/romkatv/powerlevel10k.git"
 branch = "master"
-theme = "simple"
 
 [[powerlevel10k.resources]]
 source = "resources/p10k/simple.zsh"
@@ -56,7 +54,6 @@ action = "copy"
 
 ### CLI Utilities
 [fzf]
-enabled = true
 version = "latest"
 fallback_version = "0.57.0"
 source = "github"
@@ -64,14 +61,13 @@ owner = "junegunn"
 repo = "fzf"
 
 [bat]
-enabled = true
-version = "0.24.0"
+version = "latest"
+fallback_version = "0.26.1"
 source = "github"
 owner = "sharkdp"
 repo = "bat"
 
 [fd]
-enabled = true
 version = "latest"
 fallback_version = "10.2.0"
 source = "github"
@@ -79,34 +75,40 @@ owner = "sharkdp"
 repo = "fd"
 
 [ripgrep]
-enabled = true
-version = "14.1.0"
+version = "latest"
+fallback_version = "14.1.0"
 source = "github"
 owner = "BurntSushi"
 repo = "ripgrep"
 
 [fastfetch]
-enabled = true
 version = "latest"
-fallback_version = "2.34.1"
+fallback_version = "2.30.1"
 source = "github"
 owner = "fastfetch-cli"
 repo = "fastfetch"
 
 ### Language Runtimes
 [python]
-enabled = true
 version = "3.12"
 source = "mise"
 
 [node]
-enabled = true
 version = "20"
 source = "mise"
 
+[rust]
+version = "1.93.0"
+source = "mise"
+
+### Terminal
+[alacritty]
+version = "latest"
+source = "cargo"
+
 ### Tmux
 [tmux]
-enabled = true
+enabled = false
 version = "latest"
 source = "system"
 

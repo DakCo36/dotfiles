@@ -25,6 +25,12 @@ UBUNTU_PACKAGES=(
   "curl"
   "man-db"
   "vim"
+  "cmake"
+  "pkg-config"
+  "libfreetype6-dev"
+  "libfontconfig1-dev"
+  "libxcb-xfixes0-dev"
+  "libxkbcommon-dev"
 )
 
 function install_ubuntu_prerequisite() {
