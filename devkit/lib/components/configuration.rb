@@ -32,14 +32,14 @@ module Components
       :bash_profile,
       :bash_completions,
       :zshrc,
-      :zsh_profile,
+      :zprofile,
       :zsh_completions,
       :man1
     ) do
       def initialize(
         enabled: true,
-        source: nil,
-        version: nil,
+        source:,
+        version:,
         owner: nil,
         repo: nil,
         branch: nil,
@@ -55,7 +55,7 @@ module Components
         bash_profile: nil,
         bash_completions: nil,
         zshrc: nil,
-        zsh_profile: nil,
+        zprofile: nil,
         zsh_completions: nil,
         man1: nil
       )
@@ -72,7 +72,7 @@ module Components
       end
     end
 
-    attr_accessor :home, :local, :bin, :tmp, :bashrc, :bash_profile, :bash_completions, :zshrc, :zsh_profile,
+    attr_accessor :home, :local, :bin, :tmp, :bashrc, :bash_profile, :bash_completions, :zshrc, :zprofile,
                   :zsh_completions, :man1
     attr_reader :arch, :os
 
@@ -87,7 +87,7 @@ module Components
       @bash_profile = File.join(home, ".bash_profile")
       @bash_completions = File.join(home, ".local", "share", "bash-completion", "completions")
       @zshrc = File.join(home, ".zshrc")
-      @zsh_profile = File.join(home, ".zsh_profile")
+      @zprofile = File.join(home, ".zprofile")
       @zsh_completions = File.join(home, ".local", "share", "zsh", "site-functions")
       @man1 = File.join(home, ".local", "share", "man", "man1")
 
@@ -104,7 +104,7 @@ module Components
     # @return [ComponentConfig] component configuration data object with global paths included
     def component_config(name)
       data = manifest[name.to_s] || {}
-      return ComponentConfig.new(enabled: false, **global_paths) if data.empty?
+      return ComponentConfig.new(enabled: false, source: "none", version: "none", **global_paths) if data.empty?
 
       ComponentConfig.new(**data.transform_keys(&:to_sym), **global_paths)
     end
@@ -123,7 +123,7 @@ module Components
         bash_profile: @bash_profile,
         bash_completions: @bash_completions,
         zshrc: @zshrc,
-        zsh_profile: @zsh_profile,
+        zprofile: @zprofile,
         zsh_completions: @zsh_completions,
         man1: @man1
       }

@@ -31,16 +31,18 @@ RSpec.describe Components::Configuration do
   end
 
   describe Components::Configuration::ComponentConfig do
-    describe "default values" do
-      it "has enabled true by default" do
-        config_data = Components::Configuration::ComponentConfig.new
+    describe "required fields" do
+      it "requires source and version" do
+        expect { Components::Configuration::ComponentConfig.new }.to raise_error(ArgumentError, /missing keywords.*source.*version|missing keywords.*version.*source/)
+      end
+
+      it "has enabled true by default when required fields provided" do
+        config_data = Components::Configuration::ComponentConfig.new(source: "github", version: "1.0.0")
         expect(config_data.enabled).to be true
       end
 
       it "has nil for optional fields by default" do
-        config_data = Components::Configuration::ComponentConfig.new
-        expect(config_data.source).to be_nil
-        expect(config_data.version).to be_nil
+        config_data = Components::Configuration::ComponentConfig.new(source: "github", version: "1.0.0")
         expect(config_data.owner).to be_nil
         expect(config_data.repo).to be_nil
         expect(config_data.branch).to be_nil
@@ -51,12 +53,12 @@ RSpec.describe Components::Configuration do
 
     describe "#contract_path" do
       it "replaces home directory with $HOME" do
-        config_data = Components::Configuration::ComponentConfig.new(home: "/home/user")
+        config_data = Components::Configuration::ComponentConfig.new(source: "github", version: "1.0.0", home: "/home/user")
         expect(config_data.contract_path("/home/user/test")).to eq("$HOME/test")
       end
 
       it "returns the original path if home directory is not in the path" do
-        config_data = Components::Configuration::ComponentConfig.new(home: "/home/user")
+        config_data = Components::Configuration::ComponentConfig.new(source: "github", version: "1.0.0", home: "/home/user")
         expect(config_data.contract_path("/tmp/test")).to eq("/tmp/test")
       end
     end
@@ -78,7 +80,7 @@ RSpec.describe Components::Configuration do
       end
 
       it "is immutable" do
-        config_data = Components::Configuration::ComponentConfig.new(owner: "test")
+        config_data = Components::Configuration::ComponentConfig.new(source: "github", version: "1.0.0", owner: "test")
         expect { config_data.instance_variable_set(:@owner, "changed") }.to raise_error(FrozenError)
       end
     end
