@@ -23,7 +23,6 @@ require "components/cli/fzf"
 require "components/language/python"
 require "components/language/node"
 require "components/language/rust"
-require "components/terminal/alacritty"
 require "components/editors/neovim"
 
 require "cli/registry"
