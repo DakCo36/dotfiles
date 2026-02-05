@@ -101,11 +101,6 @@ source = "mise"
 version = "1.93.0"
 source = "mise"
 
-### Terminal
-[alacritty]
-version = "latest"
-source = "cargo"
-
 ### Tmux
 [tmux]
 enabled = false

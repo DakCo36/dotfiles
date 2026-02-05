@@ -20,7 +20,6 @@ module CLI
       Component::PythonComponent,
       Component::NodeComponent,
       Component::RustComponent,
-      Component::AlacrittyComponent,
       Component::NeovimComponent,
     ].freeze
 
