@@ -13,6 +13,7 @@ COPY --chown=testuser:testuser config /home/testuser/ruby/config
 COPY --chown=testuser:testuser resources /home/testuser/ruby/resources
 COPY --chown=testuser:testuser Gemfile /home/testuser/ruby/Gemfile
 COPY --chown=testuser:testuser Gemfile.lock /home/testuser/ruby/Gemfile.lock
+COPY --chown=testuser:testuser install.sh /home/testuser/ruby/install.sh
 
 USER testuser
 RUN ls -altrh
@@ -21,11 +22,8 @@ WORKDIR /home/testuser/ruby
 
 RUN ruby -v
 RUN cp config/devkit.example.toml config/devkit.toml
-RUN gem install bundler && \
-  bundler install
 
-RUN bundle exec rspec .
-RUN bundle exec ruby bin/cli.rb install
+RUN ./install.sh --yes --force
 
 # Validate Installation
 # ohmyzsh is installed
