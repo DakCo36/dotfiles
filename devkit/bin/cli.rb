@@ -37,6 +37,7 @@ module CLI
       @registry = Registry.instance
       @auto_yes = false
       @dry_run = false
+      @force = false
     end
 
     def run(args)
@@ -64,9 +65,10 @@ module CLI
       parse_options!(args)
 
       requested_components = if args.empty?
-                               @registry.not_installed
+                               @force ? @registry.all : @registry.not_installed
                              else
-                               @registry.find_all(args).reject(&:installed?)
+                               components = @registry.find_all(args)
+                               @force ? components : components.reject(&:installed?)
                              end
 
       if requested_components.empty?
@@ -104,10 +106,15 @@ module CLI
       end
 
       install_plan.each do |component|
-        logger.info(">>> #{component.display_name} 설치 중...")
+        action = @force ? "재설치" : "설치"
+        logger.info(">>> #{component.display_name} #{action} 중...")
         begin
-          component.install
-          logger.info(">>> #{component.display_name} 설치 완료")
+          if @force
+            component.install!
+          else
+            component.install
+          end
+          logger.info(">>> #{component.display_name} #{action} 완료")
         rescue StandardError => e
           logger.error(">>> #{component.display_name} 설치 실패: #{e.message}")
           logger.error("설치가 중단되었습니다.")
@@ -294,6 +301,10 @@ module CLI
           @dry_run = true
         end
 
+        opts.on("-f", "--force", "이미 설치된 컴포넌트도 재설치합니다") do
+          @force = true
+        end
+
         opts.on("-h", "--help", "도움말을 표시합니다") do
           puts opts
           exit
@@ -305,6 +316,8 @@ module CLI
         opts.separator "  ruby bin/cli.rb install --yes        # 확인 없이 설치"
         opts.separator "  ruby bin/cli.rb install --dry-run    # 설치 계획만 확인"
         opts.separator "  ruby bin/cli.rb install bat fzf      # bat, fzf만 설치"
+        opts.separator "  ruby bin/cli.rb install --force      # 모든 컴포넌트 재설치"
+        opts.separator "  ruby bin/cli.rb install --force bat  # bat 재설치"
         opts.separator "  ruby bin/cli.rb update               # 설치된 컴포넌트 업데이트"
         opts.separator "  ruby bin/cli.rb check                # 상태 확인"
         opts.separator ""

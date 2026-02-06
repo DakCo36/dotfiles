@@ -65,7 +65,13 @@ module Component
         logger.info("Zsh is already installed.")
         return
       end
+      install!
+    end
 
+    # Force installs zsh.
+    #
+    # @return [void]
+    def install!
       logger.info("Installing zsh version #{TARGET_VERSION}")
       curl.download(DOWNLOAD_URL, tmp_file_path)
       logger.info("Unzip #{tmp_file_path} to #{tmp_dir_path}")
