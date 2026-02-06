@@ -3,6 +3,8 @@ FROM dotfiles:setup
 ENV TERM=xterm-256color
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LOG_LEVEL=debug
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 ENV PATH="/home/testuser/.local/share/mise/installs/ruby/3.4.8/bin:/home/testuser/.local/bin:$PATH"
 
