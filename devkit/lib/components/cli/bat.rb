@@ -9,6 +9,7 @@ require "mixins/loggable"
 module Component
   class BatComponent < InstallableComponent
 
+    depends_on Component::ZshBinaryComponent
     depends_on Component::CurlComponent
     depends_on Component::GithubComponent
     depends_on Component::TarComponent

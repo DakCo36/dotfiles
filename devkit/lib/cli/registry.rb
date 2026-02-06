@@ -12,6 +12,7 @@ module CLI
       Component::ZgenomComponent,
 
       Component::BatComponent,
+      Component::EzaComponent,
       Component::FdComponent,
       Component::FzfComponent,
       Component::RipgrepComponent,

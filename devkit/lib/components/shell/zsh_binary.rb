@@ -118,13 +118,15 @@ module Component
       ENV["PATH"] = paths.join(":")
       logger.debug("Current PATH: #{ENV.fetch("PATH", nil)}")
 
-      ensure_zprofile_exists
+      ensure_zsh_config_files_exist
       addExecZshInBashProfile
     end
 
-    # Creates .zprofile if it doesn't exist.
-    def ensure_zprofile_exists
+    # Creates .zprofile and .zshrc if they don't exist.
+    def ensure_zsh_config_files_exist
       FileUtils.touch(config.zprofile)
+      FileUtils.touch(config.zshrc)
+      logger.info("Ensured .zprofile and .zshrc exist")
     end
 
     # Adds exec zsh to bash_profile for auto-launching zsh.
