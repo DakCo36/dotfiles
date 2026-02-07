@@ -65,8 +65,10 @@ module CLI
     def install_command(args)
       parse_options!(args)
 
-      requested_components = if args.empty?
-                               @force ? @registry.all : @registry.not_installed
+      requested_components = if @force
+                               args.empty? ? @registry.all : @registry.find_all(args)
+                             elsif args.empty?
+                               @registry.not_installed
                              else
                                components = @registry.find_all(args)
                                @force ? components : components.reject(&:installed?)
@@ -79,7 +81,7 @@ module CLI
 
       resolver = DependencyResolver.new
       begin
-        install_plan = resolver.resolve(requested_components)
+        install_plan = resolver.resolve(requested_components, force: @force)
       rescue DependencyResolver::CircularDependencyError => e
         logger.error("의존성 오류: #{e.message}")
         return
