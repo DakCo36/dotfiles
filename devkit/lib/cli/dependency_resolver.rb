@@ -7,14 +7,17 @@ module CLI
     # Return an array of components sorted by dependencies
 
     # @param components [Array<Component::BaseComponent>] an array of components to install
+    # @param force [Boolean] if true, include already installed components
     # @return [Array<Component::BaseComponent>] an array of components sorted by dependencies
     # @raise [CircularDependencyError] when a circular dependency is detected
-    def resolve(components)
+    def resolve(components, force: false)
       return [] if components.empty?
 
       all_components = collect_all_dependencies(components)
 
       sorted = topological_sort(all_components)
+
+      return sorted.select { |c| c.respond_to?(:install!) } if force
 
       sorted.reject do |component|
         if component.respond_to?(:installed?)

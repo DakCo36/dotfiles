@@ -80,12 +80,12 @@ module Component
     private
 
     # Returns asset pattern based on architecture (regex for API search).
-    # neovim naming: nvim-linux64.tar.gz (x86_64) or nvim-linux-arm64.tar.gz (aarch64)
+    # neovim naming: nvim-linux-x86_64.tar.gz (x86_64) or nvim-linux-arm64.tar.gz (aarch64)
     def asset_pattern
       if config.arch == "aarch64"
         "nvim-linux-arm64\\.tar\\.gz"
       else
-        "nvim-linux64\\.tar\\.gz"
+        "nvim-linux-x86_64\\.tar\\.gz"
       end
     end
 
@@ -94,12 +94,12 @@ module Component
       if config.arch == "aarch64"
         "nvim-linux-arm64.tar.gz"
       else
-        "nvim-linux64.tar.gz"
+        "nvim-linux-x86_64.tar.gz"
       end
     end
 
     def tmp_asset_path
-      File.join(config.tmp, "nvim-linux64.tar.gz")
+      File.join(config.tmp, "nvim-linux-x86_64.tar.gz")
     end
 
     def config_dir
