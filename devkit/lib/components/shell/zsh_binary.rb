@@ -120,6 +120,7 @@ module Component
 
       ensure_zsh_config_files_exist
       addExecZshInBashProfile
+      addExecZshInBashrc
     end
 
     # Creates .zprofile and .zshrc if they don't exist.
@@ -129,25 +130,39 @@ module Component
       logger.info("Ensured .zprofile and .zshrc exist")
     end
 
-    # Adds exec zsh to bash_profile for auto-launching zsh.
+    # Adds exec zsh to the given bash config file for auto-launching zsh.
     # Uses ZSH_VERSION check to prevent infinite loop.
-    def addExecZshInBashProfile
+    # @param file_path [String] path to the bash config file
+    # @param label [String] human-readable name for logging
+    def addExecZshToFile(file_path, label)
       zsh_path = config.contract_path(File.join(config.bin, "zsh"))
 
-      bash_profile_content = File.read(config.bash_profile)
-      if bash_profile_content.include?("exec") && bash_profile_content.include?("zsh")
-        logger.info("exec zsh already in bash_profile, skipping")
+      FileUtils.touch(file_path) unless File.exist?(file_path)
+
+      content = File.read(file_path)
+      if content.include?("exec") && content.include?("zsh")
+        logger.info("exec zsh already in #{label}, skipping")
         return
       end
 
-      logger.info("Adding exec zsh to bash_profile")
-      File.open(config.bash_profile, "a") do |file|
+      logger.info("Adding exec zsh to #{label}")
+      File.open(file_path, "a") do |file|
         file.puts("")
         file.puts("# Auto-launch zsh")
         file.puts("if [ -x \"#{zsh_path}\" ] && [ -z \"$ZSH_VERSION\" ]; then")
         file.puts("  exec \"#{zsh_path}\" -l")
         file.puts("fi")
       end
+    end
+
+    # Adds exec zsh to .bash_profile (for login shells: SSH, su -, etc.)
+    def addExecZshInBashProfile
+      addExecZshToFile(config.bash_profile, "bash_profile")
+    end
+
+    # Adds exec zsh to .bashrc (for interactive non-login shells: terminal emulators)
+    def addExecZshInBashrc
+      addExecZshToFile(config.bashrc, "bashrc")
     end
 
   end
