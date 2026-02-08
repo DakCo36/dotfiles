@@ -17,6 +17,7 @@ module CLI
       Component::FzfComponent,
       Component::RipgrepComponent,
       Component::FastfetchComponent,
+      Component::AlacrittyComponent,
 
       Component::PythonComponent,
       Component::NodeComponent,

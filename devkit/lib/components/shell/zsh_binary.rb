@@ -148,8 +148,8 @@ module Component
       logger.info("Adding exec zsh to #{label}")
       File.open(file_path, "a") do |file|
         file.puts("")
-        file.puts("# Auto-launch zsh")
-        file.puts("if [ -x \"#{zsh_path}\" ] && [ -z \"$ZSH_VERSION\" ]; then")
+        file.puts("# Auto-launch zsh (interactive terminal only)")
+        file.puts("if [ -x \"#{zsh_path}\" ] && [ -z \"$ZSH_VERSION\" ] && [ -t 0 ] && [ -z \"$VSCODE_RESOLVING_ENVIRONMENT\" ]; then")
         file.puts("  exec \"#{zsh_path}\" -l")
         file.puts("fi")
       end

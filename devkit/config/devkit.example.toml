@@ -88,6 +88,14 @@ source = "github"
 owner = "fastfetch-cli"
 repo = "fastfetch"
 
+### Terminal
+[alacritty]
+version = "latest"
+fallback_version = "0.16.1"
+source = "github"
+owner = "alacritty"
+repo = "alacritty"
+
 ### Language Runtimes
 [python]
 version = "3.12"
