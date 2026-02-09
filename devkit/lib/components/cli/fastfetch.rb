@@ -4,6 +4,8 @@ require "components/configuration"
 require "components/prerequisites/github"
 require "components/prerequisites/curl"
 require "components/prerequisites/tar"
+require "components/shell/powerlevel10k"
+require "components/shell/zgenom"
 require "mixins/loggable"
 
 module Component
@@ -13,6 +15,8 @@ module Component
     depends_on Component::CurlComponent
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
+    depends_on Component::Powerlevel10kComponent
+    depends_on Component::ZgenomComponent
 
     # Returns the current fastfetch version.
     #
@@ -74,6 +78,7 @@ module Component
     def post_install
       setup_man_page
       setup_completions
+      append_to_zshrc
     end
 
     private
@@ -127,6 +132,27 @@ module Component
       FileUtils.mkdir_p(config.bash_completions)
       runCmd("cp", File.join(extracted_bash_completion_path, "fastfetch"),
              File.join(config.bash_completions, "fastfetch"))
+    end
+
+    def append_to_zshrc
+      zshrc_path = File.join(config.home, ".zshrc")
+      unless File.exist?(zshrc_path)
+        logger.warn(".zshrc not found, skipping fastfetch shell configuration")
+        return
+      end
+
+      content = File.read(zshrc_path)
+      if content.include?("fastfetch")
+        logger.debug("fastfetch already configured in .zshrc, skipping")
+        return
+      end
+
+      File.open(zshrc_path, "a") do |f|
+        f.puts ""
+        f.puts "# fastfetch - system information on shell startup"
+        f.puts 'command -v fastfetch > /dev/null 2>&1 && fastfetch'
+      end
+      logger.info("Added fastfetch to .zshrc")
     end
 
   end
