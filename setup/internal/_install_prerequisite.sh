@@ -23,6 +23,7 @@ UBUNTU_PACKAGES=(
   "bison"
   "git"
   "curl"
+  "unzip"
   "man-db"
   "vim"
   "cmake"

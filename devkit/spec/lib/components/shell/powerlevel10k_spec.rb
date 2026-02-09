@@ -8,6 +8,7 @@ RSpec.describe Component::Powerlevel10kComponent do
 
   let(:mock_git) { instance_spy(Component::GitComponent) }
   let(:mock_ohmyzsh) { instance_spy(Component::OhMyZshComponent) }
+  let(:mock_nerd_fonts) { instance_spy(Component::NerdFontsComponent) }
   let(:mock_logger) { Logger.new(File::NULL) }
   let(:mock_config) { instance_double(Components::Configuration) }
   let(:home_path) { "/home/user" }
@@ -18,8 +19,14 @@ RSpec.describe Component::Powerlevel10kComponent do
   before do
     allow(Component::GitComponent).to receive(:instance).and_return(mock_git)
     allow(Component::OhMyZshComponent).to receive(:instance).and_return(mock_ohmyzsh)
+    allow(Component::NerdFontsComponent).to receive(:instance).and_return(mock_nerd_fonts)
+    allow(p10k).to receive(:git).and_return(mock_git)
+    allow(p10k).to receive(:oh_my_zsh).and_return(mock_ohmyzsh)
+    allow(p10k).to receive(:nerd_fonts).and_return(mock_nerd_fonts)
     allow(p10k).to receive(:logger).and_return(mock_logger)
     allow(p10k).to receive(:config).and_return(mock_config)
+
+    allow(mock_nerd_fonts).to receive(:installed?).and_return(true)
 
     allow(mock_config).to receive(:home).and_return(home_path)
   end

@@ -56,6 +56,14 @@ type = "local"
 source = "resources/p10k/simple.zsh"
 destination = "~/.p10k.zsh"
 
+### Fonts
+[nerd-fonts]
+version = "latest"
+fallback_version = "3.3.0"
+source = "github"
+owner = "ryanoasis"
+repo = "nerd-fonts"
+
 ### CLI Utilities
 [fzf]
 version = "latest"

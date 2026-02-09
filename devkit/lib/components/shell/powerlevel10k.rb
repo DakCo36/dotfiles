@@ -3,6 +3,7 @@ require "components/installable_component"
 require "components/configuration"
 require "components/prerequisites/git"
 require "components/shell/oh_my_zsh"
+require "components/font/nerd_fonts"
 
 module Component
   class Powerlevel10kComponent < InstallableComponent
@@ -20,6 +21,7 @@ module Component
 
     depends_on Component::GitComponent
     depends_on Component::OhMyZshComponent
+    depends_on Component::NerdFontsComponent
 
     # Checks if powerlevel10k is installed.
     #
