@@ -201,4 +201,42 @@ RSpec.describe Component::FastfetchComponent do
       )
     end
   end
+
+  describe "#append_to_zshrc" do
+    let(:home_path) { Dir.mktmpdir }
+    let(:zshrc_path) { File.join(home_path, ".zshrc") }
+
+    before do
+      allow(mock_config).to receive(:home).and_return(home_path)
+    end
+
+    after do
+      FileUtils.remove_entry(home_path)
+    end
+
+    it "appends fastfetch call to .zshrc" do
+      File.write(zshrc_path, "# existing config\n")
+
+      fastfetch.send(:append_to_zshrc)
+
+      content = File.read(zshrc_path)
+      expect(content).to include("command -v fastfetch")
+      expect(content).to include("# fastfetch - system information on shell startup")
+    end
+
+    it "skips when fastfetch is already configured" do
+      File.write(zshrc_path, "command -v fastfetch > /dev/null 2>&1 && fastfetch\n")
+
+      fastfetch.send(:append_to_zshrc)
+
+      content = File.read(zshrc_path)
+      expect(content.scan("fastfetch").length).to eq(2)
+    end
+
+    it "skips when .zshrc does not exist" do
+      fastfetch.send(:append_to_zshrc)
+
+      expect(File.exist?(zshrc_path)).to be false
+    end
+  end
 end
