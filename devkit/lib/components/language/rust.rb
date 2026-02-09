@@ -15,13 +15,6 @@ module Component
     # Default Rust version to use if not specified in config
     DEFAULT_VERSION = "1.93.0"
 
-    # Checks if Rust is available via mise.
-    #
-    # @return [Boolean] true if available, false otherwise
-    def available?
-      system("mise", "which", "rustc", out: File::NULL, err: File::NULL)
-    end
-
     # Returns the current Rust version.
     #
     # @return [String, nil] Version string (e.g., "1.93.0") or nil
@@ -38,7 +31,7 @@ module Component
     #
     # @return [Boolean] true if installed, false otherwise
     def installed?
-      available? && !version.nil?
+      !version.nil?
     end
 
     # Returns the target version from config or default.
@@ -55,28 +48,25 @@ module Component
       target_version
     end
 
-    # Installs Rust (skips if already installed).
-    #
-    # @return [void]
-    def install
-      if installed?
-        logger.info("Rust #{version} is already installed via mise.")
-        return
-      end
-      install!
-    end
+    protected
 
-    # Force installs Rust via mise.
+    # Installs Rust via mise.
     #
     # @return [void]
-    def install!
+    def perform_install
       ver = target_version
       logger.info("Installing Rust #{ver} via mise...")
 
       runCmd("mise", "use", "--global", "rust@#{ver}")
-      setup_cargo_path
 
       logger.info("Rust #{ver} installed successfully via mise.")
+    end
+
+    # Sets up cargo bin PATH in .zprofile.
+    #
+    # @return [void]
+    def post_install
+      setup_cargo_path
     end
 
     private

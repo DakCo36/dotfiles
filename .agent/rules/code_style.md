@@ -1,4 +1,8 @@
-```markdown
+---
+trigger: always_on
+description: Code style and comment guidelines
+---
+
 # Comments
 
 ## 1.1 No Visual Noise

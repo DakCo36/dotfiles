@@ -11,13 +11,6 @@ module Component
     # Fixed Python version to use
     PYTHON_VERSION = "3.12.8"
 
-    # Checks if Python is available via mise.
-    #
-    # @return [Boolean] true if available, false otherwise
-    def available?
-      system("mise", "which", "python", out: File::NULL, err: File::NULL)
-    end
-
     # Returns the current Python version.
     #
     # @return [String, nil] Version string (e.g., "3.12.8") or nil
@@ -34,7 +27,7 @@ module Component
     #
     # @return [Boolean] true if installed, false otherwise
     def installed?
-      available? && !version.nil?
+      !version.nil?
     end
 
     # Returns the latest version (uses fixed version).
@@ -44,21 +37,12 @@ module Component
       PYTHON_VERSION
     end
 
-    # Installs Python (skips if already installed).
-    #
-    # @return [void]
-    def install
-      if installed?
-        logger.info("Python #{version} is already installed via mise.")
-        return
-      end
-      install!
-    end
+    protected
 
-    # Force installs Python via mise.
+    # Installs Python via mise.
     #
     # @return [void]
-    def install!
+    def perform_install
       logger.info("Installing Python #{PYTHON_VERSION} via mise...")
 
       runCmd("mise", "use", "--global", "python@#{PYTHON_VERSION}")

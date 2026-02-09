@@ -1,3 +1,8 @@
+---
+trigger: always_on
+description: TDD workflow rules for Red-Green-Refactor cycle
+---
+
 # Test-Driven Development Workflow
 
 ## Description

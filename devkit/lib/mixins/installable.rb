@@ -9,20 +9,20 @@ module Installable
   end
 
   def install
-    # 1. Validate all dependencies inherit from BaseComponent
     dependencies.each do |name, component_class|
       unless component_class < Component::BaseComponent
         raise TypeError, "Dependency #{name} (#{component_class}) must inherit from Component::BaseComponent"
       end
     end
 
-    # 2. Filter out dependencies that are already available
-    needs_to_install = dependencies.reject do |_name, component_class|
-      component = component_class.instance
-      component.respond_to?(:available?) && component.available?
+    installable_deps = dependencies.reject do |_name, component_class|
+      component_class < Component::RequiredComponent
     end
 
-    # 3. Raise error if any dependency is not installable
+    needs_to_install = installable_deps.reject do |_name, component_class|
+      component_class.instance.installed?
+    end
+
     needs_to_install.each do |name, component_class|
       component = component_class.instance
       unless component.respond_to?(:install)
@@ -30,13 +30,11 @@ module Installable
       end
     end
 
-    # 4. Install dependencies
     needs_to_install.each do |name, component_class|
       logger.info("Installing dependency: #{name}")
-      component_class.instance.install unless component_class.instance.installed?
+      component_class.instance.install
     end
 
-    # Call the original install method
     super
   end
 

@@ -1,9 +1,9 @@
 require "singleton"
 require "components/installable_component"
 require "components/configuration"
-require "components/tools/github"
-require "components/tools/curl"
-require "components/tools/tar"
+require "components/prerequisites/github"
+require "components/prerequisites/curl"
+require "components/prerequisites/tar"
 require "mixins/loggable"
 
 module Component
@@ -14,21 +14,26 @@ module Component
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
 
-    def available?
-      system("bat", "--version", out: File::NULL, err: File::NULL)
-    end
-
+    # Returns the current bat version.
+    #
+    # @return [String, nil] version string (e.g., "0.24.0") or nil
     def version
       output, status = Open3.capture2("bat", "--version")
-      output.split[1] if status.success? # example) bat 0.21.0 (405edf)
+      output.split[1] if status.success?
     rescue Errno::ENOENT
       nil
     end
 
+    # Checks if bat is installed.
+    #
+    # @return [Boolean]
     def installed?
-      available? && !version.nil?
+      !version.nil?
     end
 
+    # Returns the latest available version from GitHub.
+    #
+    # @return [String, nil] version string or nil
     def latest_version
       tag = github.get_latest_release_tag(config.owner, config.repo)
       tag&.gsub(/^v/, "")
@@ -37,20 +42,28 @@ module Component
       nil
     end
 
-    def install
-      if installed?
-        logger.info("bat already installed.")
-        return
-      end
-      install!
+
+    # bat uses v prefix for tags (e.g., v0.24.0)
+    #
+    # @param ver [String] version string
+    # @return [String] GitHub tag
+    def version_tag(ver)
+      ver == "latest" ? "latest" : "v#{ver}"
     end
 
-    def install!
+    protected
+
+    # Downloads and extracts bat binary from GitHub releases.
+    #
+    # @return [void]
+    def perform_install
+      target_ver = resolve_version
       fallback_ver = config.fallback_version ? version_tag(config.fallback_version) : nil
+
       github.download_asset(
         owner: config.owner,
         repo: config.repo,
-        version: version_tag(config.version),
+        version: version_tag(target_ver),
         fallback_version: fallback_ver,
         asset_pattern: asset_pattern,
         fallback_asset: fallback_ver ? asset_filename(fallback_ver) : nil,
@@ -59,27 +72,23 @@ module Component
 
       tar.extract(tmp_asset_path, tmp_dir_path, 1)
       runCmd("cp", File.join(tmp_dir_path, "bat"), File.join(config.bin, "bat"))
-
-      setup_man_page
-      setup_completions
-
-      logger.info("Bat installed successfully.")
+      logger.info("bat installed successfully.")
     end
 
-    # bat uses v prefix for tags (e.g., v0.24.0)
-    def version_tag(ver)
-      ver == "latest" ? "latest" : "v#{ver}"
+    # Sets up man pages and shell completions.
+    #
+    # @return [void]
+    def post_install
+      setup_man_page
+      setup_completions
     end
 
     private
 
-    # Returns asset pattern based on architecture (regex for API search).
-    # bat naming: bat-vX.Y.Z-{arch}-unknown-linux-musl.tar.gz
     def asset_pattern
       "bat-.*-#{arch_name}-unknown-linux-musl\\.tar\\.gz"
     end
 
-    # Returns exact asset filename for direct download (no API call).
     def asset_filename(version)
       "bat-#{version}-#{arch_name}-unknown-linux-musl.tar.gz"
     end

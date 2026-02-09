@@ -13,10 +13,6 @@ module Component
       subclass.include Singleton # Make new method available
     end
 
-    def available?
-      raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
-    end
-
     def version
       raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
     end

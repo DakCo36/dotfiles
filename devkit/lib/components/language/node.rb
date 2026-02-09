@@ -11,13 +11,6 @@ module Component
     # Fixed Node.js version to use (LTS Krypton)
     NODE_VERSION = "24.13.0"
 
-    # Checks if Node.js is available via mise.
-    #
-    # @return [Boolean] true if available, false otherwise
-    def available?
-      system("mise", "which", "node", out: File::NULL, err: File::NULL)
-    end
-
     # Returns the current Node.js version.
     #
     # @return [String, nil] Version string (e.g., "24.13.0") or nil
@@ -34,7 +27,7 @@ module Component
     #
     # @return [Boolean] true if installed, false otherwise
     def installed?
-      available? && !version.nil?
+      !version.nil?
     end
 
     # Returns the latest version (uses fixed version).
@@ -44,21 +37,12 @@ module Component
       NODE_VERSION
     end
 
-    # Installs Node.js (skips if already installed).
-    #
-    # @return [void]
-    def install
-      if installed?
-        logger.info("Node.js #{version} is already installed via mise.")
-        return
-      end
-      install!
-    end
+    protected
 
-    # Force installs Node.js via mise.
+    # Installs Node.js via mise.
     #
     # @return [void]
-    def install!
+    def perform_install
       logger.info("Installing Node.js #{NODE_VERSION} via mise...")
 
       runCmd("mise", "use", "--global", "node@#{NODE_VERSION}")

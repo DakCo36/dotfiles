@@ -1,9 +1,9 @@
 require "singleton"
 require "components/installable_component"
 require "components/configuration"
-require "components/tools/github"
-require "components/tools/curl"
-require "components/tools/tar"
+require "components/prerequisites/github"
+require "components/prerequisites/curl"
+require "components/prerequisites/tar"
 require "mixins/loggable"
 
 module Component
@@ -14,22 +14,26 @@ module Component
     depends_on Component::GithubComponent
     depends_on Component::TarComponent
 
-    def available?
-      system("fzf", "--version", out: File::NULL, err: File::NULL)
-    end
-
+    # Returns the current fzf version.
+    #
+    # @return [String, nil] version string (e.g., "0.57.0") or nil
     def version
       output, status = Open3.capture2("fzf", "--version")
-      # fzf outputs "0.57.0 (fc7630a)" format
       output.split[0] if status.success?
     rescue Errno::ENOENT
       nil
     end
 
+    # Checks if fzf is installed.
+    #
+    # @return [Boolean]
     def installed?
-      available? && !version.nil?
+      !version.nil?
     end
 
+    # Returns the latest available version from GitHub.
+    #
+    # @return [String, nil] version string or nil
     def latest_version
       tag = github.get_latest_release_tag(config.owner, config.repo)
       tag&.gsub(/^v/, "")
@@ -38,50 +42,52 @@ module Component
       nil
     end
 
-    def install
-      if installed?
-        logger.info("fzf already installed.")
-        return
-      end
-      install!
+
+    # fzf uses v prefix for tags (e.g., v0.57.0)
+    #
+    # @param ver [String] version string
+    # @return [String] GitHub tag
+    def version_tag(ver)
+      ver == "latest" ? "latest" : "v#{ver}"
     end
 
-    def install!
+    protected
+
+    # Downloads and extracts fzf binary from GitHub releases.
+    #
+    # @return [void]
+    def perform_install
+      target_ver = resolve_version
       fallback_ver = config.fallback_version ? version_tag(config.fallback_version) : nil
+
       github.download_asset(
         owner: config.owner,
         repo: config.repo,
-        version: version_tag(config.version),
+        version: version_tag(target_ver),
         fallback_version: fallback_ver,
         asset_pattern: asset_pattern,
         fallback_asset: fallback_ver ? asset_filename(fallback_ver) : nil,
         destination: tmp_asset_path
       )
 
-      # fzf tarball contains only the fzf binary at root level (no subdirectory)
       tar.extract(tmp_asset_path, tmp_dir_path, 0)
       runCmd("cp", File.join(tmp_dir_path, "fzf"), File.join(config.bin, "fzf"))
-
-      setup_shell_integration
-
       logger.info("fzf installed successfully.")
     end
 
-    # fzf uses v prefix for tags (e.g., v0.57.0)
-    def version_tag(ver)
-      ver == "latest" ? "latest" : "v#{ver}"
+    # Sets up fzf shell integration in .zshrc.
+    #
+    # @return [void]
+    def post_install
+      setup_shell_integration
     end
 
     private
 
-    # Returns asset pattern based on architecture (regex for API search).
-    # fzf naming: fzf-X.Y.Z-linux_{arch}.tar.gz
     def asset_pattern
       "fzf-.*-linux_#{arch_name}\\.tar\\.gz"
     end
 
-    # Returns exact asset filename for direct download.
-    # fzf uses version without v prefix in filename (e.g., fzf-0.57.0-linux_arm64.tar.gz)
     def asset_filename(version)
       ver = version.sub(/^v/, "")
       "fzf-#{ver}-linux_#{arch_name}.tar.gz"
@@ -100,8 +106,6 @@ module Component
     end
 
     def setup_shell_integration
-      # fzf 0.48.0+ supports --zsh, --bash flags for shell integration
-      # Add shell integration source to .zshrc if not present
       zshrc_path = config.zshrc
 
       return unless File.exist?(zshrc_path)
@@ -115,7 +119,6 @@ module Component
       end
 
       logger.info("Adding fzf shell integration to .zshrc")
-      # Use the new --zsh flag for fzf 0.48.0+
       integration_line = "\n# fzf shell integration\neval \"$(fzf --zsh)\"\n"
 
       File.open(zshrc_path, "a") do |file|

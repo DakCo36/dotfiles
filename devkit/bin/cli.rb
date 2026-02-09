@@ -29,6 +29,7 @@ require "components/editors/neovim"
 
 require "cli/registry"
 require "cli/dependency_resolver"
+require "cli/required_component_checker"
 
 module CLI
   class Runner
@@ -45,6 +46,8 @@ module CLI
     def run(args)
       command = args.shift || "help"
 
+      RequiredComponentChecker.check! unless command == "help"
+
       case command
       when "install"
         install_command(args)
@@ -59,6 +62,9 @@ module CLI
         help_command
         exit 1
       end
+    rescue MissingToolError => e
+      logger.error(e.message)
+      exit 1
     end
 
     private

@@ -1,8 +1,8 @@
 require "open3"
-require "components/required_tool"
+require "components/required_component"
 
 module Component
-  class TarComponent < RequiredTool
+  class TarComponent < RequiredComponent
 
     def available?
       system("tar", "--version", out: File::NULL, err: File::NULL)

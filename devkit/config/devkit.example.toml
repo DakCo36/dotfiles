@@ -2,6 +2,10 @@
 #
 # version: "latest" = always use latest, "x.y.z" = pin to specific version
 # Git-based components use branch or commit
+#
+# Resource types:
+#   type = "local"          - Copy file from devkit resources/ directory
+#   type = "github_release" - Download asset from GitHub release
 
 [settings]
 log_level = "debug"
@@ -15,14 +19,14 @@ owner = "neovim"
 repo = "neovim"
 
 [[neovim.resources]]
+type = "local"
 source = "resources/neovim/init.vim"
 destination = "~/.config/nvim/init.vim"
-action = "copy"
 
 [[neovim.resources]]
+type = "local"
 source = "resources/neovim/.vimrc"
 destination = "~/.vimrc"
-action = "copy"
 
 ### Shell
 [zsh]
@@ -48,9 +52,9 @@ repo = "https://github.com/romkatv/powerlevel10k.git"
 branch = "master"
 
 [[powerlevel10k.resources]]
+type = "local"
 source = "resources/p10k/simple.zsh"
 destination = "~/.p10k.zsh"
-action = "copy"
 
 ### CLI Utilities
 [fzf]
@@ -92,9 +96,63 @@ repo = "fastfetch"
 [alacritty]
 version = "latest"
 fallback_version = "0.16.1"
-source = "github"
+source = "cargo"
+
+[[alacritty.resources]]
+type = "github_release"
 owner = "alacritty"
 repo = "alacritty"
+asset = "Alacritty.desktop"
+destination = "~/.local/share/applications/Alacritty.desktop"
+
+[[alacritty.resources]]
+type = "github_release"
+owner = "alacritty"
+repo = "alacritty"
+asset = "Alacritty.svg"
+destination = "~/.local/share/icons/hicolor/scalable/apps/Alacritty.svg"
+
+[[alacritty.resources]]
+type = "github_release"
+owner = "alacritty"
+repo = "alacritty"
+asset = "alacritty.info"
+destination = "~/.terminfo/alacritty.info"
+
+[[alacritty.resources]]
+type = "github_release"
+owner = "alacritty"
+repo = "alacritty"
+asset = "_alacritty"
+destination = "~/.local/share/zsh/site-functions/_alacritty"
+
+[[alacritty.resources]]
+type = "github_release"
+owner = "alacritty"
+repo = "alacritty"
+asset = "alacritty.1.gz"
+destination = "~/.local/share/man/man1/alacritty.1.gz"
+
+[[alacritty.resources]]
+type = "github_release"
+owner = "alacritty"
+repo = "alacritty"
+asset = "alacritty-msg.1.gz"
+destination = "~/.local/share/man/man1/alacritty-msg.1.gz"
+
+[[alacritty.resources]]
+type = "github_release"
+owner = "alacritty"
+repo = "alacritty"
+asset = "alacritty.5.gz"
+destination = "~/.local/share/man/man5/alacritty.5.gz"
+
+[[alacritty.resources]]
+type = "github_release"
+owner = "alacritty"
+repo = "alacritty"
+asset = "alacritty-bindings.5.gz"
+destination = "~/.local/share/man/man5/alacritty-bindings.5.gz"
 
 ### Language Runtimes
 [python]
@@ -116,6 +174,6 @@ version = "latest"
 source = "system"
 
 [[tmux.resources]]
+type = "local"
 source = "resources/tmux/.tmux.conf"
 destination = "~/.tmux.conf"
-action = "symlink"

@@ -1,6 +1,6 @@
 require "spec_helper"
 require "components/shell/zgenom"
-require "components/tools/git"
+require "components/prerequisites/git"
 require "components/shell/zsh_binary"
 
 RSpec.describe Component::ZgenomComponent do

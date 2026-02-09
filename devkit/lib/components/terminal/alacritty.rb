@@ -4,8 +4,8 @@ require "singleton"
 require "components/installable_component"
 require "components/configuration"
 require "components/language/rust"
-require "components/tools/github"
-require "components/tools/curl"
+require "components/prerequisites/github"
+require "components/prerequisites/curl"
 require "mixins/loggable"
 
 module Component
@@ -19,14 +19,6 @@ module Component
     GITHUB_OWNER = "alacritty"
     GITHUB_REPO = "alacritty"
 
-    # Checks if alacritty is available.
-    #
-    # @return [Boolean] true if available, false otherwise
-    def available?
-      system("alacritty", "--version", out: File::NULL, err: File::NULL) ||
-        system("mise", "exec", "rust", "--", "alacritty", "--version", out: File::NULL, err: File::NULL)
-    end
-
     # Returns the current alacritty version.
     #
     # @return [String, nil] Version string (e.g., "0.16.1") or nil
@@ -34,7 +26,6 @@ module Component
       output = nil
       status = nil
 
-      # Try direct first (alacritty in PATH)
       begin
         output, status = Open3.capture2("alacritty", "--version")
         logger.debug("Direct alacritty --version: status=#{status.success?}, output=#{output.strip}")
@@ -43,7 +34,6 @@ module Component
         status = nil
       end
 
-      # Fallback to mise exec
       unless status&.success?
         begin
           output, status = Open3.capture2("mise", "exec", "rust", "--", "alacritty", "--version")
@@ -56,7 +46,6 @@ module Component
 
       return nil unless status&.success?
 
-      # example: alacritty 0.16.1 (a]b2c3d4)
       match = output.match(/alacritty\s+([\d.]+)/)
       match ? match[1] : nil
     end
@@ -65,7 +54,7 @@ module Component
     #
     # @return [Boolean] true if installed, false otherwise
     def installed?
-      available? && !version.nil?
+      !version.nil?
     end
 
     # Returns the latest version from GitHub.
@@ -79,41 +68,29 @@ module Component
       nil
     end
 
-    # Installs alacritty (skips if already installed).
-    #
-    # @return [void]
-    def install
-      if installed?
-        logger.info("alacritty #{version} is already installed.")
-        return
-      end
-      install!
+    # @return [String] GitHub tag format (e.g., "v0.16.1")
+    def version_tag(ver)
+      ver == "latest" ? "latest" : "v#{ver}"
     end
 
-    # Force installs alacritty via cargo, then downloads extra assets.
+    protected
+
+    # Installs alacritty binary via cargo.
     #
     # @return [void]
-    def install!
-      # 1. Get target version (try latest, fallback to config)
-      target_ver = latest_version
-      unless target_ver
-        if config.fallback_version
-          logger.warn("GitHub API failed, using fallback version: #{config.fallback_version}")
-          target_ver = config.fallback_version
-        else
-          logger.error("Failed to get alacritty version. Set fallback_version in config.")
-          return
-        end
-      end
-
-      # 2. Install specific version via cargo
+    def perform_install
+      target_ver = resolve_version
       logger.info("Installing alacritty v#{target_ver} via cargo...")
       runCmd("mise", "exec", "rust", "--", "cargo", "install", "alacritty@#{target_ver}", showStdout: true)
+    end
 
-      # 3. Symlink cargo binary to ~/.local/bin/ so desktop environments can find it
+    # Creates symlink and downloads extra assets from GitHub releases.
+    #
+    # @return [void]
+    def post_install
       create_symlink
 
-      # 4. Download and install extra assets from GitHub releases
+      target_ver = version || config.fallback_version
       logger.info("Setting up alacritty extras for v#{target_ver}...")
       download_terminfo(target_ver)
       download_icon(target_ver)
@@ -122,10 +99,6 @@ module Component
       download_completions(target_ver)
 
       logger.info("alacritty #{target_ver} installed successfully with all extras.")
-    end
-
-    def rollback
-      raise "Not implemented"
     end
 
     private
@@ -140,7 +113,6 @@ module Component
 
       curl.download(asset_url, tmp_path)
 
-      # tic without sudo installs to ~/.terminfo/
       runCmd("tic", "-xe", "alacritty,alacritty-direct", tmp_path)
 
       logger.info("alacritty terminfo installed.")
@@ -195,7 +167,6 @@ module Component
       curl.download(asset_url, tmp_path)
       runCmd("cp", tmp_path, File.join(apps_dir, "Alacritty.desktop"))
 
-      # Update desktop database so GNOME/KDE picks up the new entry
       update_desktop_database(apps_dir)
 
       logger.info("alacritty desktop entry installed.")
@@ -221,7 +192,6 @@ module Component
     #
     # @param ver [String] version string
     def download_man_pages(ver)
-      # Man section 1 pages (commands)
       man1_pages = ["alacritty.1.gz", "alacritty-msg.1.gz"]
       FileUtils.mkdir_p(config.man1)
 
@@ -232,7 +202,6 @@ module Component
         runCmd("cp", tmp_path, File.join(config.man1, page))
       end
 
-      # Man section 5 pages (file formats / config)
       man5_pages = ["alacritty.5.gz", "alacritty-bindings.5.gz"]
       man5_dir = File.join(config.local, "share", "man", "man5")
       FileUtils.mkdir_p(man5_dir)
