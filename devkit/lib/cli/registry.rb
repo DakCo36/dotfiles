@@ -8,6 +8,7 @@ module CLI
     COMPONENTS = [
       Component::ZshBinaryComponent,
       Component::OhMyZshComponent,
+      Component::NerdFontsComponent,
       Component::Powerlevel10kComponent,
       Component::ZgenomComponent,
 
