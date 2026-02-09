@@ -1,7 +1,7 @@
 require "fileutils"
 require "components/installable_component"
 require "components/configuration"
-require "components/tools/curl"
+require "components/prerequisites/curl"
 require "components/shell/zsh_binary"
 
 module Component
@@ -16,16 +16,9 @@ module Component
 
     # Checks if oh-my-zsh is installed.
     #
-    # @return [Boolean] true if directory exists, false otherwise
-    def available?
-      Dir.exist?(target_dir_path)
-    end
-
-    # Checks if oh-my-zsh is installed.
-    #
-    # @return [Boolean] true if installed, false otherwise
+    # @return [Boolean] true if directory exists
     def installed?
-      available?
+      Dir.exist?(target_dir_path)
     end
 
     # Returns the current oh-my-zsh version (git commit hash).
@@ -59,34 +52,29 @@ module Component
       nil
     end
 
-    # Installs oh-my-zsh (skips if already installed).
-    #
-    # @return [void]
-    def install
-      if installed?
-        logger.info("oh-my-zsh already installed.")
-        return
-      end
-      install!
-    end
 
-    # Force installs oh-my-zsh.
-    #
-    # @return [void]
-    def install!
+    protected
+
+    def pre_install
       logger.debug("Remove existing oh-my-zsh directory(#{target_dir_path}) if it exists")
       FileUtils.rm_rf(target_dir_path) if Dir.exist?(target_dir_path)
+    end
+
+    def perform_install
       logger.info("Installing oh-my-zsh")
       curl.download(DOWNLOAD_URL, tmp_script_path)
       File.chmod(0o755, tmp_script_path) if File.exist?(tmp_script_path)
       runCmd("sh", "-c", tmp_script_path, showStdout: true)
-      configure
     rescue StandardError => e
       logger.error("Failed to install oh-my-zsh: #{e}")
       raise e
     ensure
       logger.debug("Cleaning up temporary files")
       FileUtils.rm_f(tmp_script_path) if File.exist?(tmp_script_path)
+    end
+
+    def post_install
+      setPlugins
     end
 
     private
@@ -106,10 +94,6 @@ module Component
       File.join(config.home, ".zshrc")
     end
 
-    def configure
-      setPlugins
-    end
-
     def setPlugins
       unless File.exist?(zshrc_path)
         logger.error(".zshrc file not found")
@@ -122,7 +106,7 @@ module Component
       PLUGINS.each do |plugin|
         plugins_string += "#{plugin} "
       end
-      plugins_string = plugins_string[0..-2] # Remove last space
+      plugins_string = plugins_string[0..-2]
       plugins_string += ")"
 
       if zshrc_content.gsub!(/^[^#]*plugins=\([^)]*\)/m, "#{plugins_string}")

@@ -1,5 +1,5 @@
 require "spec_helper"
-require "components/tools/git"
+require "components/prerequisites/git"
 
 RSpec.describe Component::GitComponent do
   subject(:git) { described_class.instance }

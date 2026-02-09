@@ -1,10 +1,10 @@
 require "open3"
-require "components/required_tool"
-require "components/tools/curl"
+require "components/required_component"
+require "components/prerequisites/curl"
 require "json"
 
 module Component
-  class GithubComponent < RequiredTool
+  class GithubComponent < RequiredComponent
 
     RELEASE_BASE_URL = "https://api.github.com/repos/%s/%s/releases/latest"
     DIRECT_DOWNLOAD_URL = "https://github.com/%s/%s/releases/download/%s/%s"

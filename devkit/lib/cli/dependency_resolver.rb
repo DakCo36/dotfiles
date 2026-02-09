@@ -17,15 +17,11 @@ module CLI
 
       sorted = topological_sort(all_components)
 
+      sorted.reject! { |c| c.is_a?(Component::RequiredComponent) }
+
       return sorted.select { |c| c.respond_to?(:install!) } if force
 
-      sorted.reject do |component|
-        if component.respond_to?(:installed?)
-          component.installed?
-        else
-          component.available?
-        end
-      end
+      sorted.reject(&:installed?)
     end
 
     private

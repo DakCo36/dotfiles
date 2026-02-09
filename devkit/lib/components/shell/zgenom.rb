@@ -1,7 +1,7 @@
 require "fileutils"
 require "components/installable_component"
 require "components/configuration"
-require "components/tools/git"
+require "components/prerequisites/git"
 require "components/shell/zsh_binary"
 
 module Component
@@ -15,15 +15,8 @@ module Component
     # Checks if zgenom is installed.
     #
     # @return [Boolean] true if directory and zgenom.zsh file exist
-    def available?
-      Dir.exist?(target_dir_path) && File.exist?(File.join(target_dir_path, "zgenom.zsh"))
-    end
-
-    # Checks if zgenom is installed.
-    #
-    # @return [Boolean] true if installed, false otherwise
     def installed?
-      available?
+      Dir.exist?(target_dir_path) && File.exist?(File.join(target_dir_path, "zgenom.zsh"))
       # TODO : Check if zgenom is properly configured in .zshrc
     end
 
@@ -58,34 +51,27 @@ module Component
       nil
     end
 
-    # Installs zgenom (skips if already installed).
-    #
-    # @return [void]
-    def install
-      if installed?
-        logger.info("Zgenom already installed.")
-        return
-      end
-      install!
-      configure
+
+    protected
+
+    def pre_install
+      FileUtils.rm_rf(target_dir_path) if Dir.exist?(target_dir_path)
+      FileUtils.mkdir_p(target_dir_path)
     end
 
-    # Force installs zgenom.
-    #
-    # @return [void]
-    def install!
-      FileUtils.rm_rf(target_dir_path) if Dir.exist?(target_dir_path)
+    def perform_install
       logger.info("Installing Zgenom...")
-      FileUtils.mkdir_p(target_dir_path) unless Dir.exist?(target_dir_path)
-
       git.clone(REPO_URL, target_dir_path)
     rescue StandardError => e
       logger.error("Failed to install Zgenom: #{e}")
       raise e
     end
 
-    def rollback
-      raise NotImplementedError, "Rollback not implemented for ZgenomComponent"
+    # Configures zgenom in .zshrc after installation.
+    #
+    # @return [void]
+    def post_install
+      configure
     end
 
     private
@@ -130,7 +116,6 @@ module Component
 
       zshrc_content = File.read(zshrc_path)
 
-      # zgenom autoupdate
       zgenom_config = ""
       if zshrc_content.match?(/zgenom autoupdate/)
         logger.debug("zgenom update already exists in .zshrc, skipping")

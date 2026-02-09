@@ -1,16 +1,14 @@
 require "fileutils"
 require "components/installable_component"
 require "components/configuration"
-require "components/tools/git"
+require "components/prerequisites/git"
 require "components/shell/oh_my_zsh"
 
 module Component
   class Powerlevel10kComponent < InstallableComponent
 
     REPO_URL = "https://github.com/romkatv/powerlevel10k.git"
-    CONFIG_DIR = File.join(RESOURCES_ROOT, "p10k")
 
-    # Instant prompt block to be added at the top of .zshrc
     INSTANT_PROMPT_BLOCK = <<~ZSH
       # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
       # Initialization code that may require console input (password prompts, [y/n]
@@ -25,22 +23,11 @@ module Component
 
     # Checks if powerlevel10k is installed.
     #
-    # @return [Boolean] true if directory exists, false otherwise
-    def available?
+    # @return [Boolean] true if theme directory exists
+    def installed?
       Dir.exist?(target_dir_path)
     end
 
-    # Checks if powerlevel10k is installed.
-    #
-    # @return [Boolean] true if installed, false otherwise
-    def installed?
-      available?
-      # TODO: Check if the theme is properly configured in .zshrc
-    end
-
-    # Returns the current powerlevel10k version (git commit hash).
-    #
-    # @return [String, nil] 7-digit commit hash or nil
     def version
       return nil unless available?
 
@@ -53,9 +40,6 @@ module Component
       nil
     end
 
-    # Returns the latest version (remote origin/master) commit hash.
-    #
-    # @return [String, nil] 7-digit commit hash or nil
     def latest_version
       return nil unless available?
 
@@ -69,40 +53,33 @@ module Component
       nil
     end
 
-    # Installs powerlevel10k (skips if already installed).
-    #
-    # @return [void]
-    def install
-      if installed?
-        logger.info("Powerlevel10k already installed.")
-        return
-      end
 
-      install!
+    protected
+
+    def pre_install
+      FileUtils.rm_rf(target_dir_path) if Dir.exist?(target_dir_path)
+      FileUtils.mkdir_p(target_dir_path)
     end
 
-    # Force installs powerlevel10k.
-    #
-    # @return [void]
-    def install!
-      FileUtils.rm_rf(target_dir_path) if Dir.exist?(target_dir_path)
-      FileUtils.mkdir_p(target_dir_path) unless Dir.exist?(target_dir_path)
+    def perform_install
       logger.info("Installing Powerlevel10k theme")
       git.clone(REPO_URL, target_dir_path)
-      configure
     rescue StandardError => e
       logger.error("Failed to install Powerlevel10k: #{e}")
       raise e
     end
 
+    # install_resources handles .p10k.zsh copy via TOML
+    def post_install
+      configure
+    end
+
     private
 
-    # @return [String]
     def target_dir_path
       File.join(config.home, ".oh-my-zsh/custom/themes/powerlevel10k")
     end
 
-    # @return [String]
     def zshrc_path
       File.join(config.home, ".zshrc")
     end
@@ -110,7 +87,6 @@ module Component
     def configure
       setInstantPrompt
       setTheme
-      setConfig
     end
 
     def setInstantPrompt
@@ -154,29 +130,6 @@ module Component
       end
 
       File.write(zshrc_path, zshrc_content)
-    end
-
-    def setConfig
-      # TODO: Make it configurable if want to support multiple configurations
-      sourceFile = File.join(CONFIG_DIR, "simple.zsh")
-      destFile = File.join(config.home, ".p10k.zsh")
-
-      unless File.exist?(sourceFile)
-        logger.error("Config file #{sourceFile} not found")
-        raise "Config file #{sourceFile} not found"
-      end
-
-      if File.exist?(destFile)
-        logger.info("Backup #{destFile} to #{destFile}.backup_#{Time.now.strftime("%Y%m%d%H%M%S")}")
-        FileUtils.cp(destFile, "#{destFile}.backup_#{Time.now.strftime("%Y%m%d%H%M%S")}")
-      end
-
-      logger.info("Copying #{sourceFile} to #{destFile}")
-      FileUtils.cp(sourceFile, destFile)
-    end
-
-    def rollback
-      raise NotImplementedError, "Rollback not implemented for Powerlevel10kComponent"
     end
 
   end

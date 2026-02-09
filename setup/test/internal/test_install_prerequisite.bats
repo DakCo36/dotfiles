@@ -19,6 +19,8 @@ setup() {
   log_info() { :; }
   log_warning() { :; }
   log_error() { :; }
+
+  install_docker_ce() { :; }
 }
 
 teardown() {
