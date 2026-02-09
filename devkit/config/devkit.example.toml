@@ -65,6 +65,13 @@ owner = "ryanoasis"
 repo = "nerd-fonts"
 
 ### CLI Utilities
+[eza]
+version = "latest"
+fallback_version = "0.21.4"
+source = "cargo"
+owner = "eza-community"
+repo = "eza"
+
 [fzf]
 version = "latest"
 fallback_version = "0.57.0"
