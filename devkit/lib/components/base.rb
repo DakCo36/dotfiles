@@ -8,9 +8,24 @@ module Component
 
     include Loggable
 
+    ABSTRACT_CLASSES = %w[BaseComponent InstallableComponent RequiredComponent].freeze
+
     def self.inherited(subclass)
       super
-      subclass.include Singleton # Make new method available
+      subclass.include Singleton
+
+      class_name = subclass.name&.split("::")&.last
+      return if class_name.nil? || ABSTRACT_CLASSES.include?(class_name)
+
+      is_required = begin
+        subclass.ancestors.any? { |a| a.name == "Component::RequiredComponent" }
+      rescue StandardError
+        false
+      end
+      return if is_required
+
+      require "commands/utils/registry"
+      Commands::Registry.register(subclass)
     end
 
     def version

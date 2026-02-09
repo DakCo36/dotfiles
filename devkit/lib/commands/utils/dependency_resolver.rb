@@ -1,10 +1,7 @@
-module CLI
+module Commands
   class DependencyResolver
 
-    # Occur when a circular dependency is detected
     class CircularDependencyError < StandardError; end
-
-    # Return an array of components sorted by dependencies
 
     # @param components [Array<Component::BaseComponent>] an array of components to install
     # @param force [Boolean] if true, include already installed components
@@ -26,10 +23,6 @@ module CLI
 
     private
 
-    # Collect all dependencies recursively
-    #
-    # @param components [Array<Component::BaseComponent>] an array of starting components
-    # @return [Set<Component::BaseComponent>] a set of all related components
     def collect_all_dependencies(components)
       visited = Set.new
 
@@ -40,10 +33,6 @@ module CLI
       visited
     end
 
-    # Collect dependencies recursively for a single component
-    #
-    # @param component [Component::BaseComponent] the current component
-    # @param visited [Set<Component::BaseComponent>] a set of visited components
     def collect_dependencies_recursive(component, visited)
       return if visited.include?(component)
 
@@ -55,11 +44,6 @@ module CLI
       end
     end
 
-    # Use Kahn's Algorithm to sort components by dependencies
-    #
-    # @param components [Set<Component::BaseComponent>] a set of components to sort
-    # @return [Array<Component::BaseComponent>] an array of components sorted by dependencies
-    # @raise [CircularDependencyError] when a circular dependency is detected
     def topological_sort(components)
       components_array = components.to_a
 

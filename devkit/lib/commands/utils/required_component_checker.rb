@@ -2,7 +2,7 @@ require "components/prerequisites/curl"
 require "components/prerequisites/git"
 require "components/prerequisites/tar"
 
-module CLI
+module Commands
   class MissingToolError < StandardError; end
 
   class RequiredComponentChecker
