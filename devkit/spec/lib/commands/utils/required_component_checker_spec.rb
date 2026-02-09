@@ -1,11 +1,11 @@
 require "spec_helper"
-require "cli/required_component_checker"
+require "commands/utils/required_component_checker"
 
-RSpec.describe CLI::RequiredComponentChecker do
+RSpec.describe Commands::RequiredComponentChecker do
   describe ".check!" do
     context "when all required components are available" do
       it "does not raise" do
-        CLI::RequiredComponentChecker::REQUIRED_COMPONENTS.each do |component_class|
+        Commands::RequiredComponentChecker::REQUIRED_COMPONENTS.each do |component_class|
           allow(component_class.instance).to receive(:available?).and_return(true)
         end
 
@@ -19,24 +19,24 @@ RSpec.describe CLI::RequiredComponentChecker do
         allow(curl).to receive(:available?).and_return(false)
         allow(curl).to receive(:display_name).and_return("curl")
 
-        (CLI::RequiredComponentChecker::REQUIRED_COMPONENTS - [Component::CurlComponent]).each do |component_class|
+        (Commands::RequiredComponentChecker::REQUIRED_COMPONENTS - [Component::CurlComponent]).each do |component_class|
           allow(component_class.instance).to receive(:available?).and_return(true)
         end
 
         expect { described_class.check! }.to raise_error(
-          CLI::MissingToolError, /curl/
+          Commands::MissingToolError, /curl/
         )
       end
     end
 
     context "when all required components are missing" do
       it "raises MissingToolError listing all component names" do
-        CLI::RequiredComponentChecker::REQUIRED_COMPONENTS.each do |component_class|
+        Commands::RequiredComponentChecker::REQUIRED_COMPONENTS.each do |component_class|
           component = component_class.instance
           allow(component).to receive(:available?).and_return(false)
         end
 
-        expect { described_class.check! }.to raise_error(CLI::MissingToolError)
+        expect { described_class.check! }.to raise_error(Commands::MissingToolError)
       end
     end
   end

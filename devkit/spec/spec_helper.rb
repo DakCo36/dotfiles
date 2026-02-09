@@ -1,9 +1,12 @@
 $LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
 
 require "fileutils"
+require "commands/utils/registry"
 
 PROJECT_ROOT = File.expand_path("..", __dir__)
 RESOURCES_ROOT = File.join(PROJECT_ROOT, "resources")
+
+Commands::Registry.load_components!
 
 RSpec.configure do |config|
   # Suppress logger output during tests
