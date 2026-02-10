@@ -114,6 +114,11 @@ fallback_version = "0.16.1"
 source = "cargo"
 
 [[alacritty.resources]]
+type = "local"
+source = "resources/alacritty/alacritty.toml"
+destination = "~/.config/alacritty/alacritty.toml"
+
+[[alacritty.resources]]
 type = "github_release"
 owner = "alacritty"
 repo = "alacritty"
