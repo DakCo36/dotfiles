@@ -6,6 +6,11 @@
 *.swp
 *.swo
 
+### Emacs
+# Auto-save
+\#*\#
+*~
+
 ### Devkit
 devkit/vendor
 devkit/.bundle

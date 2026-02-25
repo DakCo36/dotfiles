@@ -19,6 +19,8 @@ UBUNTU_PACKAGES=(
   "libncurses5-dev"
   "libffi-dev"
   "libgdbm-dev"
+  "gnutls-bin"
+  "libgnutls28-dev"
   "autoconf"
   "bison"
   "git"
@@ -32,6 +34,8 @@ UBUNTU_PACKAGES=(
   "libfontconfig1-dev"
   "libxcb-xfixes0-dev"
   "libxkbcommon-dev"
+  "libtool-bin"
+  "libvterm-dev"
 )
 
 function install_ubuntu_prerequisite() {

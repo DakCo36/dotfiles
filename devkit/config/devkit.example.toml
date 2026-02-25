@@ -28,6 +28,26 @@ type = "local"
 source = "resources/neovim/.vimrc"
 destination = "~/.vimrc"
 
+[emacs]
+version = "latest"
+fallback_version = "30.2"
+source = "download"
+
+[[emacs.resources]]
+type = "local"
+source = "resources/emacs/init.el"
+destination = "~/.emacs.d/init.el"
+
+[[emacs.resources]]
+type = "local"
+source = "resources/emacs/themes.el"
+destination = "~/.emacs.d/lisp/themes.el"
+
+[[emacs.resources]]
+type = "local"
+source = "resources/emacs/markdown.el"
+destination = "~/.emacs.d/lisp/markdown.el"
+
 ### Shell
 [zsh]
 version = "latest"
