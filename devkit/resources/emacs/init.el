@@ -18,6 +18,10 @@
 ;; Treemacs
 (use-package treemacs
   :demand t
+
+  :config
+  (setq treemacs-space-between-root-nodes nil) ;; Remove extra space between projects(root node)
+  
   :bind ("C-x t t" . treemacs))
 
 ;; Nerd Icons 지원 (터미널에서도 아이콘 표시)
@@ -51,8 +55,8 @@
 (global-display-line-numbers-mode 1)
 
 ;; Default indentation (4 spaces/tabs)
+(setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
-(setq-default indent-tabs-mode t)
 
 ;; (use-package exec-path-from-shell
 ;;  :config

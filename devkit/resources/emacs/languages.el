@@ -12,6 +12,33 @@
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
 
+
+;; Indentation
+
+;; Helper functions (currently default to 4 spaces)
+(defun set-indent (use-tabs width)
+  (setq-local indent-tabs-mode use-tabs)
+  (setq-local tab-width width))
+
+;; Go: tabs, display width 4 (gofmt enforced)
+(add-hook 'go-ts-mode-hook (lambda () (set-indent t 4)))
+
+;; Ruby
+(add-hook 'ruby-mode-hook (lambda () (set-indent nil 2)))
+(add-hook 'ruby-ts-mode-hook (lambda () (set-indent nil 2)))
+
+;; JS/TS: 2 spaces
+(dolist (hook '(js-ts-mode-hook js-mode-hook))
+  (add-hook hook (lambda ()
+                   (set-indent nil 2)
+                   (setq-local js-indent-level 2))))
+(dolist (hook '(typescript-ts-mode-hook typescript-mode-hook tsx-ts-mode-hook))
+  (add-hook hook (lambda ()
+                   (set-indent nil 2)
+                   (setq-local typescript-indent-level 2)
+                   (setq-local typescript-ts-mode-indent-offset 2))))
+
+
 ;; Eglot
 
 ;; Activate ruby-lsp for both ruby-mode and ruby-ts-mode
