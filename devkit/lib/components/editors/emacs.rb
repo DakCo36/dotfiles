@@ -6,6 +6,7 @@ require "components/installable_component"
 require "components/configuration"
 require "components/prerequisites/curl"
 require "components/prerequisites/tar"
+require "components/editors/treesitter"
 
 module Component
   class EmacsComponent < InstallableComponent
@@ -15,6 +16,7 @@ module Component
 
     depends_on Component::CurlComponent
     depends_on Component::TarComponent
+    depends_on Component::TreesitterComponent
 
     # Checks if emacs is available.
     #
@@ -95,13 +97,14 @@ module Component
         configure_args = [
           "./configure",
           "--prefix", config.local,
-          "--with-gnutls=ifavailable"
+          "--with-gnutls=ifavailable",
+          "--with-tree-sitter"
         ]
         unless x_dev_available?
           logger.info("X development libraries not found, building without X support")
           configure_args << "--without-x"
         end
-        runCmd(*configure_args, showStdout: true)
+        runCmd(*configure_args, env: pkg_config_env, showStdout: true)
         runCmd("make", "-j", make_jobs.to_s)
         runCmd("make", "install")
       end
@@ -110,6 +113,22 @@ module Component
 
     def x_dev_available?
       system("pkg-config", "--exists", "x11", out: File::NULL, err: File::NULL)
+    end
+
+    def pkg_config_env
+      local_pkgconfig = File.join(config.local, "lib", "pkgconfig")
+      local_include = File.join(config.local, "include")
+      local_lib = File.join(config.local, "lib")
+
+      existing_pkg = ENV.fetch("PKG_CONFIG_PATH", "")
+      existing_cflags = ENV.fetch("CFLAGS", "")
+      existing_ldflags = ENV.fetch("LDFLAGS", "")
+
+      {
+        "PKG_CONFIG_PATH" => existing_pkg.empty? ? local_pkgconfig : "#{local_pkgconfig}:#{existing_pkg}",
+        "CFLAGS" => "-I#{local_include} #{existing_cflags}".strip,
+        "LDFLAGS" => "-L#{local_lib} #{existing_ldflags}".strip
+      }
     end
 
     def make_jobs
