@@ -104,9 +104,10 @@ module Component
           logger.info("X development libraries not found, building without X support")
           configure_args << "--without-x"
         end
-        runCmd(*configure_args, env: pkg_config_env, showStdout: true)
-        runCmd("make", "-j", make_jobs.to_s)
-        runCmd("make", "install")
+        env = build_env
+        runCmd(*configure_args, env: env, showStdout: true)
+        runCmd("make", "-j", make_jobs.to_s, env: env)
+        runCmd("make", "install", env: env)
       end
       logger.info("Emacs installed successfully.")
     end
@@ -115,7 +116,7 @@ module Component
       system("pkg-config", "--exists", "x11", out: File::NULL, err: File::NULL)
     end
 
-    def pkg_config_env
+    def build_env
       local_pkgconfig = File.join(config.local, "lib", "pkgconfig")
       local_include = File.join(config.local, "include")
       local_lib = File.join(config.local, "lib")
@@ -123,11 +124,13 @@ module Component
       existing_pkg = ENV.fetch("PKG_CONFIG_PATH", "")
       existing_cflags = ENV.fetch("CFLAGS", "")
       existing_ldflags = ENV.fetch("LDFLAGS", "")
+      existing_ld_library_path = ENV.fetch("LD_LIBRARY_PATH", "")
 
       {
         "PKG_CONFIG_PATH" => existing_pkg.empty? ? local_pkgconfig : "#{local_pkgconfig}:#{existing_pkg}",
         "CFLAGS" => "-I#{local_include} #{existing_cflags}".strip,
-        "LDFLAGS" => "-L#{local_lib} #{existing_ldflags}".strip
+        "LDFLAGS" => "-L#{local_lib} #{existing_ldflags}".strip,
+        "LD_LIBRARY_PATH" => existing_ld_library_path.empty? ? local_lib : "#{local_lib}:#{existing_ld_library_path}"
       }
     end
 
