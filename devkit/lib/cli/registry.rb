@@ -21,6 +21,7 @@ module CLI
       Component::PythonComponent,
       Component::NodeComponent,
       Component::RustComponent,
+      Component::GolangComponent,
       Component::EmacsComponent,
       Component::NeovimComponent,
     ].freeze

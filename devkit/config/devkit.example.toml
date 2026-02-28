@@ -211,6 +211,10 @@ source = "mise"
 version = "1.93.0"
 source = "mise"
 
+[go]
+version = "1.26.0"
+source = "mise"
+
 ### Tmux
 [tmux]
 enabled = false
