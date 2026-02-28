@@ -67,6 +67,7 @@ module Component
     # @return [void]
     def post_install
       setup_cargo_path
+      install_rust_analyzer
     end
 
     private
@@ -91,5 +92,13 @@ module Component
       end
     end
 
+    # Install rust-analyzer
+    #
+    # @return [void]
+    def install_rust_analyzer
+      logger.info("Installing rust-analyzer via cargo...")
+      runCmd("rustup", "component", "add", "rust-analyzer")
+      logger.info("Installed rust-analyzer.")
+    end
   end
 end

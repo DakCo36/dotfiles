@@ -50,5 +50,20 @@ module Component
       logger.info("Node.js #{NODE_VERSION} installed successfully via mise.")
     end
 
+    # After installing node, install axilliary tools
+    # 
+    # @return [void]
+    def post_install
+      install_typescript_language_server
+    end
+
+    # Install typescript-language-server
+    #
+    # @return [void]
+    def install_typescript_language_server
+      logger.info("Installing typescript-language-server via npm...")
+      runCmd("npm", "install", "-g", "typescript-language-server")
+      logger.info("Installed typescript-language-server.")
+    end
   end
 end

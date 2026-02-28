@@ -18,6 +18,7 @@ module CLI
       Component::RipgrepComponent,
       Component::FastfetchComponent,
 
+      Component::RubyComponent,
       Component::PythonComponent,
       Component::NodeComponent,
       Component::RustComponent,

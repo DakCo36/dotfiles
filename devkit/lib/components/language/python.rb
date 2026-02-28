@@ -50,5 +50,20 @@ module Component
       logger.info("Python #{PYTHON_VERSION} installed successfully via mise.")
     end
 
+    # After installing python, install axilliary tools
+    # 
+    # @return [void]
+    def post_install
+      install_lsp_server
+    end
+
+    # Install python-lsp-server
+    #
+    # @return [void]
+    def install_lsp_server
+      logger.info("Installing python-lsp-server via mise...")
+      runCmd("python", "-m", "pip", "install", "python-lsp-server", "python-lsp-ruff")
+      logger.info("Installed python-lsp-server and python-lsp-ruff.")
+    end
   end
 end
