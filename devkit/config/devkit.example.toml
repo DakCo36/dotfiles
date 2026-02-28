@@ -48,6 +48,10 @@ type = "local"
 source = "resources/emacs/markdown.el"
 destination = "~/.emacs.d/lisp/markdown.el"
 
+[treesitter]
+version = "0.24.7"
+source = "git"
+
 ### Shell
 [zsh]
 version = "latest"

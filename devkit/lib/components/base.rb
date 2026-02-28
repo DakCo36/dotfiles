@@ -75,9 +75,10 @@ module Component
 
     private
 
-    def runCmd(command, *args, showStdout: false)
+    def runCmd(command, *args, env: {}, showStdout: false)
       logger.info("Command: " + command + " " + args.join(" "))
-      out, err, status = Open3.capture3(command, *args)
+      cmd_args = env.empty? ? [command, *args] : [env, command, *args]
+      out, err, status = Open3.capture3(*cmd_args)
       unless status.success?
         logger.warn("Command failed: #{command} #{args.join(" ")}")
         logger.warn("Exit status: #{status.exitstatus}")
