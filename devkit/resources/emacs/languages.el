@@ -21,7 +21,9 @@
   (setq-local tab-width width))
 
 ;; Go: tabs, display width 4 (gofmt enforced)
-(add-hook 'go-ts-mode-hook (lambda () (set-indent t 4)))
+(add-hook 'go-ts-mode-hook (lambda ()
+                             (set-indent t 4)
+                             (setq-local go-ts-mode-indent-offset 4)))
 
 ;; Ruby
 (add-hook 'ruby-mode-hook (lambda () (set-indent nil 2)))
