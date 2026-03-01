@@ -15,6 +15,15 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+;; Disable ring-bell
+(setq ring-bell-function 'ignore)
+
+;; Font (GUI only)
+(when (display-graphic-p)
+  (set-face-attribute 'default nil
+                      :family "MesloLGS NF"
+                      :height 130))
+
 ;; Treemacs
 (use-package treemacs
   :demand t
@@ -108,14 +117,14 @@
   ;; Show eldoc buffer manually
   (defun popup-eldoc-buffer ()
     (interactive)
-      (let* ((buf (eldoc-doc-buffer))
-             (doc-window (and buf (get-buffer-window buf))))
-	(message "DEBUG: buf=%s window=%s" buf doc-window)
-        (if doc-window
-            (delete-window doc-window)
-          (eldoc-doc-buffer t)
-          (when-let ((w (get-buffer-window buf)))
-            (fit-window-to-buffer w (/ (frame-height) 3) 5)))))
+    (let* ((buf (eldoc-doc-buffer))
+           (doc-window (and buf (get-buffer-window buf))))
+      (if doc-window
+          (delete-window doc-window)
+        (when buf
+          (display-buffer buf
+                          '(display-buffer-at-bottom
+                            (window-height . fit-window-to-buffer)))))))
 
   :bind
   ("C-c h" . popup-eldoc-buffer))
