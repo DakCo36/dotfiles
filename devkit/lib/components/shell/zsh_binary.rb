@@ -128,6 +128,8 @@ module Component
         file.puts("")
         file.puts("# Auto-launch zsh (interactive terminal only)")
         file.puts("if [ -x \"#{zsh_path}\" ] && [ -z \"$ZSH_VERSION\" ] && [ -t 0 ] && [ -z \"$VSCODE_RESOLVING_ENVIRONMENT\" ]; then")
+        # FIXME Add eat check (only vterm allow to exec zsh)
+        # && { [ -z "$INSIDE_EMACS" ] || [ "$INSIDE_EMACS" = "vterm" ]}
         file.puts("  exec \"#{zsh_path}\" -l")
         file.puts("fi")
       end
