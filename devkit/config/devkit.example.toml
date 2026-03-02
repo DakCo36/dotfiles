@@ -40,13 +40,23 @@ destination = "~/.emacs.d/init.el"
 
 [[emacs.resources]]
 type = "local"
-source = "resources/emacs/themes.el"
-destination = "~/.emacs.d/lisp/themes.el"
+source = "resources/emacs/lisp/appearance.el"
+destination = "~/.emacs.d/lisp/appearance.el"
 
 [[emacs.resources]]
 type = "local"
-source = "resources/emacs/markdown.el"
+source = "resources/emacs/lisp/languages.el"
+destination = "~/.emacs.d/lisp/languages.el"
+
+[[emacs.resources]]
+type = "local"
+source = "resources/emacs/lisp/markdown.el"
 destination = "~/.emacs.d/lisp/markdown.el"
+
+[[emacs.resources]]
+type = "local"
+source = "resources/emacs/lisp/themes.el"
+destination = "~/.emacs.d/lisp/themes.el"
 
 [treesitter]
 version = "0.24.7"

@@ -18,12 +18,6 @@
 ;; Disable ring-bell
 (setq ring-bell-function 'ignore)
 
-;; Font (GUI only)
-(when (display-graphic-p)
-  (set-face-attribute 'default nil
-                      :family "MesloLGS NF"
-                      :height 130))
-
 ;; Treemacs
 (use-package treemacs
   :demand t
@@ -71,8 +65,13 @@
 ;;  :config
 ;;  (exec-path-from-shell-initialize))
 
-;; Themes
+;; Add lisp directory to load path
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+
+;; Appearance
+(require 'appearance)
+
+;; Themes
 (require 'themes)
 
 ;; Markdown
