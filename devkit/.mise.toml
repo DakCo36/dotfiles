@@ -1,0 +1,3 @@
+# devkit/.mise.toml
+[tools]
+ruby = "3.4"

@@ -225,6 +225,13 @@ source = "mise"
 version = "1.26.0"
 source = "mise"
 
+### Artificial Intelligence
+[opencode]
+version = "1.2.15"
+source = "mise"
+owner = "anomalyco"
+repo = "opencode"
+
 ### Tmux
 [tmux]
 enabled = false
