@@ -80,6 +80,9 @@
 ;; Languages
 (require 'languages)
 
+;; Artificial Intelligence
+(require 'ai)
+
 ;; Corfu (atuo-completion pop-up)
 (use-package corfu
   :custom
