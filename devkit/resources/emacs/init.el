@@ -80,12 +80,6 @@
 ;; Languages
 (require 'languages)
 
-;; emulator
-(use-package eat
-  :defer t
-  :custom
-  (eat-shell "/bin/bash"))
-
 ;; Corfu (atuo-completion pop-up)
 (use-package corfu
   :custom

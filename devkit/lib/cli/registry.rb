@@ -24,6 +24,8 @@ module CLI
       Component::GolangComponent,
       Component::EmacsComponent,
       Component::NeovimComponent,
+
+      Component::OpencodeComponent,
     ].freeze
 
     def all
