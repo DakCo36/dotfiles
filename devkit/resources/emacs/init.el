@@ -61,12 +61,13 @@
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
-;; (use-package exec-path-from-shell
-;;  :config
-;;  (exec-path-from-shell-initialize))
+(use-package exec-path-from-shell
+  :config
+  (exec-path-from-shell-initialize))
 
 ;; Add lisp directory to load path
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+;; (add-to-list 'load-path (expand-file-name "core" user-emacs-directory))
 
 ;; Appearance
 (require 'appearance)
@@ -82,6 +83,10 @@
 
 ;; Artificial Intelligence
 (require 'ai)
+
+;; Custom settings
+(add-to-list 'load-path (expand-file-name "custom" user-emacs-directory))
+
 
 ;; Corfu (atuo-completion pop-up)
 (use-package corfu
