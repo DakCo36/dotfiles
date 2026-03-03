@@ -13,13 +13,19 @@
      ;; dotfiles
      ((string-match "dotfiles" workspace)
       (if truecolor
-	  (load-theme 'doom-monokai-classic t)
-	(load-theme 'gruvbox-dark-medium t)))
-     
-    (t
+	      (load-theme 'doom-monokai-classic t)
+	    (load-theme 'gruvbox-dark-medium t)))
+
+     ;; Ohouse
+     ((string-match "onboarding-ai-cd-pipeline" workspace)
       (if truecolor
-	  (load-theme 'catppuccin t)
-	(load-theme 'gruvbox-dark-medium t))))))
+          (load-theme 'doom-one-light t)
+        (load-theme 'gruvbox-dark-medium t)))
+     
+     (t
+      (if truecolor
+	      (load-theme 'catppuccin t)
+	    (load-theme 'gruvbox-dark-medium t))))))
 
 (add-hook 'treemacs-switch-workspace-hook #'select-theme)
 (select-theme)

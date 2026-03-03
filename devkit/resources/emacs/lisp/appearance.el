@@ -1,7 +1,7 @@
 ;; Font (GUI only)
 (when (display-graphic-p)
   (set-face-attribute 'default nil
-                      :family "MesloLGS NF"
+                      :family "Hack Nerd Font"
                       :height 130))
 
 ;; UI Cleanup (GUI Only)
