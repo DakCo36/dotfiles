@@ -67,13 +67,14 @@
 
 ;; Add lisp directory to load path
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-;; (add-to-list 'load-path (expand-file-name "core" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "custom" user-emacs-directory))
 
 ;; Appearance
 (require 'appearance)
 
 ;; Themes
 (require 'themes)
+(require 'workspace-themes)
 
 ;; Markdown
 (require 'markdown)

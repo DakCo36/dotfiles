@@ -1,4 +1,10 @@
-;; workspaces
+;; workspaces-themes
+
+;; 8bit(256) vs 24bit
+;; (if (or (display-graphic-p)
+;;	(string= (getenv "COLORTERM") "truecolor"))
+;;    (load-theme 'catppuccin t)
+;;  (load-theme 'gruvbox-dark-medium t))
 
 (defun select-theme ()
   ;; Disable all custom themes
@@ -30,4 +36,5 @@
 (add-hook 'treemacs-switch-workspace-hook #'select-theme)
 (select-theme)
 
-(provide 'workspaces)
+;; Enable after copy workspaces.el
+;; (provide 'workspace-themes)
