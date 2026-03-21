@@ -12,6 +12,8 @@
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
 
+;; hs-minor-mode folding blocks
+(add-hook 'prog-mode-hook #'hs-minor-mode)
 
 ;; Indentation
 
