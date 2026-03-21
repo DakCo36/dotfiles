@@ -92,8 +92,8 @@
 (use-package corfu
   :custom
   (corfu-auto t)              ;; Enable auto-completion
-  (corfu-auto-prefix 1)       ;; Trigger after typing 1 character (changed from 2)
-  (corfu-auto-delay 0.1)      ;; Delay 0.1s before showing pop-up
+  (corfu-auto-prefix 2)       ;; Trigger after typing 2 character (changed from 2)
+  (corfu-auto-delay 0.3)      ;; Delay 0.3s before showing pop-up
   (corfu-quit-at-boundary t)  ;; Quit pop-up at completion boundary
   (corfu-quit-no-match t)     ;; Quit pop-up when no matches found
  
@@ -220,7 +220,10 @@
 
 (use-package copilot
   :hook (prog-mode . copilot-mode)
-  :bind (:map copilot-completion-map
+  :custom (copilot-idle-delay 2.0)
+  :bind (:map copilot-mode-map
+              ("C-c c" . copilot-complete)
+         :map copilot-completion-map
               ("M-RET" . copilot-accept-completion)
               ("M-]" . copilot-next-completion)
               ("M-[" . copilot-previous-completion)))
