@@ -4,9 +4,10 @@
     :ensure-system-package
     (
         ;; Claude
-        ;; (claude . "brew install claude-code")
-        ;; (claude-agent-acp . "npm install -g @zed-industries/claude-agent-acp")
+        (claude . "brew install claude-code")
+        (claude-agent-acp . "npm install -g @zed-industries/claude-agent-acp")
 
+        ;; Codex
         (codex . "npm install -g @openai/codex")
         (codex-acp . "npm install -g @zed-industries/codex-acp")
     ))
