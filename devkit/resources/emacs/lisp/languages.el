@@ -1,3 +1,7 @@
+;; Global
+(electric-pair-mode 1)
+(show-paren-mode 1)
+
 ;; Treesitter
 
 ;; Enable tree-sitter
@@ -26,6 +30,17 @@
 (add-hook 'go-ts-mode-hook (lambda ()
                              (set-indent t 4)
                              (setq-local go-ts-mode-indent-offset 4)))
+
+;; Enable electric-indent-local-mode only if save triggered
+(dolist (hook '(go-mode-hook go-ts-mode-hook))
+  (add-hook hook
+            (lambda ()
+              ;; (electric-indent-local-mode -1)
+              (add-hook 'before-save-hook #'eglot-format-buffer nil t))))
+
+;; Project
+(with-eval-after-load 'project
+  (add-to-list 'project-vc-extra-root-markers "go.mod"))
 
 ;; Ruby
 (add-hook 'ruby-mode-hook (lambda () (set-indent nil 2)))
@@ -90,5 +105,31 @@
 ;; $ rustup component add rust-analyzer
 (add-hook 'rust-ts-mode-hook 'eglot-ensure)
 (add-hook 'rust-mode-hook 'eglot-ensure)
+
+;; flymake
+;; Emacs 30+ eglot automatically enables flymake — this hook toggles it OFF
+;; (add-hook 'eglot-managed-mode-hook #'flymake-mode)
+
+;; [BUG] eglot flymake diagnostics silently dropped on non-ASCII paths (e.g. Korean)
+;;
+;; Root cause:
+;;   eglot.el `eglot-uri-to-path` (L1088) calls `url-unhex-string` which returns
+;;   a **unibyte** string (raw UTF-8 bytes, e.g. 236 157 152 for '의').
+;;
+;;   `publishDiagnostics` handler (L2430) calls `find-it` (L2443) which compares:
+;;     (car eglot--TextDocumentIdentifier-cache)  ← multibyte (from file-truename)
+;;     (expand-file-name (eglot-uri-to-path uri)) ← unibyte   (from url-unhex-string)
+;;
+;;   `equal` on unibyte vs multibyte always returns nil for non-ASCII chars,
+;;   so `find-it` returns nil → diagnostics go to `flymake-list-only-diagnostics`
+;;   instead of the buffer's `eglot--diagnostics` → flymake shows [0 0] forever.
+;;
+;; Fix (commented out — using English paths instead):
+;; (with-eval-after-load 'eglot
+;;   (advice-add 'eglot-uri-to-path :filter-return
+;;               (lambda (path)
+;;                 (if (and path (not (multibyte-string-p path)))
+;;                     (decode-coding-string path 'utf-8)
+;;                   path))))
 
 (provide 'languages)
