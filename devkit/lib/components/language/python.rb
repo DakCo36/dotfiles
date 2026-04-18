@@ -8,12 +8,9 @@ require "mixins/loggable"
 module Component
   class PythonComponent < InstallableComponent
 
-    # Fixed Python version to use
-    PYTHON_VERSION = "3.12.8"
-
     # Returns the current Python version.
     #
-    # @return [String, nil] Version string (e.g., "3.12.8") or nil
+    # @return [String, nil] Version string (e.g., "3.13.2") or nil
     def version
       output, status = Open3.capture2("mise", "current", "python")
       return nil unless status.success?
@@ -30,11 +27,11 @@ module Component
       !version.nil?
     end
 
-    # Returns the latest version (uses fixed version).
+    # Returns the desired version from config.
     #
-    # @return [String] PYTHON_VERSION
+    # @return [String] config version
     def latest_version
-      PYTHON_VERSION
+      config.version
     end
 
     protected
@@ -43,11 +40,12 @@ module Component
     #
     # @return [void]
     def perform_install
-      logger.info("Installing Python #{PYTHON_VERSION} via mise...")
+      ver = config.version
+      logger.info("Installing Python #{ver} via mise...")
 
-      runCmd("mise", "use", "--global", "python@#{PYTHON_VERSION}")
+      runCmd("mise", "use", "--global", "python@#{ver}")
 
-      logger.info("Python #{PYTHON_VERSION} installed successfully via mise.")
+      logger.info("Python #{ver} installed successfully via mise.")
     end
 
   end

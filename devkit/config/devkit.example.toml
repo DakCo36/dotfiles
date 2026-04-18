@@ -210,7 +210,7 @@ destination = "~/.local/share/man/man5/alacritty-bindings.5.gz"
 
 ### Language Runtimes
 [python]
-version = "3.12"
+version = "3.13"
 source = "mise"
 
 [node]
