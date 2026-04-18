@@ -92,6 +92,10 @@ module Component
       [out, err, status]
     end
 
+    def runMiseCmd(command, *args, **kwargs)
+      runCmd("mise", "exec", "--", command, *args, **kwargs)
+    end
+
     def runCmdWithOutput(command, *, showStdout: false)
       out, = runCmd(command, *, showStdout: false)
       out

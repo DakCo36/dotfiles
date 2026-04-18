@@ -8,9 +8,6 @@ require "mixins/loggable"
 module Component
   class NodeComponent < InstallableComponent
 
-    # Fixed Node.js version to use (LTS Krypton)
-    NODE_VERSION = "24.13.0"
-
     # Returns the current Node.js version.
     #
     # @return [String, nil] Version string (e.g., "24.13.0") or nil
@@ -30,11 +27,11 @@ module Component
       !version.nil?
     end
 
-    # Returns the latest version (uses fixed version).
+    # Returns the desired version from config.
     #
-    # @return [String] NODE_VERSION
+    # @return [String] config version
     def latest_version
-      NODE_VERSION
+      config.version
     end
 
     protected
@@ -43,11 +40,12 @@ module Component
     #
     # @return [void]
     def perform_install
-      logger.info("Installing Node.js #{NODE_VERSION} via mise...")
+      ver = config.version
+      logger.info("Installing Node.js #{ver} via mise...")
 
-      runCmd("mise", "use", "--global", "node@#{NODE_VERSION}")
+      runCmd("mise", "use", "--global", "node@#{ver}")
 
-      logger.info("Node.js #{NODE_VERSION} installed successfully via mise.")
+      logger.info("Node.js #{ver} installed successfully via mise.")
     end
 
   end
