@@ -8,7 +8,7 @@ module Component
   class NerdFontsComponent < InstallableComponent
 
     VERSION_FILE_NAME = ".version"
-    FONT_NAME = "Meslo"
+    FONT_NAME = "Hack"
 
     depends_on Component::CurlComponent
     depends_on Component::GithubComponent
