@@ -29,7 +29,7 @@ RSpec.describe Component::NerdFontsComponent do
   describe "#installed?" do
     it "returns true when font files exist" do
       allow(Dir).to receive(:exist?).with(fonts_dir).and_return(true)
-      allow(Dir).to receive(:glob).with(File.join(fonts_dir, "*.ttf")).and_return(["MesloLGS.ttf"])
+      allow(Dir).to receive(:glob).with(File.join(fonts_dir, "*.ttf")).and_return(["HackNerdFont-Regular.ttf"])
 
       expect(nerd_fonts.installed?).to be true
     end
@@ -113,10 +113,10 @@ RSpec.describe Component::NerdFontsComponent do
       nerd_fonts.install!
 
       expect(mock_curl).to have_received(:download).with(
-        "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Meslo.zip",
-        "/tmp/test/Meslo.zip"
+        "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Hack.zip",
+        "/tmp/test/Hack.zip"
       )
-      expect(nerd_fonts).to have_received(:runCmd).with("unzip", "-o", "/tmp/test/Meslo.zip", "-d", fonts_dir)
+      expect(nerd_fonts).to have_received(:runCmd).with("unzip", "-o", "/tmp/test/Hack.zip", "-d", fonts_dir)
     end
 
     it "writes the version file" do
