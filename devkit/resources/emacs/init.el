@@ -24,7 +24,8 @@
 
   :config
   (setq treemacs-space-between-root-nodes nil) ;; Remove extra space between projects(root node)
-  
+  (setq treemacs-read-string-input 'from-minibuffer) ;; Read input from minibuffer instead of child-frame popup
+
   :bind ("C-x t t" . treemacs))
 
 ;; Nerd Icons 지원 (터미널에서도 아이콘 표시)
