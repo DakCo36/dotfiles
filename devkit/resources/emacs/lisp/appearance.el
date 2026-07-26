@@ -11,23 +11,4 @@
   (scroll-bar-mode -1)      ;; Remove scrollbar
   (set-fringe-mode 8))      ;; Add padding left/right
 
-;; Matching paren: theme colors + bold/underline on the paren chars.
-(show-paren-mode 1)
-(setq show-paren-delay 0
-      show-paren-style 'parenthesis
-      show-paren-highlight-openparen t
-      show-paren-when-point-inside-paren t
-      show-paren-when-point-in-periphery t)
-
-(defun init-appearance-apply-paren-faces (&rest _)
-  "Apply bold and underline attributes to matching-parenthesis faces."
-  (set-face-attribute 'show-paren-match nil
-                      :weight 'ultra-bold
-                      :underline t)
-  (set-face-attribute 'show-paren-mismatch nil
-                      :weight 'ultra-bold
-                      :underline t))
-
-(add-hook 'after-load-theme-functions #'init-appearance-apply-paren-faces)
-
 (provide 'appearance)
