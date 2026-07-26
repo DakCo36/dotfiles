@@ -58,6 +58,11 @@ type = "local"
 source = "resources/emacs/lisp/themes.el"
 destination = "~/.emacs.d/lisp/themes.el"
 
+[[emacs.resources]]
+type = "local"
+source = "resources/emacs/lisp/init-dashboard.el"
+destination = "~/.emacs.d/lisp/init-dashboard.el"
+
 [treesitter]
 version = "0.24.7"
 source = "git"

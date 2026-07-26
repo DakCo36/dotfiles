@@ -1,8 +1,11 @@
 ;; Global
 (electric-pair-mode 1)
-(show-paren-mode 1)
 
 ;; Treesitter
+
+;; Tree-sitter language grammars (not covered by treesit-auto)
+(setq treesit-language-source-alist
+      '((gomod "https://github.com/camdencheek/tree-sitter-go-mod")))
 
 ;; Enable tree-sitter
 (use-package treesit-auto

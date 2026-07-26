@@ -77,6 +77,9 @@
 (require 'themes)
 (require 'workspace-themes)
 
+;; Dashboard
+(require 'init-dashboard)
+
 ;; Markdown
 (require 'markdown)
 
