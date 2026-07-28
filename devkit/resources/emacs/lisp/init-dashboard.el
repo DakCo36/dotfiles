@@ -6,11 +6,12 @@
 (use-package dashboard
   :demand t
   :config
-  (defun init-dashboard-insert-treemacs-workspaces (_list-size)
-    "Insert Treemacs workspace buttons into the dashboard."
+  (defun init-dashboard-insert-treemacs-workspaces (list-size)
+    "Insert up to LIST-SIZE Treemacs workspace buttons into the dashboard.
+Return nil."
     (dashboard-insert-heading "Workspaces" "w")
     (newline)
-    (dolist (ws (treemacs-workspaces))
+    (dolist (ws (dashboard-subseq (treemacs-workspaces) list-size))
       (let ((name (treemacs-workspace->name ws)))
         (insert "    ")
         (insert-button name
@@ -21,6 +22,19 @@
                        'follow-link t
                        'face 'dashboard-items-face)
         (newline))))
+
+  (defun init-dashboard--jump-to-treemacs-workspaces ()
+    "Move point to the first Treemacs workspace button."
+    (interactive)
+    (goto-char (point-min))
+    (unless (search-forward "Workspaces" nil t)
+      (user-error "Workspaces section not found"))
+    (forward-line 1)
+    (back-to-indentation))
+
+  (define-key dashboard-mode-map
+              (kbd "w")
+              #'init-dashboard--jump-to-treemacs-workspaces)
 
   (add-to-list 'dashboard-item-generators
                '(treemacs-workspaces . init-dashboard-insert-treemacs-workspaces))
