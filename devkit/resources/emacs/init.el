@@ -75,7 +75,6 @@
 
 ;; Themes
 (require 'themes)
-(require 'workspace-themes)
 
 ;; Dashboard
 (require 'init-dashboard)

@@ -17,8 +17,7 @@
                        'action (lambda (_btn)
                                  ;; Use the non-interactive API so clicking a
                                  ;; workspace switches immediately (no "Switch to:").
-                                 (treemacs-do-switch-workspace ws)
-                                 (select-theme))
+                                 (treemacs-do-switch-workspace ws))
                        'follow-link t
                        'face 'dashboard-items-face)
         (newline))))
