@@ -12,4 +12,4 @@
         (codex-acp . "npm install -g @zed-industries/codex-acp")
     ))
 
-(provide 'ai)
+(provide 'agent)

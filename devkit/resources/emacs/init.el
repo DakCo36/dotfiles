@@ -86,7 +86,7 @@
 (require 'languages)
 
 ;; Artificial Intelligence
-(require 'ai)
+(require 'agent)
 
 ;; Custom settings
 (add-to-list 'load-path (expand-file-name "custom" user-emacs-directory))
