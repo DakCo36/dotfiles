@@ -16,6 +16,8 @@
 ;; - doom-henna
 ;; - doom-nord-aurora
 
+;; 8bit(256) vs 24bit
+
 (require 'seq)
 
 (defconst default-themes
@@ -121,8 +123,11 @@ Return the loaded theme symbol, or nil when all candidates fail."
         (themes--read-workspace-configs))
   (themes-apply-current-workspace-theme))
 
+;; hook
 (add-hook 'treemacs-switch-workspace-hook #'themes-apply-current-workspace-theme)
 
+;; initialize
 (themes-apply-current-workspace-theme)
 
+;; provide
 (provide 'themes)

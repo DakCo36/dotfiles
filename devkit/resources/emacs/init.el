@@ -68,7 +68,6 @@
 
 ;; Add lisp directory to load path
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-(add-to-list 'load-path (expand-file-name "custom" user-emacs-directory))
 
 ;; Appearance
 (require 'appearance)
@@ -87,10 +86,6 @@
 
 ;; Artificial Intelligence
 (require 'agent)
-
-;; Custom settings
-(add-to-list 'load-path (expand-file-name "custom" user-emacs-directory))
-
 
 ;; Corfu (atuo-completion pop-up)
 (use-package corfu
