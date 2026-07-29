@@ -27,6 +27,16 @@
                       :weight 'ultra-bold
                       :underline t))
 
+(defun init-appearance-apply-treemacs-faces (&rest _)
+  "Normalize Treemacs faces after a theme is enabled."
+  (when (facep 'treemacs-root-face)
+    (set-face-attribute 'treemacs-root-face nil :height 1.0)))
+
 (add-hook 'enable-theme-functions #'init-appearance-apply-paren-faces)
+(add-hook 'enable-theme-functions
+          #'init-appearance-apply-treemacs-faces)
+
+(with-eval-after-load 'treemacs-faces
+  (init-appearance-apply-treemacs-faces))
 
 (provide 'appearance)
