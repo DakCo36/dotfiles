@@ -1,4 +1,5 @@
 (require 'cl-lib)
+(require 'languages/core)
 (require 'url-parse)
 
 (defconst languages-java--jdtls-java-version "21"
@@ -103,7 +104,7 @@
 
 (defun languages-java--eglot-ensure ()
   "Start Eglot unless the buffer contains dependency source."
-  (unless (languages-java--dependency-source-p)
+  (unless (languages--dependency-source-p)
     (eglot-ensure)))
 
 (defun languages-java--make-dependency-source-read-only ()
@@ -119,6 +120,8 @@
 (add-to-list 'file-name-handler-alist
              '("\\`jdt://" . languages-java--jdt-uri-handler))
 
+(add-hook 'languages--dependency-source-functions
+          #'languages-java--dependency-source-p)
 (add-hook 'java-mode-hook #'languages-java--eglot-ensure)
 (add-hook 'java-ts-mode-hook #'languages-java--eglot-ensure)
 (add-hook 'find-file-hook #'languages-java--make-dependency-source-read-only)
