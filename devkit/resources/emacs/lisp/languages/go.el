@@ -38,17 +38,22 @@
 
 (defun languages-go--eglot-contact (_interactive _project)
   "Return the gopls Eglot contact for the current buffer."
-  (let ((gopls-program (languages-go--gopls-program)))
-    (if-let ((mise-root (languages-go--mise-root)))
-        (list "mise" "exec" "-C"
-              (directory-file-name (expand-file-name mise-root))
-              "--" gopls-program)
-      (list gopls-program))))
+  (if-let ((mise-root (languages-go--mise-root)))
+      (list "mise" "exec" "-C"
+            (directory-file-name (expand-file-name mise-root))
+            "--" (languages-go--gopls-program))
+    (user-error "No mise.toml found for Go buffer")))
+
+(defun languages-go--eglot-ensure ()
+  "Start Eglot only when the current Go buffer has a mise config."
+  (when (languages-go--mise-root)
+    (eglot-ensure)))
 
 (with-eval-after-load 'eglot
   (add-to-list 'eglot-server-programs
                '((go-mode go-ts-mode) . languages-go--eglot-contact)))
 
-(add-hook 'go-ts-mode-hook #'eglot-ensure)
+(remove-hook 'go-ts-mode-hook #'eglot-ensure)
+(add-hook 'go-ts-mode-hook #'languages-go--eglot-ensure)
 
 (provide 'languages/go)

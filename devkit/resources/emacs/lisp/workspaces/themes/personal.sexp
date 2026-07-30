@@ -1,2 +1,3 @@
 (("Dakco" doom-monokai-classic)
- ("fireflies" doom-monokai-classic gruvbox-dark-medium))
+ ("kotlin-example" gruvbox-dark-medium)
+ ("fireflies" doom-snazzy gruvbox-dark-medium))

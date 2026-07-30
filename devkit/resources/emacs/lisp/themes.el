@@ -15,6 +15,7 @@
 ;; - doom-ephemeral
 ;; - doom-henna
 ;; - doom-nord-aurora
+;; - doom-snazzy
 
 ;; 8bit(256) vs 24bit
 

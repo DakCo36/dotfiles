@@ -31,6 +31,9 @@
            (run-hook-with-args-until-success
             'languages--dependency-source-functions))))
 
+(with-eval-after-load 'eglot
+  (setq eglot-extend-to-xref t))
+
 ;; Flymake
 ;; Emacs 30+ Eglot automatically enables Flymake — this hook toggles it off.
 ;; (add-hook 'eglot-managed-mode-hook #'flymake-mode)
