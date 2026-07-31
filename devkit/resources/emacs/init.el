@@ -18,25 +18,6 @@
 ;; Disable ring-bell
 (setq ring-bell-function 'ignore)
 
-;; Treemacs
-(use-package treemacs
-  :demand t
-
-  :config
-  (setq treemacs-space-between-root-nodes nil) ;; Remove extra space between projects(root node)
-  (setq treemacs-read-string-input 'from-minibuffer) ;; Read input from minibuffer instead of child-frame popup
-
-  :bind ("C-x t t" . treemacs))
-
-;; Nerd Icons 지원 (터미널에서도 아이콘 표시)
-(use-package nerd-icons)
-
-;; Treemacs + Nerd Icons 연동
-(use-package treemacs-nerd-icons
-  :after (treemacs nerd-icons)
-  :config
-  (treemacs-load-theme "nerd-icons"))
-
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -68,6 +49,10 @@
 
 ;; Add lisp directory to load path
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "lisp/modules" user-emacs-directory))
+
+;; Treemacs
+(require 'my-treemacs)
 
 ;; Appearance
 (require 'appearance)
@@ -187,10 +172,7 @@
 
 ;; vterm (full terminal emulator)
 (use-package vterm
-  :ensure t
-
-  :bind
-  ("C-c t" . vterm))
+  :ensure t)
 
 ;; Which-key (show available keybindings)
 (use-package which-key
