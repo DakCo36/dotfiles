@@ -50,6 +50,11 @@ destination = "~/.emacs.d/lisp/modules/my-treemacs.el"
 
 [[emacs.resources]]
 type = "local"
+source = "resources/emacs/lisp/modules/my-vterm.el"
+destination = "~/.emacs.d/lisp/modules/my-vterm.el"
+
+[[emacs.resources]]
+type = "local"
 source = "resources/emacs/lisp/languages.el"
 destination = "~/.emacs.d/lisp/languages.el"
 

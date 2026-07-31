@@ -54,6 +54,9 @@
 ;; Treemacs
 (require 'my-treemacs)
 
+;; Vterm
+(require 'my-vterm)
+
 ;; Appearance
 (require 'appearance)
 
@@ -169,10 +172,6 @@
 
   :hook
   (magit-post-refresh . diff-hl-magit-post-refresh))
-
-;; vterm (full terminal emulator)
-(use-package vterm
-  :ensure t)
 
 ;; Which-key (show available keybindings)
 (use-package which-key
