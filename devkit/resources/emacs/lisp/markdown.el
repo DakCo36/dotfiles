@@ -53,13 +53,5 @@
          ("C-c m r" . markdown-read-mode)
          ("C-c m w" . markdown-write-mode)))
 
-;; Cape (Completion At Point Extensions) for better text/markdown auto-completion
-(use-package cape
-  :ensure t
-  :init
-  (add-hook 'text-mode-hook (lambda ()
-                              (add-to-list 'completion-at-point-functions 'cape-dabbrev)
-                              (add-to-list 'completion-at-point-functions 'cape-file))))
-
 (provide 'markdown)
 ;;; markdowns.el ends here

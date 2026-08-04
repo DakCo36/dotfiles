@@ -54,6 +54,9 @@
 ;; Treemacs
 (require 'my-treemacs)
 
+;; Completion
+(require 'my-completion)
+
 ;; Vterm
 (require 'my-vterm)
 
@@ -74,29 +77,6 @@
 
 ;; Artificial Intelligence
 (require 'agent)
-
-;; Corfu (atuo-completion pop-up)
-(use-package corfu
-  :custom
-  (corfu-auto t)              ;; Enable auto-completion
-  (corfu-auto-prefix 2)       ;; Trigger after typing 2 character (changed from 2)
-  (corfu-auto-delay 0.3)      ;; Delay 0.3s before showing pop-up
-  (corfu-quit-at-boundary t)  ;; Quit pop-up at completion boundary
-  (corfu-quit-no-match t)     ;; Quit pop-up when no matches found
- 
-  ;; Visual
-  ;; (corfu-margin-width 1)      ;; Add margin to the pop up
-  ;; (corfu-bar-width 1)         ;; Make vertical bar thinner
-    
-  :init
-  (global-corfu-mode)         ;; Enable globally
-  (corfu-popupinfo-mode t))   ;; Show documentation in a companion popup
-
-(use-package corfu-terminal
-  :ensure t
-  :init
-  (unless (display-graphic-p)
-    (corfu-terminal-mode +1)))
 
 ;; Eldoc-box
 (use-package eldoc-box
@@ -123,38 +103,6 @@
   :bind
   ("C-c h" . popup-eldoc-buffer))
 
-;; Vertico
-(use-package vertico
-  :ensure t
-
-  :init
-  (vertico-mode))
-
-;; Marginalia (add descriptions to completion candidates)
-(use-package marginalia
-  :ensure t
-
-  :init
-  (marginalia-mode))
-
-;; Orderless (flexible completion matching)
-(use-package orderless
-  :ensure t
-
-  :custom
-  (completion-styles '(orderless basic)))
-
-;; Consultant (enhanced search and navigation)
-(use-package consult
-  :ensure t
-  :bind
-
-  (("C-s" . consult-line)       ;; Replace default search
-   ("C-c f" . consult-find)     ;; Find files in project
-   ("C-c r" . consult-ripgrep)  ;; Project-wide grep
-   ("C-x b" . consult-buffer)   ;; Enhanbed buffer switch
-   ("C-c i" . consult-imenu)))  ;; Jump to function/class
-
 ;; Magit
 (use-package magit
   :ensure t
@@ -179,20 +127,6 @@
 
   :init
   (which-key-mode))
-
-;; Embark (contextual actions)
-(use-package embark
-  :ensure t
-  :bind
-  ("C-c e" . embark-act))
-
-;; Consult integration for Embark
-(use-package embark-consult
-  :ensure t
-  :after (embark consult)
-  :demand t
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
 
 ;; Copilot
 (unless (package-installed-p 'copilot)
