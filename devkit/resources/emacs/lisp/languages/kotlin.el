@@ -221,8 +221,11 @@
              original-exit (eglot-current-server) (list nil)))))))))
 
 (defun languages-kotlin--setup-completion ()
-  "Enable the completion adapter in Eglot-managed Kotlin buffers."
+  "Enable Kotlin completion commands without blocking dot insertion."
   (when (derived-mode-p 'kotlin-mode)
+    (when (eglot-managed-p)
+      (setq-local corfu-auto-trigger ""
+                  corfu-auto-delay 0.15))
     (setq-local
      completion-at-point-functions
      (if (eglot-managed-p)
