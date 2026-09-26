@@ -1,9 +1,17 @@
+[terminal.shell]
+program = "zellij"
+args = ["attach", "-c", "main"] # main이 없다면 생성
+
 [window]
 decorations = "None"
-option_as_alt = "Both"
+padding = { x = 0, y = 0 }
 
 [font]
-size = 13
+size = 11.0
 
 [font.normal]
 family = "Hack Nerd Font Mono"
+style = "Regular"
+
+[mouse]
+hide_when_typing = true
