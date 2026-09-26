@@ -109,7 +109,7 @@
           "invert_powerline": true,
           "foreground": "#FFFFFF",
           "background": "#6CA35E",
-          "template": " \ue718 {{ if .Full }}{{ .Full }}{{ end }} "
+          "template": " \ue718 {{ if .Full }}{{ .Full }}{{ end }}"
         },
         {
           "type": "npm",
@@ -118,16 +118,33 @@
           "invert_powerline": true,
           "foreground": "#FFFFFF",
           "background": "#6CA35E",
-          "template": "\ue71e {{ if .Full }}{{ .Full }}{{ end }} "
+          "template": " \ue71e {{ if .Full }}{{ .Full }}{{ end }}"
         },
         {
-          "type": "pnpm",
+          "type": "language",
           "style": "powerline",
           "powerline_symbol": "\ue0b2",
           "invert_powerline": true,
           "foreground": "#FFFFFF",
           "background": "#6CA35E",
-          "template": "\ue865 {{ if .Full }}{{ .Full }}{{ end }} "
+          "template": "{{ if .Full }} \ue865 {{ .Full }} {{ end }}",
+          "options": {
+            "name": "pnpm-pkg",
+            "extensions": [
+              "package.json"
+            ],
+            "tools": [
+              {
+                "name": "pnpm-pkg",
+                "executable": "node",
+                "args": [
+                  "-p",
+                  "require('./package.json').packageManager || ''"
+                ],
+                "regex": "pnpm@(?P<version>(?P<major>[0-9]+)\\.(?P<minor>[0-9]+)\\.(?P<patch>[0-9]+))"
+              }
+            ]
+          }
         },
         {
           "type": "ruby",
@@ -170,6 +187,7 @@
               "uv.lock",
               "*.py"
             ],
+            "cache_duration": "3h",
             "tools": [
               {
                 "name": "uv",
@@ -248,5 +266,6 @@
     }
   ],
   "final_space": true,
+  "streaming": 20,
   "version": 4
 }
