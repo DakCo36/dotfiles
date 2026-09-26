@@ -3,4 +3,4 @@ theme = "ayu_evolve"
 [editor.soft-wrap]
 enable = true
 max-indent-retain = 0
-wrap-indicator = "↪"
+wrap-indicator = "\u2517 "

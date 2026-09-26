@@ -2,17 +2,17 @@
 name = "kotlin"
 language-servers = ["kotlin-lsp"]
 
+# LSP
+[language-server.kotlin-lsp]
+command = "kotlin-lsp"
+args = ["--stdio"]
+
 [[language]]
 name = "python"
 auto-format = true
 indent = { tab-width = 4, unit = "    " }
 formatter = { command = "ruff", args = ["format", "-"] }
 language-servers = ["ty", "ruff"]
-
-# LSP
-[language-server.kotlin-lsp]
-command = "kotlin-lsp"
-args = ["--stdio"]
 
 [language-server.ty]
 command = "ty"
