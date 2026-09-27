@@ -1,4 +1,4 @@
-;;; languages/markdown.el --- Markdown configurations
+;;; markdown.el  -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; Markdown-specific configurations including syntax highlighting,

@@ -1,3 +1,4 @@
+;;; init-languages.el  -*- lexical-binding: t; -*-
 (require 'languages/common)
 (require 'languages/markdown)
 (require 'languages/go)

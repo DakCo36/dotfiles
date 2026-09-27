@@ -1,3 +1,4 @@
+;;; my-misc.el  -*- lexical-binding: t; -*-
 ;; Keymap
 (with-eval-after-load 'hideshow
   (keymap-set hs-minor-mode-map "C-=" #'hs-toggle-hiding))

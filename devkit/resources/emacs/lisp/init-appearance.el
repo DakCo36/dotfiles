@@ -1,3 +1,4 @@
+;;; init-appearance.el  -*- lexical-binding: t; -*-
 (setq frame-resize-pixelwise t)
 
 ;; Line number

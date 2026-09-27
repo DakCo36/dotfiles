@@ -1,3 +1,4 @@
+;;; init.el  -*- lexical-binding: t; -*-
 ;; 패키지 매니저 설정
 (require 'package)
 (setq package-archives

@@ -1,3 +1,4 @@
+;;; java.el  -*- lexical-binding: t; -*-
 (require 'cl-lib)
 (require 'languages/common)
 (require 'url-parse)

@@ -1,3 +1,5 @@
+;;; init-agent.el  -*- lexical-binding: t; -*-
+
 (use-package agent-shell
     :ensure t
 

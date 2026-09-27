@@ -1,3 +1,4 @@
+;;; go.el  -*- lexical-binding: t; -*-
 (require 'languages/common)
 
 ;; Tree-sitter language grammars not covered by treesit-auto.

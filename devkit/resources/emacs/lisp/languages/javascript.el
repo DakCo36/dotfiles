@@ -1,3 +1,4 @@
+;;; javascript.el  -*- lexical-binding: t; -*-
 (require 'languages/common)
 
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js-ts-mode))

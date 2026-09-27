@@ -1,3 +1,4 @@
+;;; init-completion.el  -*- lexical-binding: t; -*-
 ;; Shared matching policy
 (use-package orderless
   :ensure t

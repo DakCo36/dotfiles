@@ -1,3 +1,4 @@
+;;; kotlin.el  -*- lexical-binding: t; -*-
 (require 'arc-mode)
 (require 'cl-lib)
 (require 'languages/common)

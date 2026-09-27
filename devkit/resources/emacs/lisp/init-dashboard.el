@@ -1,4 +1,4 @@
-;;; -*- lexical-binding: t; -*-
+;;; init-dashboard.el  -*- lexical-binding: t; -*-
 
 ;; Local init for the MELPA `dashboard` package.
 ;; Keep this filename different from `dashboard.el` to avoid feature clash.

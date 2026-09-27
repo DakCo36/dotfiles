@@ -1,3 +1,4 @@
+;;; ruby.el  -*- lexical-binding: t; -*-
 (require 'languages/common)
 
 (add-hook 'ruby-mode-hook

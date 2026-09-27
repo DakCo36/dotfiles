@@ -1,3 +1,4 @@
+;;; init-treemacs.el  -*- lexical-binding: t; -*-
 ;; Treemacs
 (use-package treemacs
   :demand t

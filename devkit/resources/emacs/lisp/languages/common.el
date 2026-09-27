@@ -1,3 +1,4 @@
+;;; common.el  -*- lexical-binding: t; -*-
 ;; treesit-auto is disabled because its global mode recalculates all language remaps whenever a file opens.
 
 (require 'cl-lib)

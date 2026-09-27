@@ -1,3 +1,4 @@
+;;; init-themes.el  -*- lexical-binding: t; -*-
 ;; Installation
 ;; catppuccin-theme
 (use-package catppuccin-theme

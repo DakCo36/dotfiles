@@ -1,3 +1,4 @@
+;;; init-terminal.el  -*- lexical-binding: t; -*-
 (unless (eq system-type 'windows-nt)
   (use-package vterm
     :ensure t
