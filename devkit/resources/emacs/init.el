@@ -23,7 +23,7 @@
  '(package-selected-packages nil)
  '(package-vc-selected-packages
    '((copilot :vc-backend Git :url
-			  "https://github.com/copilot-emacs/copilot.el"))))
+              "https://github.com/copilot-emacs/copilot.el"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -103,3 +103,10 @@
 
   :hook
   (magit-post-refresh . diff-hl-magit-post-refresh))
+
+;; Windows gpg
+(when (eq system-type 'windows-nt)
+  (let ((gpg (expand-file-name "scoop/apps/gpg/current/bin/gpg.exe"
+                               (getenv "USERPROFILE"))))
+    (when (file-exists-p gpg)
+      (setq epg-gpg-program gpg))))
