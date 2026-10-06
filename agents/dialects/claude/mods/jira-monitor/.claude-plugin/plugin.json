@@ -1,0 +1,45 @@
+{
+  "name": "jira-monitor",
+  "version": "0.3.0",
+  "description": "Side pane listing open Jira issues assigned to me, via the Jira Cloud REST API",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "baseUrl": {
+      "type": "string",
+      "title": "Jira base URL",
+      "description": "Jira Cloud site, e.g. https://your-site.atlassian.net",
+      "default": ""
+    },
+    "email": {
+      "type": "string",
+      "title": "Atlassian account email",
+      "description": "Email used for Jira API basic auth",
+      "default": ""
+    },
+    "apiToken": {
+      "type": "string",
+      "title": "Jira API token",
+      "description": "Atlassian API token; falls back to the JIRA_API_TOKEN environment variable when empty",
+      "sensitive": true,
+      "default": ""
+    },
+    "jql": {
+      "type": "string",
+      "title": "JQL",
+      "description": "Query for the pane",
+      "default": "assignee = currentUser() AND statusCategory != Done ORDER BY updated DESC"
+    },
+    "refreshMinutes": {
+      "type": "number",
+      "title": "Refresh interval (minutes)",
+      "description": "How often the pane re-fetches issues",
+      "default": 3
+    },
+    "maxResults": {
+      "type": "number",
+      "title": "Max results",
+      "description": "Maximum number of issues fetched per refresh (1-100)",
+      "default": 30
+    }
+  }
+}
