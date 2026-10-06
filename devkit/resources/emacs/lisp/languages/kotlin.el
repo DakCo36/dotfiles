@@ -167,7 +167,7 @@
   "Configure Gradle project detection and start Eglot for project source."
   (add-hook 'project-find-functions
             #'languages-kotlin--gradle-project nil t)
-  (unless (languages--dependency-source-p)
+  (unless (languages-common--dependency-source-p)
     (eglot-ensure)))
 
 (with-eval-after-load 'eglot
@@ -180,7 +180,7 @@
 (add-to-list 'file-name-handler-alist
              '("jar:/" . languages-kotlin--jar-uri-handler))
 
-(add-hook 'languages--dependency-source-functions
+(add-hook 'languages-common--dependency-source-functions
           #'languages-kotlin--dependency-source-p)
 (remove-hook 'kotlin-mode-hook #'eglot-ensure)
 (add-hook 'kotlin-mode-hook #'languages-kotlin--eglot-ensure)

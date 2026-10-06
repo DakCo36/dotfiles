@@ -10,7 +10,7 @@
 ;; Go uses tabs; gofmt enforces source formatting.
 (add-hook 'go-ts-mode-hook
           (lambda ()
-            (languages--set-indent t 4)
+            (languages-common--set-indent t 4)
             (setq-local go-ts-mode-indent-offset 4)))
 
 (dolist (hook '(go-mode-hook go-ts-mode-hook))

@@ -3,10 +3,10 @@
 
 (add-hook 'ruby-mode-hook
           (lambda ()
-            (languages--set-indent nil 2)))
+            (languages-common--set-indent nil 2)))
 (add-hook 'ruby-ts-mode-hook
           (lambda ()
-            (languages--set-indent nil 2)))
+            (languages-common--set-indent nil 2)))
 
 ;; Requires ruby-lsp on PATH.
 (with-eval-after-load 'eglot

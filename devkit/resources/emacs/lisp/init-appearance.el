@@ -19,6 +19,33 @@
   (scroll-bar-mode -1)      ;; Remove scrollbar
   (set-fringe-mode 8))      ;; Add padding left/right
 
+;; Header line
+(defun init-appearance--format-eglot-status ()
+  "Return the current buffer's Eglot status as a header-line string."
+  (if (not (fboundp 'languages-common-eglot-connection-info))
+      "None"
+    (let* ((info (languages-common-eglot-connection-info))
+           (state (plist-get info :state))
+           (name (plist-get info :name))
+           (version (plist-get info :version)))
+      (cond
+       ((eq state 'loading) "Loading...")
+       ((eq state 'connected) name)
+       (t "None")))))
+
+(defun init-appearance--refresh-header-line ()
+  "Request mode-line and header-line updates for all windows."
+  (force-mode-line-update t))
+
+(with-eval-after-load 'languages/common
+  (add-hook 'languages-common-eglot-connection-change-hook
+            #'init-appearance--refresh-header-line))
+
+(setq-default header-line-format
+            '(" " mode-name
+              " | Eglot: "
+              (:eval (init-appearance--format-eglot-status))))
+
 ;; Matching paren: theme colors + bold/underline on the paren chars.
 (show-paren-mode 1)
 (setq show-paren-delay 0
