@@ -20,7 +20,9 @@ type SearchResponse = {
 
 const optionText = (options: PluginOptions, name: string) => String(options[name] ?? '').trim()
 
-const clampOr = (options: PluginOptions, name: string, min: number, max: number, fallback: number) => {
+const baseUrlOf = (options: PluginOptions) => optionText(options, 'baseUrl').replace(/\/+$/, '')
+
+const clampOr =(options: PluginOptions, name: string, min: number, max: number, fallback: number) => {
   const value = Number(options[name])
   return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback
 }
@@ -34,7 +36,7 @@ const toIssues = (body: SearchResponse): JiraIssue[] =>
 
 async function resolveSettings($: EngineInterface, options: PluginOptions): Promise<JiraSettings> {
   return {
-    baseUrl: optionText(options, 'baseUrl').replace(/\/+$/, ''),
+    baseUrl: baseUrlOf(options),
     email: optionText(options, 'email'),
     apiToken: optionText(options, 'apiToken') || ((await $.env.get('JIRA_API_TOKEN')) ?? ''),
     jql: optionText(options, 'jql'),
@@ -95,9 +97,16 @@ export const register: Register = (on, options) => {
     return { text: error ? `Jira refresh failed: ${error}` : `${issues.length} open Jira issues.` }
   })
 
+  on('command.run', { command: REFRESH_CMD }, async $ => {
+    await refresh($, options)
+    const { issues, error } = await read($, snapshot)
+    return { text: error ? `Jira refresh failed: ${error}` : `${issues.length} open Jira issues.` }
+  })
+
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
-    const { Box, Text } = $.ui.resolve(e)
+    const { Box, Text, Link } = $.ui.resolve(e)
     const { issues, fetchedAt, error } = await read($, snapshot)
+    const baseUrl = baseUrlOf(options)
     const room = Math.max(1, Math.floor(((e.viewport?.rows ?? 24) - 4) / 2))
     const updated = fetchedAt ? new Date(fetchedAt).toTimeString().slice(0, 5) : '—'
 
@@ -111,7 +120,14 @@ export const register: Register = (on, options) => {
         {issues.slice(0, room).map(issue => (
           <Box flexDirection="column">
             <Text>
-              <Text bold color="cyan">{issue.key}</Text> <Text dimColor>[{issue.status}]</Text>
+              {baseUrl ? (
+                <Link href={`${baseUrl}/browse/${issue.key}`}>
+                  <Text bold color="cyan">{issue.key}</Text>
+                </Link>
+              ) : (
+                <Text bold color="cyan">{issue.key}</Text>
+              )}{' '}
+              <Text dimColor>[{issue.status}]</Text>
             </Text>
             <Text wrap="truncate-end">  {issue.summary}</Text>
           </Box>
