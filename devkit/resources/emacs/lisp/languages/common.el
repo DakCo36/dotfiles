@@ -17,25 +17,78 @@
 ;; hs-minor-mode folding blocks
 (add-hook 'prog-mode-hook #'hs-minor-mode)
 
-(defun languages--set-indent (use-tabs width)
+(defun languages-common--set-indent (use-tabs width)
   "Set buffer-local indentation to USE-TABS and WIDTH."
   (setq-local indent-tabs-mode use-tabs)
   (setq-local tab-width width))
 
-(defvar languages--dependency-source-functions nil
+(defvar languages-common--dependency-source-functions nil
   "Functions that recognize materialized language server dependency sources.")
 
-(defun languages--dependency-source-p ()
+(defun languages-common--dependency-source-p ()
   "Return non-nil when the current buffer contains dependency source."
   (and buffer-file-name
        (or (string-match-p
             "\\(?:\\`\\|/\\)\\(?:jar\\|jdt\\|jrt\\):/"
             buffer-file-name)
            (run-hook-with-args-until-success
-            'languages--dependency-source-functions))))
+            'languages-common--dependency-source-functions))))
+
+;; Eglot
+
+;;;; Eglot Status
+(defvar languages-common--eglot-pending nil
+  "Eglot servers whose connections are being initialized.")
+
+(defvar languages-common-eglot-connection-change-hook nil
+  "Hook run without arguments when an Eglot connection changes.")
+
+(defun languages-common--eglot-starting (server)
+  "Track initializing SERVER and notify connection observers."
+  (cl-pushnew server languages-common--eglot-pending)
+  (run-hooks 'languages-common-eglot-connection-change-hook))
+
+(defun languages-common--eglot-finished (server)
+  "Remove connected or stopped SERVER and notify observers."
+  (setq languages-common--eglot-pending
+        (delq server languages-common--eglot-pending))
+  (run-hooks 'languages-common-eglot-connection-change-hook))
+
+(defun languages-common-eglot-connection-info ()
+  "Return Eglot connection data for the current buffer.
+Takes no arguments.  Return a plist whose :state is `none',
+`loading', or `connected'.  Connected data includes :name and
+:version; :version is nil when the server omits it."
+  (if (not (featurep 'eglot))
+      '(:state none)
+    (setq languages-common--eglot-pending
+          (cl-delete-if-not #'jsonrpc-running-p
+                            languages-common--eglot-pending))
+    (let ((server (eglot-current-server)))
+      (cond
+       ((and server (jsonrpc-running-p server))
+        (list :state 'connected
+              :name (eglot--server-name server)
+              :version (plist-get (eglot--server-info server)
+                                  :version)))
+       ((cl-some
+         (lambda (pending)
+           (and (equal (eglot--project pending)
+                       (eglot--current-project))
+                (eglot--languageId pending)))
+         languages-common--eglot-pending)
+        '(:state loading))
+       (t '(:state none))))))
 
 (with-eval-after-load 'eglot
-  (setq eglot-extend-to-xref t))
+  ;; Enable xref for Eglot.
+  (setq eglot-extend-to-xref t)
+  (add-hook 'eglot-server-initialized-hook
+            #'languages-common--eglot-starting)
+  (add-hook 'eglot-connect-hook
+            #'languages-common--eglot-finished)
+  (advice-add 'eglot--on-shutdown :after
+              #'languages-common--eglot-finished))
 
 ;; Flymake
 ;; Emacs 30+ Eglot automatically enables Flymake — this hook toggles it off.

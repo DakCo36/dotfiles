@@ -8,13 +8,13 @@
 (dolist (hook '(js-ts-mode-hook js-mode-hook))
   (add-hook hook
             (lambda ()
-              (languages--set-indent nil 2)
+              (languages-common--set-indent nil 2)
               (setq-local js-indent-level 2))))
 
 (dolist (hook '(typescript-ts-mode-hook typescript-mode-hook tsx-ts-mode-hook))
   (add-hook hook
             (lambda ()
-              (languages--set-indent nil 2)
+              (languages-common--set-indent nil 2)
               (setq-local typescript-indent-level 2)
               (setq-local typescript-ts-mode-indent-offset 2))))
 
