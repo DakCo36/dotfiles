@@ -69,6 +69,7 @@ Takes no arguments.  Return a plist whose :state is `none',
        ((and server (jsonrpc-running-p server))
         (list :state 'connected
               :name (eglot--server-name server)
+              :program (languages-common--eglot-program-name-function server)
               :version (plist-get (eglot--server-info server)
                                   :version)))
        ((cl-some
@@ -79,6 +80,13 @@ Takes no arguments.  Return a plist whose :state is `none',
          languages-common--eglot-pending)
         '(:state loading))
        (t '(:state none))))))
+
+(defun languages-common--eglot-program-name-function (server)
+  "Return SERVER's launch command basename, or nil"
+  (let* ((command (process-command (jsonrpc--process server)))
+         (program (car-safe command)))
+    (when (stringp program)
+      (file-name-nondirectory program))))
 
 (with-eval-after-load 'eglot
   ;; Enable xref for Eglot.

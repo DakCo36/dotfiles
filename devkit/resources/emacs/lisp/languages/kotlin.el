@@ -172,10 +172,7 @@
 
 (with-eval-after-load 'eglot
   (add-to-list 'eglot-server-programs
-               (list 'kotlin-mode
-                     (expand-file-name
-                      "~/.local/opt/kotlin-server-263.4421.0/bin/intellij-server")
-                     "--stdio")))
+               '(kotlin-mode "kotlin-lsp" "--stdio")))
 
 (add-to-list 'file-name-handler-alist
              '("jar:/" . languages-kotlin--jar-uri-handler))
