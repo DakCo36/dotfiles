@@ -1,5 +1,8 @@
 theme = "ayu_evolve"
 
+[editor.file-picker]
+hidden = false
+
 [editor.soft-wrap]
 enable = true
 max-indent-retain = 0
