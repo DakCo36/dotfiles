@@ -27,10 +27,11 @@
     (let* ((info (languages-common-eglot-connection-info))
            (state (plist-get info :state))
            (name (plist-get info :name))
+           (program (plist-get info :program))
            (version (plist-get info :version)))
       (cond
        ((eq state 'loading) "Loading...")
-       ((eq state 'connected) name)
+       ((eq state 'connected) program)
        (t "None")))))
 
 (defun init-appearance--refresh-header-line ()
