@@ -1,0 +1,47 @@
+language: ko-KR
+
+reviews:
+  profile: assertive
+  review_details: true
+  high_level_summary_in_walkthrough: true
+  high_level_summary_instructions: |
+    Summarize the changes in behavior and their impact on users, focusing on before and after.
+    Mention any required installation, configuration synchronization, or restart only when supported by evidence.
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: false
+
+  finishing_touches:
+    autofix:
+      enabled: false
+
+  # Uncomment to exclude generated or vendored files from review.
+  # path_filters:
+  #   - "!generated/**"
+  #   - "!vendor/**"
+
+  # Uncomment to check whether keybinding changes are documented in the PR.
+  # pre_merge_checks:
+  #   custom_checks:
+  #     - name: "Document keybinding changes"
+  #       mode: warning
+  #       instructions: |
+  #         Pass if the PR does not add, remove, or change keybindings.
+  #         Otherwise, require the PR description to list the affected editor,
+  #         command, and old and new bindings, marking additions or removals.
+  #         Warn if any affected binding is missing from the description.
+
+  path_instructions:
+    - path: "devkit/resources/emacs/**/*.el"
+      instructions: |
+        패키지 초기화 순서, 지연 로딩, hook 및 advice의 중복 등록을 확인하세요.
+        전역 상태와 buffer-local 상태를 구분하고 설정 재평가 시 동작을 검토하세요.
+        Eglot 연결 전후와 종료 시점, 외부 실행 파일 탐색, 의존성 소스 탐색을 확인하세요.
+        내부 API 사용은 실제 호환성 문제와 근거를 설명하세요.
+
+chat:
+  auto_reply: false
