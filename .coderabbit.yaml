@@ -19,10 +19,11 @@ reviews:
     autofix:
       enabled: false
 
-  # Uncomment to exclude generated or vendored files from review.
-  # path_filters:
-  #   - "!generated/**"
-  #   - "!vendor/**"
+  path_filters:
+    - "!.archive/**"
+    # Uncomment to exclude additional generated or vendored files.
+    # - "!generated/**"
+    # - "!vendor/**"
 
   # Uncomment to check whether keybinding changes are documented in the PR.
   # pre_merge_checks:
