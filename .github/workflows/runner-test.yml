@@ -1,0 +1,24 @@
+name: gharp Runner test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on:
+      - self-hosted
+      - "gharp-test-${{ github.run_id }}-${{ github.run_attempt }}"
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check runner environment
+        run: |
+          uname -m
+          cat /etc/os-release
+          git rev-parse --short HEAD
+          echo "gharp runner is working"
