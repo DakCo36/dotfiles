@@ -1,0 +1,9 @@
+[tools]
+# Go
+go = "1.26.9"
+"go:golang.org/x/tools/gopls" = "latest"
+
+# Python
+python = "3.14"
+ruff = "latest"
+ty = "latest"
