@@ -21,42 +21,7 @@
 (with-eval-after-load 'project
   (add-to-list 'project-vc-extra-root-markers "go.mod"))
 
-(defun languages-go--mise-root ()
-  "Return the nearest mise config directory for the current buffer."
-  (locate-dominating-file
-   (or (and buffer-file-name
-            (file-name-directory buffer-file-name))
-       default-directory)
-   (lambda (directory)
-     (or (file-exists-p (expand-file-name "mise.toml" directory))
-         (file-exists-p (expand-file-name ".mise.toml" directory))))))
-
-(defun languages-go--gopls-program ()
-  "Return the gopls executable path."
-  (or (executable-find "gopls")
-      (let ((default-gopls (expand-file-name "go/bin/gopls" "~")))
-        (and (file-executable-p default-gopls)
-             default-gopls))
-      "gopls"))
-
-(defun languages-go--eglot-contact (_interactive _project)
-  "Return the gopls Eglot contact for the current buffer."
-  (if-let ((mise-root (languages-go--mise-root)))
-      (list "mise" "exec" "-C"
-            (directory-file-name (expand-file-name mise-root))
-            "--" (languages-go--gopls-program))
-    (user-error "No mise.toml found for Go buffer")))
-
-(defun languages-go--eglot-ensure ()
-  "Start Eglot only when the current Go buffer has a mise config."
-  (when (languages-go--mise-root)
-    (eglot-ensure)))
-
-(with-eval-after-load 'eglot
-  (add-to-list 'eglot-server-programs
-               '((go-mode go-ts-mode) . languages-go--eglot-contact)))
-
-(remove-hook 'go-ts-mode-hook #'eglot-ensure)
-(add-hook 'go-ts-mode-hook #'languages-go--eglot-ensure)
+;; Requires gopls on PATH
+(add-hook 'go-ts-mode-hook #'eglot-ensure)
 
 (provide 'languages/go)
