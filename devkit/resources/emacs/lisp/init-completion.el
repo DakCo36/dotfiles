@@ -52,6 +52,7 @@
   (corfu-popupinfo-mode t))
 
 (use-package corfu-terminal
+  :if (< emacs-major-version 31)
   :ensure t
   :init
   (unless (display-graphic-p)

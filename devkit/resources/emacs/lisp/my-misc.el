@@ -9,6 +9,7 @@
 
 ;; Setup exec-path-from-shell to ensure Emacs inherits the correct PATH and other environment variables from the shell
 (use-package exec-path-from-shell
+  :if (memq system-type '(darwin gnu/linux))
   :config
   (add-to-list 'exec-path-from-shell-variables "KILO_API_KEY")
   (exec-path-from-shell-initialize))
