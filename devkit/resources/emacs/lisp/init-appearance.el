@@ -35,7 +35,9 @@
         (propertize (or program name "None")
                     'help-echo
                     (format "State: %s\nServer: %s\nVersion: %s"
-                            state name version)))
+                            state
+                            (or name "Unknown")
+                            (or version "Unknown"))))
        (t "None")))))
 
 (defun init-appearance--refresh-header-line ()
