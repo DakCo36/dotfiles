@@ -48,6 +48,8 @@
   (minuet-n-completions 1)
   (minuet-auto-suggestion-debounce-delay 0.6)
   (minuet-auto-suggestion-throttle-delay 1.5)
+  :custom-face
+  (minuet-suggestion-face ((t :inherit font-lock-comment-face :slant italic)))
   :config
   (plist-put minuet-codestral-options
              :end-point "https://api.kilo.ai/api/fim/completions")
