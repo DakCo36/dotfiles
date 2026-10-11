@@ -31,7 +31,11 @@
            (version (plist-get info :version)))
       (cond
        ((eq state 'loading) "Loading...")
-       ((eq state 'connected) program)
+       ((eq state 'connected)
+        (propertize (or program name "None")
+                    'help-echo
+                    (format "State: %s\nServer: %s\nVersion: %s"
+                            state name version)))
        (t "None")))))
 
 (defun init-appearance--refresh-header-line ()
