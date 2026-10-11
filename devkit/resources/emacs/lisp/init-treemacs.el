@@ -23,7 +23,10 @@
    ("C-c t p" . treemacs-display-current-project-exclusively)))
 
 ;; Nerd Icons support
-(use-package nerd-icons)
+;; Default is "Symbols Nerd Font Mono", which devkit does not install.
+(use-package nerd-icons
+  :custom
+  (nerd-icons-font-family "Hack Nerd Font Mono"))
 
 ;; Treemacs and Nerd Icons integration
 (use-package treemacs-nerd-icons

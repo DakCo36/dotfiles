@@ -10,7 +10,7 @@
 (when (display-graphic-p)
   (set-face-attribute 'default nil
                       :family "Hack Nerd Font"
-                      :height 130))
+                      :height 120))
 
 ;; UI Cleanup (GUI Only)
 (when (display-graphic-p)
