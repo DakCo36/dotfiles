@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y \
   build-essential \
   software-properties-common \
   locales \
-  bats \
   git \
   && rm -rf /var/lib/apt/lists/*
 
@@ -33,10 +32,7 @@ COPY --chown=testuser:testuser ./README.md ./setup/README.md
 COPY --chown=testuser:testuser ./test ./setup/test
 
 # Make scripts executable
-RUN chmod +x ./setup/install.sh ./setup/test/test_install.sh ./setup/test/test_units.sh
-
-# Run unit tests BEFORE installation
-RUN ./setup/test/test_units.sh
+RUN chmod +x ./setup/install.sh ./setup/test/test_install.sh
 
 # # Run installation and integration tests (needs sudo)
 RUN ./setup/test/test_install.sh

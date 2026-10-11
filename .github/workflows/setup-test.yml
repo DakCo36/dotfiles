@@ -1,0 +1,43 @@
+name: Setup test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "setup/**"
+      - ".github/workflows/setup-test.yml"
+  pull_request:
+    paths:
+      - "setup/**"
+      - ".github/workflows/setup-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: setup-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-test:
+    # Public repo: never run fork PRs on the self-hosted runner.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on:
+      - self-hosted
+      - "gharp-setup-${{ github.run_id }}-${{ github.run_attempt }}"
+    timeout-minutes: 30
+
+    env:
+      IMAGE: dotfiles-setup:${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run docker-test.sh
+        working-directory: setup
+        run: ./docker-test.sh --no-cache
+
+      - name: Remove test image
+        if: always()
+        run: docker rmi "$IMAGE" 2>/dev/null || true
