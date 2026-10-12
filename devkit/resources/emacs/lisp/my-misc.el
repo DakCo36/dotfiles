@@ -7,6 +7,9 @@
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
+;; Encoding
+(prefer-coding-system 'utf-8-unix)
+
 ;; In Zsh(or Bash), Setup exec-path-from-shell to ensure Emacs inherits the correct PATH and other environment variables from the shell
 ;; No supported in Windows
 (use-package exec-path-from-shell
