@@ -34,12 +34,17 @@
   ;; Set pipe buffer size 64KB for minuet
   (setq w32-pipe-buffer-size (* 64 1024))
 
-  (let* ((git-sh-path
-          (car (process-lines "git" "var" "GIT_SHELL_PATH")))
+  (let* ((git (executable-find "git"))
+         (git-sh-path
+          (when git
+            (condition-case nil
+                (car (process-lines "git" "var" "GIT_SHELL_PATH"))
+              (error nil))))
          (diff-path
-          (expand-file-name
-           "diff.exe" (file-name-directory git-sh-path))))
-    (when (file-executable-p diff-path)
+          (when git-sh-path
+            (expand-file-name
+             "diff.exe" (file-name-directory git-sh-path)))))
+    (when (and diff-path (file-executable-p diff-path))
       (setq diff-command diff-path))))
 
 (provide 'my-misc)
