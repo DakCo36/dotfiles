@@ -88,6 +88,35 @@ Takes no arguments.  Return a plist whose :state is `none',
     (when (stringp program)
       (file-name-nondirectory program))))
 
+;; Flymake
+;; Normalize driver character in Windows
+(defun languages-common--normalizer-driver-letter (path)
+  "Set driver letter to lowercase in PATH(Windows)"
+  (if (and (stringp path)
+           (string-match-p "\\`[A-Za-z]:" path))
+      (concat (downcase (substring path 0 1))
+              (substring path 1))
+    path))
+
+(defun languages-common--eglot-find-buffer-visiting (original server path)
+  "Call eglot-find-buffer-visiting with SERVER and PATH, if not found, try Windows drive char normalize."
+  (or (funcall original server path)
+      (when (and (eq system-type 'windows-nt)
+                 (stringp path))
+        (let ((normalized-path
+               (languages-common--normalizer-driver-letter path)))
+          (cl-loop
+           for buffer in (eglot--managed-buffers server)
+           when
+           (with-current-buffer buffer
+             (or
+              (equal normalized-path
+                     (languages-common--normalizer-driver-letter buffer-file-name))
+              (equal normalized-path
+                     (languages-common--normalizer-driver-letter
+                      (car eglot--TextDocumentIdentifier-cache)))))
+           return buffer)))))
+
 (with-eval-after-load 'eglot
   ;; Enable xref for Eglot.
   (setq eglot-extend-to-xref t)
@@ -96,25 +125,9 @@ Takes no arguments.  Return a plist whose :state is `none',
   (add-hook 'eglot-connect-hook
             #'languages-common--eglot-finished)
   (advice-add 'eglot--on-shutdown :after
-              #'languages-common--eglot-finished))
-
-;; Flymake
-;; Emacs 30+ Eglot automatically enables Flymake — this hook toggles it off.
-;; (add-hook 'eglot-managed-mode-hook #'flymake-mode)
-
-;; [BUG] Eglot Flymake diagnostics silently dropped on non-ASCII paths.
-;;
-;; Root cause:
-;;   eglot.el `eglot-uri-to-path` calls `url-unhex-string`, which returns a
-;;   unibyte string. `publishDiagnostics` compares that path with the multibyte
-;;   path in `eglot--TextDocumentIdentifier-cache`, so the comparison fails.
-;;
-;; Fix (commented out — using English paths instead):
-;; (with-eval-after-load 'eglot
-;;   (advice-add 'eglot-uri-to-path :filter-return
-;;               (lambda (path)
-;;                 (if (and path (not (multibyte-string-p path)))
-;;                     (decode-coding-string path 'utf-8)
-;;                   path))))
+              #'languages-common--eglot-finished)
+  (advice-add 'eglot--find-buffer-visiting
+              :around
+              #'languages-common--eglot-find-buffer-visiting))
 
 (provide 'languages/common)
