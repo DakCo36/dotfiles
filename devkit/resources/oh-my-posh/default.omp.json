@@ -7,12 +7,21 @@
       "newline": true,
       "segments": [
         {
+          "type": "session",
+          "style": "plain",
+          "foreground": "#98C379",
+          "foreground_templates": [
+            "{{ if .SSHSession }}#FF9248{{ end }}"
+          ],
+          "template": "[{{ if .SSHSession }}SSH{{ else }}Local{{ end }} {{ .HostName }}]"
+        },
+        {
           "foreground": "#E5C07B",
           "options": {
             "time_format": "15:04:05"
           },
           "style": "plain",
-          "template": "[{{ .CurrentDate | date .Format }}]",
+          "template": " [{{ .CurrentDate | date .Format }}]",
           "type": "time"
         },
         {
