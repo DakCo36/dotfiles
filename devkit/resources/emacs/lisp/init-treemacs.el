@@ -1,5 +1,18 @@
 ;;; init-treemacs.el  -*- lexical-binding: t; -*-
 ;; Treemacs
+
+(defun init-treemacs--apply-collapsed-directory-git-state
+    (original button path buffer git-future)
+  "Use the same Git cache for a collapsed directory's key and path."
+  (when (and (eq treemacs--git-mode 'deferred)
+             (buffer-live-p buffer))
+    (with-current-buffer buffer
+      (let ((key (treemacs-button-get button :key)))
+        (unless (equal key path)
+          (puthash key (treemacs--get-or-parse-git-result git-future)
+                   treemacs--git-cache)))))
+  (funcall original button path buffer git-future))
+
 (use-package treemacs
   :demand t
 
@@ -9,6 +22,8 @@
   (setq treemacs-read-string-input 'from-minibuffer)
   (setq treemacs-expand-after-init nil) ;; Disable expand automatically
   (treemacs-follow-mode -1)
+  (advice-add 'treemacs--apply-annotations-deferred :around
+              #'init-treemacs--apply-collapsed-directory-git-state)
 
   :bind
   (("C-c t t" . treemacs)
